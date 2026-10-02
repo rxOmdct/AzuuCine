@@ -104,6 +104,8 @@ export default defineConfig(({ mode }) => {
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,ico,webmanifest,woff2}'],
+        // La page de confidentialité est une vraie page, pas l'app
+        navigateFallbackDenylist: [/^\/privacy/],
         // Les affiches AniList ne peuvent pas être copiées dans la base (CORS) :
         // on les garde en cache après le premier affichage pour les voir hors-ligne.
         runtimeCaching: [
