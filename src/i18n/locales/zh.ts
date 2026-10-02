@@ -745,6 +745,19 @@ const dict: Translations = {
   'feed.rewatched': '重温了',
   'feed.added': '想看',
   'feed.review': '短评',
+  'auth.google': "使用 Google 继续",
+  'auth.or': "或",
+  'auth.err.google': "Google 登录失败，请重试。",
+  'auth.err.storage': "浏览器阻止了存储，无法登录。",
+  'welcome.title': "选择你的用户名",
+  'welcome.titleA': "欢迎来到",
+  'welcome.titleB': "AzuuCine",
+  'welcome.text': "选择一个用户名：朋友们会通过它找到并关注你。",
+  'welcome.usernamePh': "your_name",
+  'welcome.namePh': "你的名字",
+  'welcome.nameHint': "可选——显示在你的主页上。之后都可以修改。",
+  'welcome.go': "开始吧",
+  'welcome.later': "稍后",
 }
 
 export default dict

@@ -195,6 +195,63 @@ export async function signOut(): Promise<void> {
   }
 }
 
+// ───────────────────────────── Connexion avec Google (OAuth + PKCE) ─────────────────────────────
+// Google renvoie vers l'app avec un code à usage unique (?code=…) que seul cet appareil peut échanger,
+// grâce au « vérificateur » gardé ici le temps de l'aller-retour. Aucun jeton ne passe dans l'adresse.
+
+const VERIFIER_KEY = 'azuucine:pkce'
+
+const b64url = (bytes: Uint8Array) => btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+
+export async function signInWithGoogle(): Promise<void> {
+  const verifier = b64url(crypto.getRandomValues(new Uint8Array(48)))
+  const challenge = b64url(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier))))
+  try {
+    localStorage.setItem(VERIFIER_KEY, JSON.stringify({ verifier, at: Date.now() }))
+  } catch {
+    throw new AuthError(t('auth.err.storage'))
+  }
+  const params = new URLSearchParams({
+    provider: 'google',
+    redirect_to: appUrl(),
+    code_challenge: challenge,
+    code_challenge_method: 's256',
+  })
+  location.assign(`${SUPABASE_URL}/auth/v1/authorize?${params}`)
+}
+
+/** Retour de Google : adresse avec ?code=… (ou ?error=…). */
+export const hasOAuthRedirect = () => /[?&](code|error)=/.test(location.search)
+
+async function consumeOAuthRedirect(): Promise<{ error?: string }> {
+  const params = new URLSearchParams(location.search)
+  const code = params.get('code') ?? ''
+  const oauthError = params.get('error_description') ?? params.get('error')
+  history.replaceState(null, '', `${location.pathname}#/`)
+  let saved: { verifier?: string; at?: number } = {}
+  try {
+    saved = JSON.parse(localStorage.getItem(VERIFIER_KEY) ?? '{}')
+    localStorage.removeItem(VERIFIER_KEY)
+  } catch {
+    /* ignore */
+  }
+  if (oauthError) return { error: t('auth.err.google') }
+  // Vérificateur absent ou trop vieux (> 10 min) : on ne tente rien
+  if (!/^[A-Za-z0-9_-]{43,128}$/.test(saved.verifier ?? '') || !saved.at || Date.now() - saved.at > 600_000) {
+    return { error: t('auth.err.google') }
+  }
+  if (!/^[A-Za-z0-9_-]{8,256}$/.test(code)) return { error: t('auth.err.google') }
+  try {
+    const data = await gotrue('/token?grant_type=pkce', { body: { auth_code: code, code_verifier: saved.verifier } })
+    const s = toSession(data)
+    if (!s) return { error: t('auth.err.response') }
+    setSession(s)
+    return {}
+  } catch (e) {
+    return { error: (e as Error).message }
+  }
+}
+
 let refreshing: Promise<Session | null> | null = null
 
 async function refresh(): Promise<Session | null> {
@@ -232,6 +289,7 @@ export async function getAccessToken(force = false): Promise<string | null> {
  * Supabase renvoie vers l'app avec les jetons après le « # ». On ouvre la session puis on nettoie l'adresse.
  */
 export async function consumeAuthRedirect(): Promise<{ type?: string; error?: string }> {
+  if (hasOAuthRedirect()) return consumeOAuthRedirect()
   const hash = location.hash.startsWith('#') ? location.hash.slice(1) : ''
   if (!/(^|&)(access_token|error)=/.test(hash)) return {}
   const params = new URLSearchParams(hash)

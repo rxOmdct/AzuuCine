@@ -2,7 +2,7 @@ import { t } from '../i18n'
 import { LanguageSelect } from '../i18n/react'
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import { useState, type FormEvent, type ReactNode } from 'react'
-import { PASSWORD_MIN, requestPasswordReset, signIn, signUp, updatePassword } from '../lib/cloud/auth'
+import { PASSWORD_MIN, requestPasswordReset, signIn, signInWithGoogle, signUp, updatePassword } from '../lib/cloud/auth'
 import { cx } from '../lib/utils'
 
 type Mode = 'login' | 'signup' | 'forgot'
@@ -62,6 +62,18 @@ export default function AuthScreen({ notice }: { notice?: string }) {
     setInfo(undefined)
   }
 
+  const google = async () => {
+    setError(undefined)
+    setInfo(undefined)
+    setBusy(true)
+    try {
+      await signInWithGoogle()
+    } catch (err) {
+      setError((err as Error).message)
+      setBusy(false)
+    }
+  }
+
   const submit = async (e: FormEvent) => {
     e.preventDefault()
     setError(undefined)
@@ -105,6 +117,19 @@ export default function AuthScreen({ notice }: { notice?: string }) {
             </button>
           ))}
         </div>
+      )}
+
+      {mode !== 'forgot' && (
+        <>
+          <button type="button" onClick={google} disabled={busy} className="btn btn-ghost w-full py-3">
+            {t('auth.google')}
+          </button>
+          <div className="my-5 flex items-center gap-3 text-xs text-ink-3">
+            <span className="h-px flex-1 bg-line" />
+            {t('auth.or')}
+            <span className="h-px flex-1 bg-line" />
+          </div>
+        </>
       )}
 
       <form onSubmit={submit} className="space-y-3">

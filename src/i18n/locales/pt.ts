@@ -745,6 +745,19 @@ const dict: Translations = {
   'feed.rewatched': 'reviu',
   'feed.added': 'quer ver',
   'feed.review': 'opinião',
+  'auth.google': "Continuar com o Google",
+  'auth.or': "ou",
+  'auth.err.google': "Falha ao entrar com o Google. Tente novamente.",
+  'auth.err.storage': "Seu navegador está bloqueando o armazenamento: não é possível entrar.",
+  'welcome.title': "Escolha seu nome de usuário",
+  'welcome.titleA': "Boas-vindas ao",
+  'welcome.titleB': "AzuuCine",
+  'welcome.text': "Escolha um nome de usuário: é assim que seus amigos vão te encontrar e seguir.",
+  'welcome.usernamePh': "seu_usuario",
+  'welcome.namePh': "Seu nome",
+  'welcome.nameHint': "Opcional — aparece no seu perfil. Você pode mudar tudo depois.",
+  'welcome.go': "Vamos lá",
+  'welcome.later': "Depois",
 }
 
 export default dict

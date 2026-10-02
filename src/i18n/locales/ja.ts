@@ -745,6 +745,19 @@ const dict: Translations = {
   'feed.rewatched': 'が再視聴：',
   'feed.added': 'が見たい：',
   'feed.review': 'レビュー',
+  'auth.google': "Google で続行",
+  'auth.or': "または",
+  'auth.err.google': "Google でのログインに失敗しました。もう一度お試しください。",
+  'auth.err.storage': "ブラウザがストレージをブロックしているため、ログインできません。",
+  'welcome.title': "ユーザー名を選ぶ",
+  'welcome.titleA': "ようこそ",
+  'welcome.titleB': "AzuuCine へ",
+  'welcome.text': "ユーザー名を選んでください。友だちはこの名前であなたを見つけてフォローできます。",
+  'welcome.usernamePh': "your_name",
+  'welcome.namePh': "表示名",
+  'welcome.nameHint': "任意 — プロフィールに表示されます。あとからすべて変更できます。",
+  'welcome.go': "はじめる",
+  'welcome.later': "あとで",
 }
 
 export default dict

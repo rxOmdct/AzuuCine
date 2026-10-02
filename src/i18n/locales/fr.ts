@@ -747,6 +747,19 @@ const dict = {
   'feed.rewatched': 'a revu',
   'feed.added': 'veut voir',
   'feed.review': 'avis',
+  'auth.google': "Continuer avec Google",
+  'auth.or': "ou",
+  'auth.err.google': "La connexion avec Google a échoué. Réessaie.",
+  'auth.err.storage': "Ton navigateur bloque le stockage : impossible de se connecter.",
+  'welcome.title': "Choisis ton pseudo",
+  'welcome.titleA': "Bienvenue sur",
+  'welcome.titleB': "AzuuCine",
+  'welcome.text': "Choisis ton pseudo : c'est grâce à lui que tes amis te trouveront et pourront te suivre.",
+  'welcome.usernamePh': "ton_pseudo",
+  'welcome.namePh': "Ton nom",
+  'welcome.nameHint': "Facultatif — affiché sur ton profil. Tu pourras tout changer plus tard.",
+  'welcome.go': "C'est parti",
+  'welcome.later': "Plus tard",
 }
 
 export default dict

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import App from './App'
 import AuthScreen, { NewPasswordScreen } from './components/AuthScreen'
-import { consumeAuthRedirect, getSession, onSessionChange, type Session } from './lib/cloud/auth'
+import { consumeAuthRedirect, getSession, hasOAuthRedirect, onSessionChange, type Session } from './lib/cloud/auth'
 import { cloudEnabled } from './lib/cloud/config'
 import { setScope } from './lib/scope'
 import { MediaProvider } from './store'
@@ -14,7 +14,7 @@ export default function Root() {
   const [session, setSession] = useState<Session | null>(() => (cloudEnabled ? getSession() : null))
   // Lien reçu par email en cours de traitement (#access_token=…)
   const [redirect, setRedirect] = useState<'checking' | 'recovery' | 'none'>(() =>
-    cloudEnabled && /(^#|&)(access_token|error)=/.test(location.hash) ? 'checking' : 'none',
+    cloudEnabled && (/(^#|&)(access_token|error)=/.test(location.hash) || hasOAuthRedirect()) ? 'checking' : 'none',
   )
   const [notice, setNotice] = useState<string>()
   const userId = session?.user.id

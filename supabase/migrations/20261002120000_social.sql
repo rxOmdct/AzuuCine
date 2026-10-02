@@ -53,8 +53,15 @@ set search_path = ''
 as $$
 declare
   u text := public.azuu_random_username();
+  -- Connexion Google : on reprend le nom du compte comme nom affiché (le pseudo reste à choisir)
+  n text := left(trim(regexp_replace(coalesce(new.raw_user_meta_data->>'full_name', new.raw_user_meta_data->>'name', ''), '[[:cntrl:]]', '', 'g')), 40);
 begin
-  insert into public.profiles (id, username, display_name) values (new.id, u, u) on conflict (id) do nothing;
+  begin
+    insert into public.profiles (id, username, display_name) values (new.id, u, coalesce(nullif(n, ''), u)) on conflict (id) do nothing;
+  exception when others then
+    -- Nom refusé : on garde le pseudo (l'inscription ne doit jamais échouer pour ça)
+    insert into public.profiles (id, username, display_name) values (new.id, u, u) on conflict (id) do nothing;
+  end;
   return new;
 end;
 $$;

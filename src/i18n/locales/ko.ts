@@ -745,6 +745,19 @@ const dict: Translations = {
   'feed.rewatched': '님이 다시 봤어요:',
   'feed.added': '님이 보고 싶어 해요:',
   'feed.review': '감상',
+  'auth.google': "Google로 계속하기",
+  'auth.or': "또는",
+  'auth.err.google': "Google 로그인에 실패했어요. 다시 시도해 주세요.",
+  'auth.err.storage': "브라우저가 저장소를 차단해 로그인할 수 없어요.",
+  'welcome.title': "사용자 이름 선택",
+  'welcome.titleA': "환영해요,",
+  'welcome.titleB': "AzuuCine",
+  'welcome.text': "사용자 이름을 정해 주세요. 친구들이 이 이름으로 나를 찾고 팔로우할 수 있어요.",
+  'welcome.usernamePh': "your_name",
+  'welcome.namePh': "내 이름",
+  'welcome.nameHint': "선택 사항 — 프로필에 표시돼요. 나중에 모두 바꿀 수 있어요.",
+  'welcome.go': "시작하기",
+  'welcome.later': "나중에",
 }
 
 export default dict

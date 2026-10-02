@@ -7,6 +7,7 @@ import FollowList from './FollowList'
 import ItemPeek, { type PeekOwner } from './ItemPeek'
 import PeopleSearch from './PeopleSearch'
 import ProfileView from './ProfileView'
+import WelcomeProfile, { RANDOM_USERNAME } from './WelcomeProfile'
 
 interface SocialApi {
   /** Réseau disponible (compte connecté) */
@@ -52,6 +53,22 @@ export function SocialProvider({ children, onOpenOwnItem }: { children: ReactNod
   const [requests, setRequests] = useState<ProfileCard[]>([])
   const [stack, setStack] = useState<Overlay[]>([])
   const [peeked, setPeeked] = useState<{ item: MediaItem; owner?: PeekOwner }>()
+  // « Plus tard » sur le choix du pseudo : redemandé au prochain lancement
+  const [welcomeLater, setWelcomeLater] = useState(() => {
+    try {
+      return sessionStorage.getItem('azuucine:welcome-later') === '1'
+    } catch {
+      return false
+    }
+  })
+  const later = useCallback(() => {
+    setWelcomeLater(true)
+    try {
+      sessionStorage.setItem('azuucine:welcome-later', '1')
+    } catch {
+      /* ignore */
+    }
+  }, [])
 
   const refresh = useCallback(async () => {
     if (!enabled || !navigator.onLine) return
@@ -127,6 +144,7 @@ export function SocialProvider({ children, onOpenOwnItem }: { children: ReactNod
           ),
         )}
       {children}
+      {enabled && me && RANDOM_USERNAME.test(me.username) && !welcomeLater && <WelcomeProfile onLater={later} />}
       {enabled && peeked && <ItemPeek item={peeked.item} owner={peeked.owner} onClose={() => setPeeked(undefined)} />}
     </SocialContext.Provider>
   )
