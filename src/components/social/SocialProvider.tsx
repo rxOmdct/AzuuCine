@@ -7,6 +7,7 @@ import FollowList from './FollowList'
 import ItemPeek, { type PeekOwner } from './ItemPeek'
 import PeopleSearch from './PeopleSearch'
 import ProfileView from './ProfileView'
+import { useOnResume } from '../../lib/onResume'
 import WelcomeProfile, { RANDOM_USERNAME } from './WelcomeProfile'
 
 interface SocialApi {
@@ -84,6 +85,8 @@ export function SocialProvider({ children, onOpenOwnItem }: { children: ReactNod
   useEffect(() => {
     void refresh()
   }, [refresh])
+  // Nouvelles demandes d'abonnement, compteurs… mis à jour au retour sur l'app
+  useOnResume(() => void refresh(), enabled)
 
   const push = useCallback((o: Overlay) => setStack((s) => [...s.slice(-8), o]), [])
   const pop = useCallback(() => setStack((s) => s.slice(0, -1)), [])

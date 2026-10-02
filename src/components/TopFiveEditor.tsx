@@ -7,6 +7,7 @@ import { useMedia } from '../store'
 import type { TopCategory } from '../types'
 import { TypeBadge } from './Badges'
 import Poster from './Poster'
+import { useScrollLock } from '../lib/scrollLock'
 
 interface Props {
   category: TopCategory
@@ -29,13 +30,7 @@ export default function TopFiveEditor({ category: initialCategory, onClose }: Pr
   const catInfo = TOP_CATEGORIES.find((c) => c.value === category)!
   const byId = useMemo(() => new Map(items.map((i) => [i.id, i])), [items])
 
-  useEffect(() => {
-    const prev = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.body.style.overflow = prev
-    }
-  }, [])
+  useScrollLock()
 
   /** Changer de catégorie enregistre d'abord celle en cours. */
   const switchCategory = async (cat: TopCategory) => {

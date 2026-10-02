@@ -21,6 +21,7 @@ export default function PersonRow({ person, actions }: { person: ProfileCard; ac
         await unfollow(person.id)
         setRelation('none')
       }
+      void social.refresh()
     } catch {
       /* réseau : rien ne change */
     } finally {

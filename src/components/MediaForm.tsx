@@ -6,6 +6,7 @@ import { canonicalGenre, canonicalSubtype, genreLabel, genreSuggestions as defau
 import { fileToPosterDataURL } from '../lib/image'
 import { getTmdbCredits } from '../lib/catalogApi'
 import { renderItemCard, slug } from '../lib/shareCard'
+import { useScrollLock } from '../lib/scrollLock'
 import { cx, formatRating, todayISO } from '../lib/utils'
 import { useMedia } from '../store'
 import type { MediaInput, MediaItem, RatingScale, WatchStatus } from '../types'
@@ -127,7 +128,7 @@ function Rewatches({ dates, onChange }: { dates: string[]; onChange: (d: string[
 }
 
 export default function MediaForm({ item, onClose, onGoToSettings }: Props) {
-  const { add, update, remove, items, settings, lists, account } = useMedia()
+  const { add, update, remove, items, settings, lists } = useMedia()
   const [form, setForm] = useState<MediaInput>(() => {
     if (!item) return EMPTY
     const { id: _id, createdAt: _c, updatedAt: _u, ...rest } = item
@@ -142,13 +143,7 @@ export default function MediaForm({ item, onClose, onGoToSettings }: Props) {
   const typeInfo = TYPE_BY_VALUE[form.type]
 
   // Bloque le défilement de la page derrière la feuille
-  useEffect(() => {
-    const prev = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.body.style.overflow = prev
-    }
-  }, [])
+  useScrollLock()
 
   const set = <K extends keyof MediaInput>(key: K, value: MediaInput[K]) => setForm((f) => ({ ...f, [key]: value }))
 
@@ -179,6 +174,11 @@ export default function MediaForm({ item, onClose, onGoToSettings }: Props) {
   const setStatus = (status: WatchStatus) =>
     setForm((f) => {
       const next = { ...f, status }
+      // « À voir » : pas encore regardé, donc pas de dates
+      if (status === 'a_voir') {
+        next.startDate = undefined
+        next.endDate = undefined
+      }
       if (status === 'en_cours' && !f.startDate) next.startDate = todayISO()
       if (status === 'termine') {
         if (!f.endDate) next.endDate = todayISO()
@@ -511,15 +511,6 @@ export default function MediaForm({ item, onClose, onGoToSettings }: Props) {
 
           <Section title={t('form.review')}>
             <textarea className="field min-h-32 resize-y" value={form.notes ?? ''} onChange={(e) => set('notes', e.target.value)} placeholder={t('form.reviewPh')} />
-            {account && (
-              <label className="mt-3 flex items-start gap-2.5 text-sm text-ink-2">
-                <input type="checkbox" className="mt-0.5 size-4 accent-[var(--color-accent)]" checked={!!form.notesPublic} onChange={(e) => set('notesPublic', e.target.checked || undefined)} />
-                <span>
-                  {t('form.reviewPublic')}
-                  <span className="block text-xs text-ink-3">{t('form.reviewPublicHint')}</span>
-                </span>
-              </label>
-            )}
           </Section>
 
           <div className="space-y-2 border-t border-line pt-6">

@@ -7,6 +7,7 @@ import { cachedMonth, isBrowsableMonth, loadMonth, RELEASE_CATEGORIES } from '..
 import { remotePosterToLocal } from '../lib/image'
 import { calendarEvents, loadReleases, refreshReleases } from '../lib/releases'
 import { readStorage } from '../lib/security'
+import { useScrollLock } from '../lib/scrollLock'
 import { cx, normalizeText, todayISO } from '../lib/utils'
 import { useMedia } from '../store'
 import type { MediaInput, MediaItem, MediaType } from '../types'
@@ -107,13 +108,7 @@ export default function CalendarView({ onClose, onOpen }: { onClose: () => void;
   const [added, setAdded] = useState<Set<string>>(new Set())
   const request = useRef(0)
 
-  useEffect(() => {
-    const prev = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.body.style.overflow = prev
-    }
-  }, [])
+  useScrollLock()
 
   useEffect(() => {
     try {

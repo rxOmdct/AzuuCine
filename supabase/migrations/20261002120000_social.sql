@@ -344,7 +344,8 @@ immutable
 set search_path = ''
 as $$
   select case when length(coalesce(x->>'poster', '')) > 150000 then x - 'poster' else x end
-  from (select (case when d->>'notesPublic' = 'true' then d else d - 'notes' end) - 'listIds' as x) s
+  -- Les avis sont publics (comme sur Letterboxd) ; les listes perso restent privées
+  from (select d - 'listIds' - 'notesPublic' as x) s
 $$;
 
 create or replace function public.profile_card(p public.profiles)
@@ -409,9 +410,10 @@ begin
         from public.items where user_id = p.id and not deleted and jsonb_typeof(data->'top') = 'object'
       ),
       'recent', (
-        select coalesce(jsonb_agg(public.public_item(s.data) order by s.k desc), '[]'::jsonb)
+        select coalesce(jsonb_agg(public.public_item(s.data) order by s.k desc nulls last), '[]'::jsonb)
         from (
-          select data, coalesce(data->>'endDate', left(data->>'updatedAt', 10)) as k
+          -- Date de visionnage (pas la date de modification : un import ou une synchro ne doit pas tout faire remonter)
+          select data, coalesce(data->>'endDate', data->>'startDate') as k
           from public.items
           where user_id = p.id and not deleted and data->>'status' = 'termine'
           order by k desc nulls last

@@ -2,6 +2,7 @@ import { Check, Loader2, Plus, Star } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { t } from '../../i18n'
 import { genreLabel } from '../../lib/genres'
+import { useScrollLock } from '../../lib/scrollLock'
 import { cx, formatDate, formatRating, normalizeText } from '../../lib/utils'
 import { useMedia } from '../../store'
 import type { MediaInput, MediaItem } from '../../types'
@@ -23,6 +24,8 @@ export default function ItemPeek({ item, owner, onClose }: { item: MediaItem; ow
   const owned = items.some(
     (i) => (item.externalId && i.externalId === item.externalId) || normalizeText(i.title) === normalizeText(item.title),
   )
+
+  useScrollLock()
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
@@ -61,12 +64,12 @@ export default function ItemPeek({ item, owner, onClose }: { item: MediaItem; ow
   }
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/70 sm:items-center sm:p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-[60] flex touch-none items-end justify-center overscroll-none bg-black/70 sm:items-center sm:p-4" onClick={onClose}>
       <div
         role="dialog"
         aria-modal="true"
         aria-label={item.title}
-        className="sheet-in safe-bottom max-h-[88dvh] w-full max-w-md overflow-y-auto rounded-t-3xl border border-line-strong bg-surface p-5 sm:rounded-3xl"
+        className="sheet-in safe-bottom max-h-[88dvh] w-full max-w-md touch-pan-y overflow-y-auto overscroll-contain rounded-t-3xl border border-line-strong bg-surface p-5 sm:rounded-3xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex gap-4">

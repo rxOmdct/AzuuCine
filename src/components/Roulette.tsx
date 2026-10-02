@@ -20,6 +20,7 @@ import type { MediaItem } from '../types'
 import { TypeBadge } from './Badges'
 import Poster from './Poster'
 import { RatingBadge } from './Rating'
+import { useScrollLock } from '../lib/scrollLock'
 
 const CARD = 112 // largeur d'une affiche dans le rouleau (w-28)
 const GAP = 12
@@ -68,13 +69,7 @@ export default function Roulette({ onClose, onOpen }: Props) {
   }
 
   // Bloque le défilement derrière + mémorise les filtres
-  useEffect(() => {
-    const prev = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.body.style.overflow = prev
-    }
-  }, [])
+  useScrollLock()
   useEffect(() => saveFilters(filters), [filters])
 
   // Changer les filtres efface le tirage en cours

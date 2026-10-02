@@ -14,7 +14,7 @@ interface Props {
   normalize?: (input: string) => string
 }
 
-/** Saisie de tags libres avec suggestions tapables. */
+/** Saisie de tags libres ; des suggestions apparaissent quand on commence à taper. */
 export default function TagInput({ value, onChange, suggestions, placeholder, display = (v) => v, normalize = (v) => v }: Props) {
   const [text, setText] = useState('')
 
@@ -29,7 +29,9 @@ export default function TagInput({ value, onChange, suggestions, placeholder, di
   const filtered = useMemo(() => {
     const q = normalizeText(text)
     const taken = new Set(value.map((v) => normalizeText(display(v))))
-    return suggestions.filter((s) => !taken.has(normalizeText(s)) && (!q || normalizeText(s).includes(q))).slice(0, 12)
+    // Suggestions seulement pendant la saisie (pas de rangée de genres affichée en permanence)
+    if (!q) return []
+    return suggestions.filter((s) => !taken.has(normalizeText(s)) && normalizeText(s).includes(q)).slice(0, 12)
   }, [text, value, suggestions])
 
   return (

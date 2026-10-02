@@ -2,6 +2,7 @@ import { Loader2, Star, UserPlus } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { t } from '../../i18n'
 import { getFeed, type FeedEntry } from '../../lib/cloud/social'
+import { useOnResume } from '../../lib/onResume'
 import { timeAgo } from '../../lib/timeAgo'
 import { formatRating } from '../../lib/utils'
 import { useMedia } from '../../store'
@@ -34,6 +35,13 @@ export default function FriendsFeed() {
   useEffect(() => {
     if (social.enabled && navigator.onLine) void load()
   }, [social.enabled, load])
+  // Retour sur l'app : on récupère ce que les abonnements ont ajouté entre-temps
+  useOnResume(() => void load(), social.enabled)
+  // Abonnement / désabonnement : le fil change aussi
+  const followKey = `${social.me?.following ?? ''}`
+  useEffect(() => {
+    if (social.enabled && followKey && navigator.onLine) void load()
+  }, [followKey, social.enabled, load])
 
   if (!social.enabled) return null
 
@@ -86,7 +94,7 @@ export default function FriendsFeed() {
                           {formatRating(e.item.rating, settings.ratingScale)}
                         </span>
                       )}
-                      {e.item.notes && e.item.notesPublic && <span>{t('feed.review')}</span>}
+                      {e.item.notes && <span>{t('feed.review')}</span>}
                       <span>{timeAgo(e.createdAt)}</span>
                     </span>
                   </span>

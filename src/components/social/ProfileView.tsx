@@ -108,6 +108,7 @@ export default function ProfileView({ username, onClose }: { username: string; o
     try {
       await follow(profile.id)
       await load()
+      void social.refresh()
     } catch (e) {
       setToast((e as Error).message)
     } finally {
@@ -122,6 +123,7 @@ export default function ProfileView({ username, onClose }: { username: string; o
     try {
       await unfollow(profile.id)
       await load()
+      void social.refresh()
     } catch (e) {
       setToast((e as Error).message)
     } finally {
