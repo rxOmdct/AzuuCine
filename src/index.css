@@ -1,0 +1,133 @@
+@import 'tailwindcss';
+
+/*
+ * Thème AzuuCine — fond noir + une couleur d'accent (rouge par défaut, modifiable dans Réglages → Thème).
+ * Pas de dégradés ni d'ombres : aplats, filets de 1px, boutons pilule.
+ * Une seule police (Inter), comme une appli type Letterboxd.
+ */
+@theme {
+  --color-bg: #0a0a0a;
+  --color-surface: #111110;
+  --color-surface-2: #181817;
+  --color-line: #262624;
+  --color-line-strong: #3a3936;
+  --color-ink: #f4f2ee;
+  --color-ink-2: #b3b0a8;
+  --color-ink-3: #8a8781;
+  /* Rouge pour texte / icônes / filets sur fond noir */
+  --color-accent: #ef4444;
+  /* Rouge plein (boutons), avec texte blanc */
+  --color-accent-fill: #d11f2f;
+  /* Texte posé sur un bouton plein (blanc ou noir selon le thème) */
+  --color-on-accent: #ffffff;
+
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    min-height: 100%;
+    background: var(--color-bg);
+    color: var(--color-ink);
+    color-scheme: dark;
+  }
+  body {
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: none;
+  }
+  h1,
+  h2,
+  h3 {
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  /* Évite le zoom automatique d'iOS sur les champs (police >= 16px) */
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+  button {
+    cursor: pointer;
+  }
+  ::selection {
+    background: var(--color-accent-fill);
+    color: var(--color-on-accent);
+  }
+}
+
+/* Petite étiquette en capitales (titres de section, libellés de champs) */
+@utility eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-ink-3);
+}
+
+@layer components {
+  .field {
+    @apply w-full rounded-xl border border-line bg-surface px-3.5 py-2.5 text-ink placeholder:text-ink-3 outline-none transition-colors focus:border-accent;
+  }
+  .label {
+    @apply eyebrow mb-2 block;
+  }
+  .chip {
+    @apply inline-flex shrink-0 items-center gap-1.5 rounded-full border border-line px-3.5 py-1.5 text-sm text-ink-2 transition-colors active:scale-[0.97];
+  }
+  .chip-on {
+    @apply border-ink bg-ink text-bg;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-[15px] font-medium transition-colors active:scale-[0.98] disabled:opacity-40;
+  }
+  .btn-primary {
+    @apply bg-accent-fill text-on-accent;
+  }
+  .btn-light {
+    @apply bg-ink text-bg;
+  }
+  .btn-ghost {
+    @apply border border-ink/80 text-ink;
+  }
+  .card {
+    @apply rounded-2xl border border-line bg-surface;
+  }
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Apparition douce des feuilles (formulaire, recherche) — pas de fondu de couleur */
+@keyframes sheet-in {
+  from {
+    transform: translateY(16px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+.sheet-in {
+  animation: sheet-in 0.22s ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sheet-in {
+    animation: none;
+  }
+}

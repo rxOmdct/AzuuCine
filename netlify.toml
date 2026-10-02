@@ -1,0 +1,9 @@
+# Netlify construit le site lui-même : `npm run build`, puis publie le dossier dist.
+# Les deux variables VITE_SUPABASE_* (publiques) sont réglées dans Netlify → Environment variables.
+# La clé TMDB n'est JAMAIS ici : elle reste un secret Supabase.
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"

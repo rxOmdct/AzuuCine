@@ -1,0 +1,11 @@
+project_id = "azuucine"
+
+# Réglages des fonctions serveur (utilisés par `supabase functions deploy`).
+# Le jeton de connexion est vérifié dans le code de chaque fonction (compatible avec
+# les anciennes et les nouvelles clés d'API Supabase).
+
+[functions.tmdb]
+verify_jwt = false
+
+[functions.delete-account]
+verify_jwt = false
