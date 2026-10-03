@@ -66,9 +66,11 @@ function contentSecurityPolicy(supabaseUrl: string): Plugin {
 // remplace base: '/' par base: '/azuucine/'.
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '.', 'VITE_')
-  // Sur Netlify, un build sans Supabase donnerait un site « sans compte » (données invisibles) : on refuse.
-  if (loadEnv(mode, '.', '').NETLIFY && (!env.VITE_SUPABASE_URL || !env.VITE_SUPABASE_ANON_KEY)) {
-    throw new Error('VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY manquantes dans Netlify → Environment variables')
+  // Sur Netlify ou en déploiement VPS (REQUIRE_SUPABASE=1, voir .gitea/workflows/deploy.yml), un build sans
+  // Supabase donnerait un site « sans compte » (données invisibles) : on refuse.
+  const full = loadEnv(mode, '.', '')
+  if ((full.NETLIFY || full.REQUIRE_SUPABASE) && (!env.VITE_SUPABASE_URL || !env.VITE_SUPABASE_ANON_KEY)) {
+    throw new Error('VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY manquantes (variables Gitea Actions ou Netlify)')
   }
   const origin = (env.VITE_SUPABASE_URL ?? '').trim().replace(/^(https?:\/\/[^/]+).*$/, '$1')
   const supabaseUrl = /^https:\/\/[a-z0-9-]+\.supabase\.(co|in)$/i.test(origin) ? origin : ''

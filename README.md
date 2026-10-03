@@ -82,7 +82,7 @@ supabase/
 - **Affichage** : React échappe tout le texte (pas d'injection HTML possible) ; aucun `innerHTML`, aucun `eval`.
 - **Politique de sécurité du contenu (CSP)** ajoutée à la version publiée : seuls les scripts de l'app s'exécutent et
   seuls TMDB / AniList / ton projet Supabase peuvent être contactés. Le fichier `_headers` généré au build ajoute les
-  en-têtes de sécurité sur Netlify / Cloudflare Pages (anti-iframe, HSTS, pas de référent…).
+  en-têtes de sécurité (repris par nginx sur le VPS, Netlify ou Cloudflare Pages) (anti-iframe, HSTS, pas de référent…).
 - **Serveur de développement** : `npm run dev` n'est accessible que depuis ton PC. `npm run dev:mobile` l'ouvre à ton
   réseau Wi-Fi, à utiliser seulement chez toi et à couper après.
 - **Dépendances** : lance `npm run audit` de temps en temps et `npm update` pour les correctifs.
@@ -95,7 +95,7 @@ supabase/
    `supabase/migrations/20260930120000_azuucine.sql` → **Run**. (Tu peux le relancer sans risque.)
 3. **Réglages de connexion** : *Authentication* →
    - *Sign In / Providers* → **Email** activé, **Confirm email** activé (recommandé), longueur minimale du mot de passe : 8.
-   - *URL Configuration* → **Site URL** = l'adresse de ton app en ligne (ex. `https://azuucine.netlify.app`),
+   - *URL Configuration* → **Site URL** = l'adresse de ton app en ligne (ex. `https://azuucine.rdacet.fr`),
      et dans **Redirect URLs** ajoute aussi `http://localhost:5173`. Les liens des emails (confirmation, mot de passe
      oublié) renvoient vers ces adresses.
 4. **Le fichier `.env`** : copie `.env.example` en `.env`, puis remplis les 2 valeurs depuis *Project Settings* →
@@ -105,7 +105,7 @@ supabase/
    ```powershell
    npx.cmd supabase login
    npx.cmd supabase link --project-ref <l'identifiant du projet, dans l'adresse du tableau de bord>
-   npx.cmd supabase secrets set TMDB_API_KEY=<ta clé ou ton jeton TMDB> ALLOWED_ORIGINS=https://azuucine.netlify.app,http://localhost:5173
+   npx.cmd supabase secrets set TMDB_API_KEY=<ta clé ou ton jeton TMDB> ALLOWED_ORIGINS=https://azuucine.rdacet.fr,http://localhost:5173
    npx.cmd supabase functions deploy tmdb --no-verify-jwt
    npx.cmd supabase functions deploy delete-account --no-verify-jwt
    ```
@@ -117,7 +117,7 @@ supabase/
    d'un compte efface aussi ses photos.
 6. **Relance l'app** (`npm run dev`) : l'écran de connexion apparaît. Crée ton compte ; dans *Réglages*, AzuuCine te
    propose d'ajouter à ton compte les titres déjà présents sur l'appareil.
-7. **En ligne** : sur Netlify / Cloudflare Pages, ajoute `VITE_SUPABASE_URL` et `VITE_SUPABASE_ANON_KEY` dans les
+7. **En ligne** : sur le VPS (voir « Déploiement automatique »), Netlify ou Cloudflare Pages, ajoute `VITE_SUPABASE_URL` et `VITE_SUPABASE_ANON_KEY` dans les
    variables d'environnement du site (le `.env` n'y est pas envoyé), ou fais `npm run build` sur ton PC avec le `.env`
    et glisse le dossier `dist/`.
 
@@ -163,15 +163,27 @@ Une PWA installable a besoin d'être servie en **HTTPS**. L'hébergeur ne sert q
 npm run build
 ```
 
-Cela crée un dossier `dist/`. Le plus simple :
+Cela crée un dossier `dist/`. Il est publié automatiquement sur mon VPS (voir ci-dessous) ; tu peux aussi le glisser sur
+n'importe quel hébergeur statique (Netlify Drop, Cloudflare Pages, Vercel…).
 
-1. Va sur **https://app.netlify.com/drop** (compte gratuit).
-2. Glisse-dépose le dossier `dist/` sur la page.
-3. Tu obtiens une adresse du type `https://azuucine-xxxx.netlify.app` (tu peux la renommer dans les réglages du site).
+### Déploiement automatique (VPS + Gitea Actions)
 
-Pour mettre à jour l'app plus tard : `npm run build`, puis re-glisse `dist/` dans l'onglet *Deploys* du site. L'app installée se met à jour toute seule au lancement suivant.
+À chaque push sur `main`, le workflow `.gitea/workflows/deploy.yml` fait `npm ci`, `npm run build`, puis publie `dist/`
+sur le VPS, sur **https://azuucine.rdacet.fr**.
 
-Alternatives : Cloudflare Pages, Vercel, GitHub Pages (dans ce dernier cas, mets `base: '/nom-du-repo/'` dans `vite.config.ts`).
+- **Architecture** (conteneurs LXC) : `azuucine-ci` (runner Gitea Actions, utilisateur `deploy` sans sudo, seul à pouvoir
+  écrire dans `/srv/azuucine`) → dossier partagé `/srv/azuucine` → `azuucine-web` (nginx, lecture seule) → `proxy`
+  (nginx + certbot, HTTPS).
+- **Variables de build** (publiques) : dans Gitea → Dépôt → Paramètres → Actions, variable `VITE_SUPABASE_URL` et secret
+  `VITE_SUPABASE_ANON_KEY`. Si elles manquent, le build **échoue** (`REQUIRE_SUPABASE=1` active la garde de
+  `vite.config.ts`). Les vrais secrets (clé TMDB, `service_role`) restent dans Supabase.
+- **En-têtes de sécurité** : définis une seule fois dans `vite.config.ts` (CSP, HSTS, etc.). `deploy/headers-to-nginx.mjs`
+  convertit `dist/_headers` en configuration nginx à chaque déploiement : rien à recopier à la main.
+- **Versions** : les 3 dernières sont gardées dans `/srv/azuucine/releases/`, `current` pointe sur la version en ligne.
+- **Retour arrière** (en root sur le VPS) : `/srv/azuucine/rollback.sh` revient à la version précédente,
+  `/srv/azuucine/rollback.sh <nom-de-version>` à une version précise (`ls /srv/azuucine/releases`).
+- **Supabase** : ajoute `https://azuucine.rdacet.fr` à *Authentication → URL Configuration* (Site URL et Redirect URLs),
+  au secret `ALLOWED_ORIGINS` des Edge Functions, et aux origines autorisées du client OAuth Google.
 
 ## 3. Installer sur l'écran d'accueil
 
