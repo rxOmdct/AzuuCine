@@ -758,6 +758,8 @@ const dict: Translations = {
   'welcome.nameHint': "任意 — プロフィールに表示されます。あとからすべて変更できます。",
   'welcome.go': "はじめる",
   'welcome.later': "あとで",
+  'social.watching': "視聴中",
+  'social.watchlist': "見たい",
 }
 
 export default dict

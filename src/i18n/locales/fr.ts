@@ -760,6 +760,8 @@ const dict = {
   'welcome.nameHint': "Facultatif — affiché sur ton profil. Tu pourras tout changer plus tard.",
   'welcome.go': "C'est parti",
   'welcome.later': "Plus tard",
+  'social.watching': "En cours",
+  'social.watchlist': "Envie de voir",
 }
 
 export default dict

@@ -44,6 +44,8 @@ export interface Profile extends ProfileCard {
   stats?: ProfileStats
   top: MediaItem[]
   recent: MediaItem[]
+  watching: MediaItem[]
+  watchlist: MediaItem[]
 }
 
 export interface FeedEntry {
@@ -113,6 +115,8 @@ function toProfile(raw: unknown): Profile | null {
       : undefined,
     top: toItems(raw.top),
     recent: toItems(raw.recent),
+    watching: toItems(raw.watching),
+    watchlist: toItems(raw.watchlist),
   }
 }
 

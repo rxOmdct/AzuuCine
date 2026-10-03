@@ -290,6 +290,17 @@ function ProfileTab({ profile, topByCategory, onOpen }: { profile: Profile; topB
         </section>
       ))}
 
+      {profile.watching.length > 0 && (
+        <>
+          <SectionTitle>{t('social.watching')}</SectionTitle>
+          <div className="grid grid-cols-4 gap-2.5">
+            {profile.watching.map((item) => (
+              <PosterTile key={item.id} item={item} onOpen={() => onOpen(item)} />
+            ))}
+          </div>
+        </>
+      )}
+
       <SectionTitle>{t('social.recent')}</SectionTitle>
       {profile.recent.length ? (
         <div className="grid grid-cols-4 gap-2.5">
@@ -299,6 +310,17 @@ function ProfileTab({ profile, topByCategory, onOpen }: { profile: Profile; topB
         </div>
       ) : (
         <p className="text-sm text-ink-3">{t('social.noRecent')}</p>
+      )}
+
+      {profile.watchlist.length > 0 && (
+        <>
+          <SectionTitle>{t('social.watchlist')}</SectionTitle>
+          <div className="grid grid-cols-4 gap-2.5">
+            {profile.watchlist.map((item) => (
+              <PosterTile key={item.id} item={item} onOpen={() => onOpen(item)} />
+            ))}
+          </div>
+        </>
       )}
 
       {s && (

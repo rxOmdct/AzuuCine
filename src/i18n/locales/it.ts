@@ -758,6 +758,8 @@ const dict: Translations = {
   'welcome.nameHint': "Facoltativo — mostrato sul tuo profilo. Potrai cambiare tutto più tardi.",
   'welcome.go': "Iniziamo",
   'welcome.later': "Più tardi",
+  'social.watching': "In corso",
+  'social.watchlist': "Vuole vedere",
 }
 
 export default dict

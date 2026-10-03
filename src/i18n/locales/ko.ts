@@ -758,6 +758,8 @@ const dict: Translations = {
   'welcome.nameHint': "선택 사항 — 프로필에 표시돼요. 나중에 모두 바꿀 수 있어요.",
   'welcome.go': "시작하기",
   'welcome.later': "나중에",
+  'social.watching': "보는 중",
+  'social.watchlist': "보고 싶어요",
 }
 
 export default dict

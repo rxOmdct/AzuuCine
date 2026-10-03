@@ -419,6 +419,27 @@ begin
           order by k desc nulls last
           limit 12
         ) s
+      ),
+      -- En cours et « à voir » : ce qu'on voit aussi dans le fil des abonnements
+      'watching', (
+        select coalesce(jsonb_agg(public.public_item(s.data) order by s.k desc nulls last), '[]'::jsonb)
+        from (
+          select data, coalesce(data->>'startDate', left(data->>'updatedAt', 10)) as k
+          from public.items
+          where user_id = p.id and not deleted and data->>'status' = 'en_cours'
+          order by k desc nulls last
+          limit 8
+        ) s
+      ),
+      'watchlist', (
+        select coalesce(jsonb_agg(public.public_item(s.data) order by s.k desc nulls last), '[]'::jsonb)
+        from (
+          select data, data->>'createdAt' as k
+          from public.items
+          where user_id = p.id and not deleted and data->>'status' = 'a_voir'
+          order by k desc nulls last
+          limit 8
+        ) s
       )
     );
   end if;

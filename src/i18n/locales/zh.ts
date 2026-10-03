@@ -758,6 +758,8 @@ const dict: Translations = {
   'welcome.nameHint': "可选——显示在你的主页上。之后都可以修改。",
   'welcome.go': "开始吧",
   'welcome.later': "稍后",
+  'social.watching': "正在看",
+  'social.watchlist': "想看",
 }
 
 export default dict
