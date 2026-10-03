@@ -1,5 +1,5 @@
 import { locale, t } from '../i18n'
-import { Check, Heart, ImagePlus, Loader2, Minus, Plus, Share2, Trash2, X } from 'lucide-react'
+import { Check, ChevronDown, Heart, ImagePlus, Loader2, Minus, Plus, Share2, Trash2, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { CRITERIA, DEFAULT_FILM_MINUTES, MEDIA_TYPES, platformSuggestions as defaultPlatforms, STATUSES, TYPE_BY_VALUE } from '../lib/constants'
 import { canonicalGenre, canonicalSubtype, genreLabel, genreSuggestions as defaultGenres, subtypeLabel, subtypeSuggestions } from '../lib/genres'
@@ -48,7 +48,7 @@ const METADATA_KEYS = [
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="space-y-3">
-      <h3 className="eyebrow text-ink-2">{title}</h3>
+      {title && <h3 className="eyebrow text-ink-2">{title}</h3>}
       {children}
     </section>
   )
@@ -140,6 +140,7 @@ export default function MediaForm({ item, onClose, onGoToSettings }: Props) {
   const [filledFrom, setFilledFrom] = useState<string>()
   const [posterError, setPosterError] = useState<string>()
   const fileRef = useRef<HTMLInputElement>(null)
+  const [showInfo, setShowInfo] = useState(false)
   const typeInfo = TYPE_BY_VALUE[form.type]
 
   // Bloque le défilement de la page derrière la feuille
@@ -445,8 +446,21 @@ export default function MediaForm({ item, onClose, onGoToSettings }: Props) {
             </Section>
           )}
 
-          {/* Infos */}
-          <Section title={t('form.info')}>
+          {/* Infos : repliées par défaut (dates remplies selon le statut, année et genres par la recherche) */}
+          <button
+            type="button"
+            onClick={() => setShowInfo((v) => !v)}
+            aria-expanded={showInfo}
+            className="flex w-full items-center justify-between border-t border-line pt-5 text-left"
+          >
+            <span>
+              <span className="eyebrow block text-ink-2">{t('form.info')}</span>
+              <span className="mt-1 block text-xs text-ink-3">{t('form.infoHint')}</span>
+            </span>
+            <ChevronDown size={18} className={cx('shrink-0 text-ink-3 transition-transform', showInfo && 'rotate-180')} />
+          </button>
+          {showInfo && (
+          <Section title="">
             <div className="grid grid-cols-2 gap-3">
               <Field label={t('form.start')}>
                 <input className="field" type="date" value={form.startDate ?? ''} onChange={(e) => set('startDate', e.target.value || undefined)} />
@@ -478,6 +492,7 @@ export default function MediaForm({ item, onClose, onGoToSettings }: Props) {
               />
             </div>
           </Section>
+          )}
 
           {(form.status === 'termine' || (form.rewatchDates?.length ?? 0) > 0) && (
             <Section title={t('form.rewatches')}>

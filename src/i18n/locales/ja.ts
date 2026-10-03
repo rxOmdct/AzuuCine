@@ -760,6 +760,7 @@ const dict: Translations = {
   'welcome.later': "あとで",
   'social.watching': "視聴中",
   'social.watchlist': "見たい",
+  'form.infoHint': "日付・年・配信サービス・ジャンル — 自動で入力されます",
 }
 
 export default dict

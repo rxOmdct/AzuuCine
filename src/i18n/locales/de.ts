@@ -760,6 +760,7 @@ const dict: Translations = {
   'welcome.later': "Später",
   'social.watching': "Schaut gerade",
   'social.watchlist': "Möchte sehen",
+  'form.infoHint': "Daten, Jahr, Plattform und Genres – werden automatisch ausgefüllt",
 }
 
 export default dict

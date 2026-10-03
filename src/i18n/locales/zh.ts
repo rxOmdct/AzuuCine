@@ -760,6 +760,7 @@ const dict: Translations = {
   'welcome.later': "稍后",
   'social.watching': "正在看",
   'social.watchlist': "想看",
+  'form.infoHint': "日期、年份、平台和类型——自动填写",
 }
 
 export default dict

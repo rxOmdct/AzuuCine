@@ -760,6 +760,7 @@ const dict: Translations = {
   'welcome.later': "나중에",
   'social.watching': "보는 중",
   'social.watchlist': "보고 싶어요",
+  'form.infoHint': "날짜, 연도, 플랫폼, 장르 — 자동으로 채워져요",
 }
 
 export default dict

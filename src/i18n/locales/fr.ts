@@ -762,6 +762,7 @@ const dict = {
   'welcome.later': "Plus tard",
   'social.watching': "En cours",
   'social.watchlist': "Envie de voir",
+  'form.infoHint': "Dates, année, plateforme et genres — remplis automatiquement",
 }
 
 export default dict
