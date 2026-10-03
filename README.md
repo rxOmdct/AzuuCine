@@ -179,6 +179,8 @@ sur le VPS, sur **https://azuucine.rdacet.fr**.
   `vite.config.ts`). Les vrais secrets (clé TMDB, `service_role`) restent dans Supabase.
 - **En-têtes de sécurité** : définis une seule fois dans `vite.config.ts` (CSP, HSTS, etc.). `deploy/headers-to-nginx.mjs`
   convertit `dist/_headers` en configuration nginx à chaque déploiement : rien à recopier à la main.
+- **Config nginx** : `deploy/nginx/site.conf` (dont le type MIME du manifest du PWA) est livrée avec chaque release. Pour un
+  conteneur `azuucine-web` neuf : `lxc-attach -n azuucine-web -- bash < deploy/web/bootstrap.sh`, puis un push sur `main`.
 - **Versions** : les 3 dernières sont gardées dans `/srv/azuucine/releases/`, `current` pointe sur la version en ligne.
 - **Retour arrière** (en root sur le VPS) : `/srv/azuucine/rollback.sh` revient à la version précédente,
   `/srv/azuucine/rollback.sh <nom-de-version>` à une version précise (`ls /srv/azuucine/releases`).

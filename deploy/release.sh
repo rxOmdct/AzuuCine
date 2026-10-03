@@ -13,6 +13,7 @@ REL="$ROOT/releases/$(date -u +%Y%m%d%H%M%S)-${SHA:0:8}"
 mkdir -p "$REL"
 cp -a "$SRC" "$REL/dist"
 node "$HERE/headers-to-nginx.mjs" "$REL/dist/_headers" "$REL/nginx"
+cp "$HERE/nginx/site.conf" "$REL/nginx/site.conf"   # config nginx du site, versionnée dans le dépôt
 
 # bascule atomique : lien relatif temporaire puis rename
 ln -s "releases/$(basename "$REL")" "$ROOT/current.tmp"
