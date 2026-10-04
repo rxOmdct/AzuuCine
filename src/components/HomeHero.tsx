@@ -133,11 +133,6 @@ export default function HomeHero({ items, onOpen }: { items: MediaItem[]; onOpen
 export function ContinueCard({ item, onOpen }: { item: MediaItem; onOpen: (item: MediaItem) => void }) {
   const { incrementEpisode } = useMedia()
   const image = item.backdrop ?? item.poster
-  const pos = seasonPosition(item)
-  const cap = episodeCap(item)
-  const done = pos ? pos.episode : item.episodesWatched
-  const size = pos ? pos.size : cap
-  const pct = size ? Math.min(100, (done / size) * 100) : 0
   const next = nextEpisodeLabel(item)
 
   return (
@@ -145,11 +140,6 @@ export function ContinueCard({ item, onOpen }: { item: MediaItem; onOpen: (item:
       <div className="relative">
         <button onClick={() => onOpen(item)} className="relative block aspect-video w-full overflow-hidden rounded-xl border border-line bg-surface-2" aria-label={t('card.open', { title: item.title })}>
           {image && <img src={image} alt="" loading="lazy" className="size-full object-cover" />}
-          {size ? (
-            <span className="absolute inset-x-0 bottom-0 h-1 bg-bg/70">
-              <span className="block h-full bg-accent" style={{ width: `${pct}%` }} />
-            </span>
-          ) : null}
         </button>
         {next && (
           <button
