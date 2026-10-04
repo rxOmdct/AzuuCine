@@ -3,7 +3,8 @@ import { region, t, tmdbLanguage } from '../i18n'
 import { tmdbViaCloud } from './cloud/api'
 import { TYPE_BY_VALUE } from './constants'
 import { subtypeLabel, tmdbGenres } from './genres'
-import { cleanText, isSafeExternalId, isSafeTmdbPath, LIMITS, safeCountries, safePosterUrl, safeStringList } from './security'
+import { franchiseKey } from './franchise'
+import { cleanText, isSafeExternalId, isSafeTmdbPath, LIMITS, safeCountries, safePosterUrl, safeSeasons, safeStringList } from './security'
 
 /**
  * Recherche dans les bases publiques :
@@ -29,6 +30,8 @@ export interface SearchResult {
   prefill?: Partial<MediaInput>
   /** URL de l'affiche en bonne qualité */
   posterUrl?: string
+  /** Autres titres connus (romaji…), pour repérer les doublons */
+  altTitles?: string[]
 }
 
 // ─────────────────────────── Nettoyage des réponses ───────────────────────────
@@ -50,6 +53,7 @@ export function sanitizeMeta(d: Partial<MediaInput>): Partial<MediaInput> {
     platform: cleanText(d.platform, LIMITS.shortText),
     duration: count(d.duration, 6000),
     episodesTotal: count(d.episodesTotal, 100000),
+    seasons: safeSeasons(d.seasons),
     episodeDuration: count(d.episodeDuration, 1440),
     externalId: isSafeExternalId(d.externalId) ? d.externalId : undefined,
     countries: safeCountries(d.countries),
@@ -75,6 +79,7 @@ function safeResult(r: SearchResult): SearchResult | null {
     thumb: safePosterUrl(r.thumb),
     posterUrl: safePosterUrl(r.posterUrl),
     kindLabel: cleanText(r.kindLabel, 40) ?? '',
+    altTitles: r.altTitles?.map((x) => cleanText(x, LIMITS.title)).filter((x): x is string => !!x).slice(0, 3),
     prefill: r.prefill ? sanitizeMeta(r.prefill) : undefined,
   }
 }
@@ -208,6 +213,7 @@ interface TmdbDetails {
   first_air_date?: string
   poster_path?: string | null
   last_episode_to_air?: { runtime?: number } | null
+  seasons?: { season_number?: number; episode_count?: number }[]
   vote_average?: number
   vote_count?: number
   'watch/providers'?: { results?: Record<string, { flatrate?: { provider_name: string }[] }> }
@@ -279,12 +285,31 @@ export async function getTmdbDetails(result: SearchResult, key: string): Promise
     genres: tmdbGenres((d.genres ?? []).map((g) => g.id)).filter((g) => guess.type === 'film' || g !== 'Animation'),
     platform: provider ? (PROVIDER_NAMES[provider] ?? provider) : undefined,
     duration: kind === 'movie' ? d.runtime || undefined : undefined,
-    episodesTotal: kind === 'tv' ? d.number_of_episodes || undefined : undefined,
+    episodesTotal: kind === 'tv' ? Math.max(d.number_of_episodes || 0, sumSeasons(tmdbSeasons(d))) || undefined : undefined,
+    seasons: kind === 'tv' ? tmdbSeasons(d) : undefined,
     episodeDuration: kind === 'tv' ? epRuntime : undefined,
     externalId: result.externalId,
     countries: d.origin_country?.length ? d.origin_country : d.production_countries?.map((c) => c.iso_3166_1).slice(0, 3),
     publicRating: tmdbPublicRating(d.vote_average, d.vote_count),
   })
+}
+
+/** Épisodes par saison (hors épisodes spéciaux « saison 0 », et saisons annoncées sans épisode). */
+function tmdbSeasons(d: TmdbDetails): number[] | undefined {
+  const list = (Array.isArray(d.seasons) ? d.seasons : [])
+    .filter((s) => typeof s.season_number === 'number' && s.season_number > 0 && typeof s.episode_count === 'number' && s.episode_count > 0)
+    .sort((a, b) => a.season_number! - b.season_number!)
+    .map((s) => s.episode_count!)
+  return safeSeasons(list)
+}
+const sumSeasons = (s?: number[]) => (s ?? []).reduce((a, b) => a + b, 0)
+
+/** Saisons d'une série déjà dans la bibliothèque (pour les fiches ajoutées avant le suivi par saison). */
+export async function getTmdbSeasons(externalId: string, key: string): Promise<{ seasons?: number[]; total?: number }> {
+  if (!isSafeExternalId(externalId) || !externalId.startsWith('tmdb:tv:')) return {}
+  const d = await tmdbFetch<TmdbDetails>(`/tv/${externalId.split(':')[2]}`, key)
+  const seasons = tmdbSeasons(d)
+  return { seasons, total: Math.max(d.number_of_episodes || 0, sumSeasons(seasons)) || undefined }
 }
 
 /** Vérifie qu'une clé TMDB fonctionne. */
@@ -399,6 +424,7 @@ function aniToResult(m: AniMedia): SearchResult | null {
     externalId: `anilist:${m.id}`,
     title,
     originalTitle: original && original !== title ? original : undefined,
+    altTitles: [m.title.romaji, m.title.english, m.title.native].filter((x): x is string => !!x).slice(0, 3),
     year: year ?? undefined,
     thumb: m.coverImage?.medium ?? undefined,
     posterUrl: m.coverImage?.large ?? m.coverImage?.medium ?? undefined,
@@ -419,6 +445,44 @@ function aniToResult(m: AniMedia): SearchResult | null {
       publicRating: typeof m.averageScore === 'number' && m.averageScore > 0 ? m.averageScore / 10 : undefined,
     },
   })
+}
+
+const titlesOf = (r: SearchResult) => [r.title, r.originalTitle, ...(r.altTitles ?? [])].filter((x): x is string => !!x)
+const exactKey = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '')
+
+/**
+ * Recherche unique : films, séries et animes.
+ * TMDB d'abord (il regroupe toutes les saisons d'une série sous une seule fiche), puis les animes
+ * d'AniList qu'il ne connaît pas. Les saisons séparées d'AniList (« … Season 2 ») ne sont pas répétées.
+ */
+export async function searchAll(query: string, key?: string): Promise<SearchResult[]> {
+  const [tm, an] = await Promise.allSettled([key ? searchTmdb(query, key) : Promise.resolve([]), searchAniList(query)])
+  if (tm.status === 'rejected' && an.status === 'rejected') throw tm.reason
+  const tmdb = tm.status === 'fulfilled' ? tm.value : []
+  const ani = an.status === 'fulfilled' ? an.value : []
+
+  const seriesKeys = new Set(tmdb.filter((r) => r.typeGuess !== 'film').flatMap(titlesOf).map(franchiseKey))
+  const movieKeys = new Set(tmdb.filter((r) => r.typeGuess === 'film').flatMap(titlesOf).map(exactKey))
+  const seen = new Set<string>()
+  const extra = ani.filter((r) => {
+    const titles = titlesOf(r)
+    if (r.typeGuess === 'film') return !titles.some((x) => movieKeys.has(exactKey(x)))
+    const keys = titles.map(franchiseKey)
+    if (keys.some((k) => seriesKeys.has(k) || seen.has(k))) return false
+    keys.forEach((k) => seen.add(k))
+    return true
+  })
+  return [...tmdb, ...extra]
+}
+
+/** Retrouve sur TMDB la série (toutes saisons) correspondant à une saison d'anime AniList. */
+export async function findTmdbSeries(titles: (string | undefined)[], key: string): Promise<SearchResult | undefined> {
+  const keys = new Set(titles.filter((x): x is string => !!x).map(franchiseKey))
+  for (const q of titles.filter((x): x is string => !!x).slice(0, 2)) {
+    const found = (await searchTmdb(q, key)).find((r) => r.typeGuess !== 'film' && r.externalId.startsWith('tmdb:tv:') && titlesOf(r).some((x) => keys.has(franchiseKey(x))))
+    if (found) return found
+  }
+  return undefined
 }
 
 /** Animes recommandés par AniList à partir d'un anime. */

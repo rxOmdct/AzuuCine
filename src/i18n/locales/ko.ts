@@ -761,6 +761,14 @@ const dict: Translations = {
   'social.watching': "보는 중",
   'social.watchlist': "보고 싶어요",
   'form.infoHint': "날짜, 연도, 플랫폼, 장르 — 자동으로 채워져요",
+  'search.allKinds': "영화, 시리즈, 애니",
+  'search.animeOnly': "TMDB 키가 없으면 애니만 찾을 수 있어요.",
+  'search.alreadySeries': "이미 라이브러리에 있어요 — 열기",
+  'form.episodesOfSeason': "시즌 {season} 에피소드",
+  'form.seasonsTotal_one': "{seasons}개 시즌 · 총 {count}화",
+  'form.seasonsTotal_other': "{seasons}개 시즌 · 총 {count}화",
+  'form.seasonEpisodes_one': "{count}화",
+  'form.seasonEpisodes_other': "{count}화",
 }
 
 export default dict

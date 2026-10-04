@@ -13,6 +13,7 @@ import {
   safeDay,
   safeIso,
   safePosterUrl,
+  safeSeasons,
   safeStringList,
 } from './security'
 import { todayISO, uid } from './utils'
@@ -60,6 +61,8 @@ function safeDates(v: unknown): string[] | undefined {
 }
 
 /** Valide et nettoie une fiche venant d'un fichier importé. Renvoie null si inutilisable. */
+
+
 export function normalizeItem(raw: unknown): MediaItem | null {
   if (!isPlainObject(raw)) return null
   const r = raw
@@ -91,6 +94,7 @@ export function normalizeItem(raw: unknown): MediaItem | null {
     episodesWatched,
     episodesTotal,
     season: int(r.season, 0, 1000) || undefined,
+    seasons: safeSeasons(r.seasons),
     episodeDuration: int(r.episodeDuration, 0, 1440) || undefined,
     duration: int(r.duration, 0, 6000) || undefined,
     startDate: safeDay(r.startDate),

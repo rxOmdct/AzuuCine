@@ -761,6 +761,14 @@ const dict: Translations = {
   'social.watching': "視聴中",
   'social.watchlist': "見たい",
   'form.infoHint': "日付・年・配信サービス・ジャンル — 自動で入力されます",
+  'search.allKinds': "映画・ドラマ・アニメ",
+  'search.animeOnly': "TMDB キーがない場合はアニメのみ検索できます。",
+  'search.alreadySeries': "ライブラリにあります — 開く",
+  'form.episodesOfSeason': "シーズン{season}のエピソード",
+  'form.seasonsTotal_one': "{seasons}シーズン・全{count}話",
+  'form.seasonsTotal_other': "{seasons}シーズン・全{count}話",
+  'form.seasonEpisodes_one': "{count}話",
+  'form.seasonEpisodes_other': "{count}話",
 }
 
 export default dict

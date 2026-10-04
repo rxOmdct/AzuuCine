@@ -24,6 +24,8 @@ export interface MediaItem {
   episodesWatched: number
   episodesTotal?: number
   season?: number
+  /** Nombre d'épisodes de chaque saison (TMDB), ex. [24, 24]. Les épisodes vus restent comptés au total. */
+  seasons?: number[]
   /** Durée d'un épisode en minutes (sinon valeur par défaut selon le type). */
   episodeDuration?: number
   /** Durée totale en minutes (films / formats uniques). */

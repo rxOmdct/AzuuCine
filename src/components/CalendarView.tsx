@@ -2,7 +2,8 @@ import { locale, t } from '../i18n'
 import { Check, ChevronLeft, ChevronRight, Loader2, Plus, RefreshCw, X } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { loadAiring, refreshAiring, saveAiring } from '../lib/airing'
-import { getAniListById, getTmdbDetails, releaseToResult, type GlobalRelease, type ReleaseCategory } from '../lib/catalogApi'
+import { findTmdbSeries, getAniListById, getTmdbDetails, releaseToResult, type GlobalRelease, type ReleaseCategory } from '../lib/catalogApi'
+import { findFranchiseItem } from '../lib/franchise'
 import { cachedMonth, isBrowsableMonth, loadMonth, RELEASE_CATEGORIES } from '../lib/globalReleases'
 import { remotePosterToLocal } from '../lib/image'
 import { calendarEvents, loadReleases, refreshReleases } from '../lib/releases'
@@ -198,7 +199,12 @@ export default function CalendarView({ onClose, onOpen }: { onClose: () => void;
     }
     for (const r of global) {
       const key = `${r.externalId}|${r.date}`
-      const item = byExt.get(r.externalId) ?? byTitle.get(normalizeText(r.title)) ?? (r.originalTitle ? byTitle.get(normalizeText(r.originalTitle)) : undefined)
+      const item =
+        byExt.get(r.externalId) ??
+        byTitle.get(normalizeText(r.title)) ??
+        (r.originalTitle ? byTitle.get(normalizeText(r.originalTitle)) : undefined) ??
+        // « Black Clover Season 2 » sur AniList = ma fiche « Black Clover »
+        (r.cat !== 'film' ? findFranchiseItem(items, [r.title, r.originalTitle], { type: r.cat }) : undefined)
       map.set(key, {
         key,
         date: r.date,
@@ -262,7 +268,12 @@ export default function CalendarView({ onClose, onOpen }: { onClose: () => void;
     try {
       let data: Partial<MediaInput> = {}
       let poster: string | undefined
-      if (r.externalId.startsWith('anilist:')) {
+      // Anime : on préfère la fiche TMDB, qui regroupe toutes les saisons (sinon chaque saison AniList ferait une fiche)
+      const series = r.externalId.startsWith('anilist:') && hasKey ? await findTmdbSeries([r.title, r.originalTitle], settings.tmdbKey!).catch(() => undefined) : undefined
+      if (series) {
+        data = await getTmdbDetails(series, settings.tmdbKey!)
+        poster = series.posterUrl ? await remotePosterToLocal(series.posterUrl) : undefined
+      } else if (r.externalId.startsWith('anilist:')) {
         const res = await getAniListById(r.externalId)
         data = { ...res?.prefill }
         poster = res?.posterUrl ?? r.poster

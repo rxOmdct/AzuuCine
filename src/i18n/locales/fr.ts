@@ -763,6 +763,14 @@ const dict = {
   'social.watching': "En cours",
   'social.watchlist': "Envie de voir",
   'form.infoHint': "Dates, année, plateforme et genres — remplis automatiquement",
+  'search.allKinds': "Films, séries et animes",
+  'search.animeOnly': "Sans clé TMDB, seuls les animes sont trouvés.",
+  'search.alreadySeries': "déjà dans ta bibliothèque — ouvrir",
+  'form.episodesOfSeason': "Épisodes de la saison {season}",
+  'form.seasonsTotal_one': "{seasons} saisons · {count} épisode au total",
+  'form.seasonsTotal_other': "{seasons} saisons · {count} épisodes au total",
+  'form.seasonEpisodes_one': "{count} épisode",
+  'form.seasonEpisodes_other': "{count} épisodes",
 }
 
 export default dict

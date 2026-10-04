@@ -125,3 +125,10 @@ export function readStorage<T>(key: string, fallback: T): unknown | T {
 /** Objet « simple » (pas un tableau, pas null). */
 export const isPlainObject = (v: unknown): v is Record<string, unknown> =>
   typeof v === 'object' && v !== null && !Array.isArray(v) && Object.getPrototypeOf(v) === Object.prototype
+
+/** Épisodes par saison : liste d'entiers bornée (au plus 100 saisons). */
+export function safeSeasons(v: unknown): number[] | undefined {
+  if (!Array.isArray(v)) return undefined
+  const out = v.slice(0, 100).map((n) => (typeof n === 'number' && Number.isInteger(n) && n > 0 && n <= 5000 ? n : 0))
+  return out.length > 1 && out.every((n) => n > 0) ? out : undefined
+}

@@ -53,9 +53,15 @@ export default function HomePage({ onOpen, onAdd, onNavigate, onRoulette, onCale
     void refreshAiring(items, cache, settings.tmdbKey)
       .then((next) => {
         saveAiring(next)
-        const patches = trackable(items)
-          .filter((i) => i.status !== 'termine' && next[i.id] && next[i.id].aired > (i.episodesTotal ?? 0))
-          .map((i) => ({ id: i.id, patch: { episodesTotal: next[i.id].aired } }))
+        const patches = trackable(items).flatMap((i) => {
+          const info = next[i.id]
+          if (!info) return []
+          const patch: Partial<MediaItem> = {}
+          if (i.status !== 'termine' && info.aired > (i.episodesTotal ?? 0)) patch.episodesTotal = info.aired
+          // Découpage par saison (nouvelle saison annoncée, ou fiche ajoutée avant le suivi par saison)
+          if (info.seasonSizes && info.seasonSizes.join() !== (i.seasons ?? []).join()) patch.seasons = info.seasonSizes
+          return Object.keys(patch).length ? [{ id: i.id, patch }] : []
+        })
         if (patches.length) return patchMany(patches)
       })
       .catch(() => {})

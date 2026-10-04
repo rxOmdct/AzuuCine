@@ -4,7 +4,8 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { CRITERIA, DEFAULT_FILM_MINUTES, MEDIA_TYPES, platformSuggestions as defaultPlatforms, STATUSES, TYPE_BY_VALUE } from '../lib/constants'
 import { canonicalGenre, canonicalSubtype, genreLabel, genreSuggestions as defaultGenres, subtypeLabel, subtypeSuggestions } from '../lib/genres'
 import { fileToPosterDataURL } from '../lib/image'
-import { getTmdbCredits } from '../lib/catalogApi'
+import { getTmdbCredits, getTmdbSeasons } from '../lib/catalogApi'
+import { episodesBeforeSeason, seasonPosition } from '../lib/franchise'
 import { renderItemCard, slug } from '../lib/shareCard'
 import { useScrollLock } from '../lib/scrollLock'
 import { cx, formatRating, todayISO } from '../lib/utils'
@@ -38,6 +39,7 @@ const METADATA_KEYS = [
   'overview',
   'duration',
   'episodesTotal',
+  'seasons',
   'episodeDuration',
   'poster',
   'externalId',
@@ -70,6 +72,39 @@ interface Props {
   item?: MediaItem
   onClose: () => void
   onGoToSettings?: () => void
+  /** Ouvre une autre fiche (titre déjà dans la bibliothèque) */
+  onOpenItem?: (item: MediaItem) => void
+}
+
+/** Choix de la saison : « S2 » = la saison 1 est vue, on commence la 2. */
+function SeasonPicker({ seasons, watched, season, onChange }: { seasons: number[]; watched: number; season?: number; onChange: (episodesWatched: number, season: number) => void }) {
+  const current = seasonPosition({ episodesWatched: watched, seasons, season })!
+  return (
+    <div>
+      <span className="label">{t('form.season')}</span>
+      <div className="no-scrollbar -mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1">
+        {seasons.map((size, k) => {
+          const n = k + 1
+          const start = episodesBeforeSeason(seasons, n)
+          const done = watched >= start + size
+          const on = n === current.season
+          return (
+            <button
+              key={n}
+              type="button"
+              onClick={() => !on && (n < current.season ? onChange(start + size, n) : onChange(start, n))}
+              className={cx('chip shrink-0', on && 'chip-on')}
+              aria-pressed={on}
+              title={t('form.seasonEpisodes', { count: size })}
+            >
+              {done && !on && <Check size={13} />}
+              S{n}
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
 }
 
 /** « Moi vs le public » : ma note comparée à la moyenne TMDB / AniList. */
@@ -127,7 +162,7 @@ function Rewatches({ dates, onChange }: { dates: string[]; onChange: (d: string[
   )
 }
 
-export default function MediaForm({ item, onClose, onGoToSettings }: Props) {
+export default function MediaForm({ item, onClose, onGoToSettings, onOpenItem }: Props) {
   const { add, update, remove, items, settings, lists } = useMedia()
   const [form, setForm] = useState<MediaInput>(() => {
     if (!item) return EMPTY
@@ -142,9 +177,28 @@ export default function MediaForm({ item, onClose, onGoToSettings }: Props) {
   const fileRef = useRef<HTMLInputElement>(null)
   const [showInfo, setShowInfo] = useState(false)
   const typeInfo = TYPE_BY_VALUE[form.type]
+  const pos = typeInfo.episodic ? seasonPosition(form) : undefined
 
   // Bloque le défilement de la page derrière la feuille
   useScrollLock()
+
+  // Série TMDB ajoutée avant le suivi par saison : on récupère le découpage en arrière-plan
+  const extId = form.externalId
+  useEffect(() => {
+    const key = settings.tmdbKey?.trim()
+    if (!extId?.startsWith('tmdb:tv:') || form.seasons || !key || !navigator.onLine) return
+    let alive = true
+    getTmdbSeasons(extId, key)
+      .then(({ seasons, total }) => {
+        if (!alive || !seasons) return
+        setForm((f) => (f.externalId === extId && !f.seasons ? { ...f, seasons, episodesTotal: Math.max(f.episodesTotal ?? 0, total ?? 0) || f.episodesTotal } : f))
+      })
+      .catch(() => {})
+    return () => {
+      alive = false
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [extId])
 
   const set = <K extends keyof MediaInput>(key: K, value: MediaInput[K]) => setForm((f) => ({ ...f, [key]: value }))
 
@@ -162,6 +216,8 @@ export default function MediaForm({ item, onClose, onGoToSettings }: Props) {
       for (const key of METADATA_KEYS) {
         if (data[key] !== undefined) (next as unknown as Record<string, unknown>)[key] = data[key]
       }
+      // Découpage par saison : celui de la nouvelle source (ou aucun)
+      next.seasons = data.seasons
       if (data.type && data.type !== 'autre') next.subtype = undefined
       if (data.genres?.length) next.genres = [...new Set([...f.genres, ...data.genres])]
       if (data.platform && !f.platform) next.platform = data.platform
@@ -218,6 +274,8 @@ export default function MediaForm({ item, onClose, onGoToSettings }: Props) {
       poster: form.poster?.trim() || undefined,
       overview: form.overview?.trim() || undefined,
     }
+    const pos = seasonPosition(clean)
+    if (pos) clean.season = pos.season
     try {
       if (item) await update(item.id, clean)
       else await add(clean)
@@ -285,6 +343,7 @@ export default function MediaForm({ item, onClose, onGoToSettings }: Props) {
               initialQuery={item ? form.title : ''}
               currentExternalId={item?.externalId}
               onGoToSettings={onGoToSettings}
+              onOpenExisting={!item && onOpenItem ? onOpenItem : undefined}
             />
           ) : (
             <button
@@ -410,21 +469,34 @@ export default function MediaForm({ item, onClose, onGoToSettings }: Props) {
           {typeInfo.episodic ? (
             <Section title={t('form.episodes')}>
               <div className="card space-y-5 p-4">
+                {pos && form.seasons ? (
+                  <SeasonPicker seasons={form.seasons} watched={form.episodesWatched} season={form.season} onChange={(n, season) => setForm((f) => ({ ...f, episodesWatched: n, season }))} />
+                ) : null}
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-ink-2">{t('home.episodesSeen')}</span>
+                  <span className="text-sm text-ink-2">{pos ? t('form.episodesOfSeason', { season: pos.season }) : t('home.episodesSeen')}</span>
                   <div className="flex items-center gap-3">
                     <button type="button" onClick={() => changeEpisodes(-1)} className="grid size-10 place-items-center rounded-full border border-line-strong text-ink-2" aria-label={t('form.minusEp')}>
                       <Minus size={17} />
                     </button>
                     <span className="min-w-16 text-center text-2xl font-bold tabular-nums">
-                      {form.episodesWatched}
-                      {form.episodesTotal ? <span className="text-base text-ink-3">/{form.episodesTotal}</span> : null}
+                      {pos ? pos.episode : form.episodesWatched}
+                      {pos ? <span className="text-base text-ink-3">/{pos.size}</span> : form.episodesTotal ? <span className="text-base text-ink-3">/{form.episodesTotal}</span> : null}
                     </span>
                     <button type="button" onClick={() => changeEpisodes(1)} className="grid size-10 place-items-center rounded-full bg-accent-fill text-on-accent" aria-label={t('form.plusEp')}>
                       <Plus size={17} strokeWidth={2.5} />
                     </button>
                   </div>
                 </div>
+                {pos ? (
+                  <div className="flex items-end justify-between gap-3">
+                    <p className="pb-2 text-xs text-ink-3">{t('form.seasonsTotal', { seasons: form.seasons!.length, count: form.episodesTotal ?? 0 })}</p>
+                    <div className="w-28 shrink-0">
+                      <Field label={t('form.minPerEp')}>
+                        <input className="field" type="number" inputMode="numeric" min={0} value={form.episodeDuration ?? ''} onChange={(e) => set('episodeDuration', toNum(e.target.value))} placeholder={String(typeInfo.episodeMinutes)} />
+                      </Field>
+                    </div>
+                  </div>
+                ) : (
                 <div className="grid grid-cols-3 gap-3">
                   <Field label={t('form.total')}>
                     <input className="field" type="number" inputMode="numeric" min={0} value={form.episodesTotal ?? ''} onChange={(e) => set('episodesTotal', toNum(e.target.value))} placeholder="?" />
@@ -436,6 +508,7 @@ export default function MediaForm({ item, onClose, onGoToSettings }: Props) {
                     <input className="field" type="number" inputMode="numeric" min={0} value={form.episodeDuration ?? ''} onChange={(e) => set('episodeDuration', toNum(e.target.value))} placeholder={String(typeInfo.episodeMinutes)} />
                   </Field>
                 </div>
+                )}
               </div>
             </Section>
           ) : (

@@ -761,6 +761,14 @@ const dict: Translations = {
   'social.watching': "Assistindo",
   'social.watchlist': "Quer assistir",
   'form.infoHint': "Datas, ano, plataforma e gêneros — preenchidos automaticamente",
+  'search.allKinds': "Filmes, séries e animes",
+  'search.animeOnly': "Sem chave do TMDB, só animes são encontrados.",
+  'search.alreadySeries': "já está na sua biblioteca — abrir",
+  'form.episodesOfSeason': "Episódios da temporada {season}",
+  'form.seasonsTotal_one': "{seasons} temporadas · {count} episódio no total",
+  'form.seasonsTotal_other': "{seasons} temporadas · {count} episódios no total",
+  'form.seasonEpisodes_one': "{count} episódio",
+  'form.seasonEpisodes_other': "{count} episódios",
 }
 
 export default dict

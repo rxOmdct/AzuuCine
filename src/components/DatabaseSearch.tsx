@@ -1,11 +1,12 @@
 import { t } from '../i18n'
 import { Check, Loader2, Search } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
-import { getTmdbDetails, searchAniList, searchTmdb, type SearchResult, type Source } from '../lib/catalogApi'
+import { getTmdbDetails, searchAll, type SearchResult } from '../lib/catalogApi'
+import { findFranchiseItem } from '../lib/franchise'
 import { remotePosterToLocal } from '../lib/image'
 import { cx } from '../lib/utils'
 import { useMedia } from '../store'
-import type { MediaInput } from '../types'
+import type { MediaInput, MediaItem } from '../types'
 
 interface Props {
   /** Reçoit les métadonnées trouvées (titre, type, genres, épisodes, affiche…). */
@@ -14,18 +15,14 @@ interface Props {
   /** Identifiant externe de la fiche en cours d'édition (pour ne pas la signaler comme doublon). */
   currentExternalId?: string
   onGoToSettings?: () => void
+  /** Nouvelle fiche : si le titre (ou une autre saison) est déjà dans la bibliothèque, on ouvre la fiche existante. */
+  onOpenExisting?: (item: MediaItem) => void
 }
 
-const SOURCES: { value: Source; readonly label: string; hint: string }[] = [
-  { value: 'tmdb', get label() { return t('search.moviesSeries') }, hint: 'TMDB' },
-  { value: 'anilist', get label() { return t('typePlural.anime') }, hint: 'AniList' },
-]
-
-/** Recherche un titre dans TMDB ou AniList et remplit la fiche automatiquement. */
-export default function DatabaseSearch({ onPick, initialQuery = '', currentExternalId, onGoToSettings }: Props) {
+/** Recherche un titre (films, séries et animes en une seule fois) et remplit la fiche automatiquement. */
+export default function DatabaseSearch({ onPick, initialQuery = '', currentExternalId, onGoToSettings, onOpenExisting }: Props) {
   const { items, settings } = useMedia()
   const hasKey = !!settings.tmdbKey?.trim()
-  const [source, setSource] = useState<Source>(hasKey ? 'tmdb' : 'anilist')
   const [query, setQuery] = useState(initialQuery)
   const [results, setResults] = useState<SearchResult[]>([])
   const [loading, setLoading] = useState(false)
@@ -33,13 +30,17 @@ export default function DatabaseSearch({ onPick, initialQuery = '', currentExter
   const [error, setError] = useState<string>()
   const requestId = useRef(0)
 
-  const existing = new Set(items.map((i) => i.externalId).filter((id) => id && id !== currentExternalId))
+  const others = items.filter((i) => !currentExternalId || i.externalId !== currentExternalId)
+  /** Déjà dans ma bibliothèque : même référence, ou une autre saison de la même série. */
+  const inLibrary = (r: SearchResult) =>
+    others.find((i) => i.externalId === r.externalId) ??
+    findFranchiseItem(others, [r.title, r.originalTitle, ...(r.altTitles ?? [])], { type: r.typeGuess })
 
   // Recherche avec un petit délai pendant la frappe
   useEffect(() => {
     const q = query.trim()
     setError(undefined)
-    if (q.length < 2 || (source === 'tmdb' && !hasKey)) {
+    if (q.length < 2) {
       setResults([])
       setLoading(false)
       return
@@ -48,7 +49,7 @@ export default function DatabaseSearch({ onPick, initialQuery = '', currentExter
     setLoading(true)
     const timer = setTimeout(async () => {
       try {
-        const res = source === 'tmdb' ? await searchTmdb(q, settings.tmdbKey!) : await searchAniList(q)
+        const res = await searchAll(q, hasKey ? settings.tmdbKey : undefined)
         if (id === requestId.current) setResults(res)
       } catch (e) {
         if (id === requestId.current) {
@@ -60,9 +61,11 @@ export default function DatabaseSearch({ onPick, initialQuery = '', currentExter
       }
     }, 450)
     return () => clearTimeout(timer)
-  }, [query, source, hasKey, settings.tmdbKey])
+  }, [query, hasKey, settings.tmdbKey])
 
   const pick = async (r: SearchResult) => {
+    const mine = onOpenExisting && inLibrary(r)
+    if (mine) return onOpenExisting(mine)
     setPicking(r.externalId)
     setError(undefined)
     try {
@@ -83,42 +86,31 @@ export default function DatabaseSearch({ onPick, initialQuery = '', currentExter
     <div className="card p-4">
       <div className="mb-3 flex items-center justify-between gap-2">
         <span className="eyebrow">{t('search.fillFrom')}</span>
-        <div className="flex rounded-full border border-line p-0.5">
-          {SOURCES.map((s) => (
-            <button
-              key={s.value}
-              type="button"
-              onClick={() => setSource(s.value)}
-              className={cx('rounded-full px-3 py-1 text-xs font-medium transition-colors', source === s.value ? 'bg-ink text-bg' : 'text-ink-3')}
-            >
-              {s.label}
-            </button>
-          ))}
-        </div>
+        <span className="text-[11px] text-ink-3">{t('search.allKinds')}</span>
       </div>
 
-      {source === 'tmdb' && !hasKey ? (
-        <div className="rounded-xl border border-dashed border-line-strong p-3.5 text-sm text-ink-2">
-          {t('search.needKey')}
+      <div className="relative">
+        <Search size={17} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-3" />
+        <input
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Parasite, Frieren, Crash Landing on You…"
+          className="field pl-10"
+          enterKeyHint="search"
+          autoComplete="off"
+        />
+        {loading && <Loader2 size={17} className="absolute right-3.5 top-1/2 -translate-y-1/2 animate-spin text-ink-3" />}
+      </div>
+
+      {!hasKey && (
+        <div className="mt-2 text-xs text-ink-3">
+          {t('search.animeOnly')}
           {onGoToSettings && (
-            <button type="button" onClick={onGoToSettings} className="mt-2 block font-medium text-ink">
+            <button type="button" onClick={onGoToSettings} className="ml-1 font-medium text-ink">
               {t('search.openSettings')} <span className="text-accent">→</span>
             </button>
           )}
-        </div>
-      ) : (
-        <div className="relative">
-          <Search size={17} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-3" />
-          <input
-            type="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={source === 'tmdb' ? 'Parasite, Crash Landing on You…' : 'Frieren, One Piece…'}
-            className="field pl-10"
-            enterKeyHint="search"
-            autoComplete="off"
-          />
-          {loading && <Loader2 size={17} className="absolute right-3.5 top-1/2 -translate-y-1/2 animate-spin text-ink-3" />}
         </div>
       )}
 
@@ -127,7 +119,8 @@ export default function DatabaseSearch({ onPick, initialQuery = '', currentExter
       {results.length > 0 && (
         <ul className="-mx-1 mt-3 max-h-[22rem] divide-y divide-line overflow-y-auto overscroll-contain">
           {results.map((r) => {
-            const already = existing.has(r.externalId)
+            const mine = inLibrary(r)
+            const already = !!mine
             return (
               <li key={r.externalId}>
                 <button
@@ -148,7 +141,7 @@ export default function DatabaseSearch({ onPick, initialQuery = '', currentExter
                     {r.originalTitle && <span className="block truncate text-xs text-ink-3">{r.originalTitle}</span>}
                     <span className="mt-1 block text-[10.5px] uppercase text-ink-3">
                       {[r.kindLabel, r.year].filter(Boolean).join(' · ')}
-                      {already && <span className="text-accent"> · {t('search.already')}</span>}
+                      {already && <span className="text-accent"> · {mine.externalId === r.externalId ? t('search.already') : t('search.alreadySeries')}</span>}
                     </span>
                   </span>
                   {picking === r.externalId ? (
@@ -163,13 +156,13 @@ export default function DatabaseSearch({ onPick, initialQuery = '', currentExter
         </ul>
       )}
 
-      {!loading && !error && query.trim().length >= 2 && results.length === 0 && !(source === 'tmdb' && !hasKey) && (
+      {!loading && !error && query.trim().length >= 2 && results.length === 0 && (
         <p className="mt-3 text-sm text-ink-3">{t('search.noResults')}</p>
       )}
 
       <p className="mt-3 flex items-start gap-1.5 text-[11px] leading-relaxed text-ink-3">
         <Check size={12} className="mt-0.5 shrink-0" />
-        {t('search.privacy', { source: source === 'tmdb' ? 'TMDB' : 'AniList' })}
+        {t('search.privacy', { source: hasKey ? 'TMDB / AniList' : 'AniList' })}
       </p>
     </div>
   )

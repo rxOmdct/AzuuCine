@@ -13,6 +13,7 @@ import { dbNameFor, scopedKey } from './lib/scope'
 import { isPlainObject, LIMITS, readStorage } from './lib/security'
 import { mediaDB, requestPersistentStorage } from './lib/db'
 import { todayISO, uid } from './lib/utils'
+import { seasonPosition } from './lib/franchise'
 
 // Clés propres à l'espace actif (compte connecté, ou appareil sans compte)
 const settingsKey = () => scopedKey('settings')
@@ -249,6 +250,9 @@ export function MediaProvider({ children, cloudUser }: { children: ReactNode; cl
       if (item.episodesTotal) next = Math.min(next, item.episodesTotal)
       if (next === item.episodesWatched) return
       const patch: Partial<MediaInput> = { episodesWatched: next }
+      // Série en plusieurs saisons : la saison suit les épisodes vus
+      const pos = seasonPosition({ episodesWatched: next, seasons: item.seasons })
+      if (pos && pos.season !== item.season) patch.season = pos.season
       if (delta > 0 && (item.status === 'a_voir' || item.status === 'pause')) {
         patch.status = 'en_cours'
         if (!item.startDate) patch.startDate = todayISO()

@@ -761,6 +761,14 @@ const dict: Translations = {
   'social.watching': "正在看",
   'social.watchlist': "想看",
   'form.infoHint': "日期、年份、平台和类型——自动填写",
+  'search.allKinds': "电影、剧集和动画",
+  'search.animeOnly': "没有 TMDB 密钥时只能找到动画。",
+  'search.alreadySeries': "已在你的片库中——打开",
+  'form.episodesOfSeason': "第 {season} 季的集数",
+  'form.seasonsTotal_one': "{seasons} 季 · 共 {count} 集",
+  'form.seasonsTotal_other': "{seasons} 季 · 共 {count} 集",
+  'form.seasonEpisodes_one': "{count} 集",
+  'form.seasonEpisodes_other': "{count} 集",
 }
 
 export default dict

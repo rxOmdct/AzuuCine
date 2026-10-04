@@ -63,6 +63,7 @@ export default function App() {
           key={editor === 'new' ? 'new' : editor.id}
           item={editor === 'new' ? undefined : editor}
           onClose={() => setEditor(null)}
+          onOpenItem={(i) => setEditor(i)}
           onGoToSettings={() => {
             setEditor(null)
             go('settings')

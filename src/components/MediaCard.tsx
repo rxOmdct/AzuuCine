@@ -1,6 +1,7 @@
 import { t } from '../i18n'
 import { Heart, Plus } from 'lucide-react'
 import { TYPE_BY_VALUE } from '../lib/constants'
+import { seasonPosition } from '../lib/franchise'
 import { useMedia } from '../store'
 import type { MediaItem } from '../types'
 import { StatusPill, TypeBadge } from './Badges'
@@ -9,16 +10,21 @@ import { RatingBadge } from './Rating'
 
 function Progress({ item }: { item: MediaItem }) {
   if (!TYPE_BY_VALUE[item.type].episodic || (!item.episodesWatched && !item.episodesTotal)) return null
-  const pct = item.episodesTotal ? Math.min(100, (item.episodesWatched / item.episodesTotal) * 100) : 0
+  // Série en plusieurs saisons : progression dans la saison en cours
+  const pos = seasonPosition(item)
+  const done = pos ? pos.episode : item.episodesWatched
+  const size = pos ? pos.size : item.episodesTotal
+  const pct = size ? Math.min(100, (done / size) * 100) : 0
+  const season = pos?.season ?? item.season
   return (
     <div className="mt-1.5">
       <div className="flex justify-between text-[10.5px] text-ink-3">
         <span>
-          {item.season ? `S${item.season} · ` : ''}{t('card.ep', { n: item.episodesWatched })}
-          {item.episodesTotal ? `/${item.episodesTotal}` : ''}
+          {season ? `S${season} · ` : ''}{t('card.ep', { n: done })}
+          {size ? `/${size}` : ''}
         </span>
       </div>
-      {item.episodesTotal ? (
+      {size ? (
         <div className="mt-1.5 h-[3px] overflow-hidden rounded-full bg-line">
           <div className="h-full rounded-full bg-accent" style={{ width: `${pct}%` }} />
         </div>
