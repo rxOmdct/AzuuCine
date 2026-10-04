@@ -82,7 +82,22 @@ export function needsCheck(item: MediaItem, cache: AiringCache, force = false): 
   // Fiche TMDB vérifiée avant le suivi par saison : on récupère le découpage une fois
   if (item.externalId?.startsWith('tmdb:tv:') && (!info.backdrop || (!info.seasonSizes && (info.seasons ?? 0) > 1)) && info.checkedAt < SEASONS_SINCE) return true
   const age = Date.now() - new Date(info.checkedAt).getTime()
+  // Le prochain épisode annoncé est sorti depuis la dernière vérification : on revérifie (au plus toutes les heures)
+  if (info.next && info.next.date <= localDay() && localDay(new Date(info.checkedAt)) <= info.next.date && age > 3600_000) return true
   return age > (info.ended ? RECHECK_ENDED_MS : RECHECK_MS)
+}
+
+/**
+ * À jour : j'ai vu tous les épisodes sortis et la série continue.
+ * La fiche quitte « Continuer », puis revient dès que le prochain épisode sort.
+ */
+export function isCaughtUp(item: MediaItem, cache: AiringCache): boolean {
+  const info = cache[item.id]
+  if (!info || !info.aired || !trackable([item]).length) return false
+  // Épisode annoncé dont la date est passée : il est sorti, même si on n'a pas encore revérifié
+  const aired = info.next && info.next.date <= localDay() ? info.aired + 1 : info.aired
+  const cap = episodeCap(item)
+  return item.episodesWatched >= aired && !(cap && item.episodesWatched >= cap && info.ended)
 }
 
 // ───────── TMDB ─────────

@@ -1,7 +1,7 @@
 import { useSocial } from '../components/social/SocialProvider'
 import { t } from '../i18n'
 import { CalendarDays, Dices, Plus } from 'lucide-react'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { TYPE_BY_VALUE } from '../lib/constants'
 import Avatar from '../components/social/Avatar'
 import FriendsFeed from '../components/social/FriendsFeed'
@@ -11,7 +11,8 @@ import Recommendations from '../components/Recommendations'
 import HomeHero, { ContinueCard } from '../components/HomeHero'
 import type { Tab } from '../components/BottomNav'
 import { EmptyState, LinkArrow, PageHeader, SectionTitle, StatTile } from '../components/ui'
-import { CACHE_EVENT, loadAiring, needsCheck, refreshAiring, saveAiring, trackable } from '../lib/airing'
+import { CACHE_EVENT, isCaughtUp, loadAiring, needsCheck, refreshAiring, saveAiring, trackable } from '../lib/airing'
+import { useOnResume } from '../lib/onResume'
 import { calendarEvents } from '../lib/releases'
 import { computeStats } from '../lib/stats'
 import { formatDuration, todayISO } from '../lib/utils'
@@ -46,13 +47,18 @@ export default function HomePage({ onOpen, onAdd, onNavigate, onRoulette, onCale
   const stats = useMemo(() => computeStats(items), [items])
   // Sorties dans les 7 prochains jours (pastille sur l'icône calendrier)
   // Vérification discrète des nouveaux épisodes (au plus toutes les 12 h) : pastille du calendrier et nombre d'épisodes à jour
+  // Revérifié aussi au retour dans l'app : un épisode sorti entre-temps fait réapparaître la série dans « Continuer »
   const airingStarted = useRef(false)
-  useEffect(() => {
-    if (loading || airingStarted.current || !navigator.onLine) return
-    airingStarted.current = true
+  const airingRunning = useRef(false)
+  const latest = useRef({ items, tmdbKey: settings.tmdbKey })
+  latest.current = { items, tmdbKey: settings.tmdbKey }
+  const checkAiring = useCallback(() => {
+    const { items, tmdbKey } = latest.current
+    if (airingRunning.current || !navigator.onLine) return
     const cache = loadAiring()
     if (!trackable(items).some((i) => needsCheck(i, cache))) return
-    void refreshAiring(items, cache, settings.tmdbKey)
+    airingRunning.current = true
+    void refreshAiring(items, cache, tmdbKey)
       .then((next) => {
         saveAiring(next)
         const patches = trackable(items).flatMap((i) => {
@@ -68,7 +74,16 @@ export default function HomePage({ onOpen, onAdd, onNavigate, onRoulette, onCale
         if (patches.length) return patchMany(patches)
       })
       .catch(() => {})
-  }, [loading, items, settings.tmdbKey, patchMany])
+      .finally(() => {
+        airingRunning.current = false
+      })
+  }, [patchMany])
+  useEffect(() => {
+    if (loading || airingStarted.current) return
+    airingStarted.current = true
+    checkAiring()
+  }, [loading, checkAiring])
+  useOnResume(checkAiring, !loading)
 
   const [cacheVersion, setCacheVersion] = useState(0)
   useEffect(() => {
@@ -84,7 +99,9 @@ export default function HomePage({ onOpen, onAdd, onNavigate, onRoulette, onCale
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [items, cacheVersion])
 
-  const inProgress = items.filter((i) => i.status === 'en_cours')
+  // En cours, sans les séries où j'ai tout vu en attendant le prochain épisode
+  const airing = useMemo(() => loadAiring(), [cacheVersion]) // eslint-disable-line react-hooks/exhaustive-deps
+  const inProgress = items.filter((i) => i.status === 'en_cours' && !isCaughtUp(i, airing))
   // Bannière : ce que je regarde en ce moment (le plus récemment touché), sinon le prochain « à voir »
   const byRecent = [...inProgress].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
   const firstToWatch = items.find((i) => i.status === 'a_voir')
