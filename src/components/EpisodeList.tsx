@@ -88,7 +88,7 @@ export default function EpisodeList({ form, onChange }: Props) {
             ))}
           </select>
         ) : (
-          <span className="eyebrow">{t('form.episodes')}</span>
+          <span />
         )}
         <span className="flex items-center gap-2 text-xs text-ink-3">
           {loading && <Loader2 size={13} className="animate-spin" />}
@@ -115,7 +115,6 @@ export default function EpisodeList({ form, onChange }: Props) {
                 ) : (
                   <span className="grid size-full place-items-center text-sm font-semibold text-ink-3">{e.number}</span>
                 )}
-                {seen && <span className="absolute inset-x-0 bottom-0 h-[3px] bg-accent" />}
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block text-[11px] font-medium uppercase tracking-wide text-ink-3">

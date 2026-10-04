@@ -86,7 +86,9 @@ export default function HomePage({ onOpen, onAdd, onNavigate, onRoulette, onCale
 
   const inProgress = items.filter((i) => i.status === 'en_cours')
   // Bannière : ce que je regarde en ce moment (le plus récemment touché), sinon le prochain « à voir »
-  const featured = [...inProgress].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))[0] ?? items.find((i) => i.status === 'a_voir')
+  const byRecent = [...inProgress].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+  const firstToWatch = items.find((i) => i.status === 'a_voir')
+  const featured = (byRecent.length ? byRecent.slice(0, 8) : firstToWatch ? [firstToWatch] : [])
   const toWatch = items.filter((i) => i.status === 'a_voir').slice(0, 12)
   const recent = items
     .filter((i) => i.status === 'termine')
@@ -140,7 +142,26 @@ export default function HomePage({ onOpen, onAdd, onNavigate, onRoulette, onCale
         </>
       ) : (
         <>
-          {featured && <HomeHero item={featured} onOpen={onOpen} />}
+          {featured.length > 0 && <HomeHero items={featured} onOpen={onOpen} />}
+
+          <FriendsFeed />
+
+          {/* Roulette : pour les soirs sans idée */}
+          <button onClick={onRoulette} className="card mt-8 flex w-full items-center gap-4 p-4 text-left transition-colors active:bg-surface-2">
+            <span className="grid size-12 shrink-0 place-items-center rounded-full bg-accent-fill text-on-accent">
+              <Dices size={24} />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block font-semibold">
+                {t('home.noIdea')} <span className="text-accent">{t('roulette.name')}</span>
+              </span>
+              <span className="mt-0.5 block text-xs text-ink-3">
+                {stats.toWatch ? t('home.rouletteHint', { count: stats.toWatch }) : t('home.rouletteHintAll')}
+              </span>
+            </span>
+            <span className="text-accent">→</span>
+          </button>
+
 
           {inProgress.length > 0 && (
             <>
@@ -161,25 +182,6 @@ export default function HomePage({ onOpen, onAdd, onNavigate, onRoulette, onCale
               <PosterStrip items={toWatch} onOpen={onOpen} />
             </>
           )}
-
-          <FriendsFeed />
-
-          {/* Roulette : pour les soirs sans idée */}
-          <button onClick={onRoulette} className="card mt-8 flex w-full items-center gap-4 p-4 text-left transition-colors active:bg-surface-2">
-            <span className="grid size-12 shrink-0 place-items-center rounded-full bg-accent-fill text-on-accent">
-              <Dices size={24} />
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block font-semibold">
-                {t('home.noIdea')} <span className="text-accent">{t('roulette.name')}</span>
-              </span>
-              <span className="mt-0.5 block text-xs text-ink-3">
-                {stats.toWatch ? t('home.rouletteHint', { count: stats.toWatch }) : t('home.rouletteHintAll')}
-              </span>
-            </span>
-            <span className="text-accent">→</span>
-          </button>
-
 
           <TopFive onOpen={onOpen} />
 
