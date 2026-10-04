@@ -2,20 +2,27 @@ import { Check, Info, Plus } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { t } from '../i18n'
 import { TYPE_BY_VALUE } from '../lib/constants'
+import { canWatchMore, nextAirDate } from '../lib/airing'
 import { episodeCap, seasonPosition } from '../lib/franchise'
 import { genreLabel } from '../lib/genres'
-import { cx } from '../lib/utils'
+import { cx, formatDate } from '../lib/utils'
 import { useMedia } from '../store'
 import type { MediaItem } from '../types'
 
 /** Où j'en suis : « S2 · É3 » (épisode suivant à voir) */
 export function nextEpisodeLabel(item: MediaItem): string | undefined {
-  if (!TYPE_BY_VALUE[item.type].episodic) return undefined
-  const cap = episodeCap(item)
-  if (cap && item.episodesWatched >= cap) return undefined
+  if (!TYPE_BY_VALUE[item.type].episodic || !canWatchMore(item)) return undefined
   const pos = seasonPosition({ ...item, episodesWatched: item.episodesWatched + 1, season: undefined })
   const ep = t('episodes.short', { n: pos ? pos.episode : item.episodesWatched + 1 })
   return pos ? `${t('episodes.seasonShort', { n: pos.season })} · ${ep}` : ep
+}
+
+/** Plus rien à cocher : « Tout vu », ou « Prochain épisode le … » si la suite n'est pas encore sortie. */
+export function waitingLabel(item: MediaItem): string {
+  const cap = episodeCap(item)
+  if (cap && item.episodesWatched >= cap) return t('hero.allSeen')
+  const date = nextAirDate(item)
+  return date ? t('hero.nextOn', { date: formatDate(date) }) : t('hero.upToDate')
 }
 
 /** Grande bannière de l'accueil : défile entre les titres que je regarde en ce moment (ou le prochain à voir). */
@@ -104,7 +111,7 @@ export default function HomeHero({ items, onOpen }: { items: MediaItem[]; onOpen
             </button>
           ) : episodic ? (
             <span className="btn btn-ghost px-5">
-              <Check size={17} /> {t('hero.allSeen')}
+              <Check size={17} /> {waitingLabel(item)}
             </span>
           ) : null}
           <button onClick={() => onOpen(item)} className="btn btn-ghost bg-bg/60 px-4">
@@ -153,7 +160,7 @@ export function ContinueCard({ item, onOpen }: { item: MediaItem; onOpen: (item:
       </div>
       <button onClick={() => onOpen(item)} className="mt-2 block w-full text-left">
         <span className="block truncate text-sm font-semibold">{item.title}</span>
-        <span className="block text-xs text-ink-3">{next ? t('homeHero.nextUp', { ep: next }) : t('hero.allSeen')}</span>
+        <span className="block text-xs text-ink-3">{next ? t('homeHero.nextUp', { ep: next }) : waitingLabel(item)}</span>
       </button>
     </article>
   )

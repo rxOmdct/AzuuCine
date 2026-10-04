@@ -8,7 +8,8 @@ import { getTmdbCredits, getTmdbExtras } from '../lib/catalogApi'
 import { episodeCap, seasonPosition } from '../lib/franchise'
 import { renderItemCard, slug } from '../lib/shareCard'
 import { useScrollLock } from '../lib/scrollLock'
-import { cx, formatRating, todayISO } from '../lib/utils'
+import { cx, formatDate, formatRating, todayISO } from '../lib/utils'
+import { airedCount, nextAirDate, useAiringCache } from '../lib/airing'
 import { useMedia } from '../store'
 import type { MediaInput, MediaItem, RatingScale, WatchStatus } from '../types'
 import { StatusDot } from './Badges'
@@ -203,10 +204,18 @@ export default function MediaForm({ item, onClose, onGoToSettings, onOpenItem }:
   }
 
   /** Bouton principal de l'en-tête : épisode suivant (séries) ou « vu » (films). */
+  // Épisodes déjà sortis (fiche suivie) : on ne coche pas un épisode à venir
+  const airingCache = useAiringCache()
+  const aired = item ? airedCount({ id: item.id, type: form.type, externalId: form.externalId }, airingCache) : undefined
+
   const primary: HeroAction = (() => {
     if (typeInfo.episodic) {
       const cap = episodeCap(form)
       if (cap && form.episodesWatched >= cap) return { label: t('hero.allSeen'), done: true }
+      if (aired != null && form.episodesWatched >= aired) {
+        const date = item ? nextAirDate({ id: item.id, type: form.type, externalId: form.externalId }, airingCache) : undefined
+        return { label: date ? t('hero.nextOn', { date: formatDate(date) }) : t('hero.upToDate'), done: true }
+      }
       const nextPos = seasonPosition({ ...form, episodesWatched: form.episodesWatched + 1, season: undefined })
       const ep = t('episodes.short', { n: nextPos ? nextPos.episode : form.episodesWatched + 1 })
       const label = t('hero.seenEp', { ep: nextPos ? `${t('episodes.seasonShort', { n: nextPos.season })} · ${ep}` : ep })
@@ -465,7 +474,7 @@ export default function MediaForm({ item, onClose, onGoToSettings, onOpenItem }:
             <Section title={t('form.episodes')}>
               {/* Liste d'épisodes pour une fiche liée (TMDB / AniList) ; compteur + total modifiable pour une fiche manuelle */}
               {form.seasons || (form.externalId && form.episodesTotal) ? (
-                <EpisodeList form={form} onChange={(n, season) => setForm((f) => withEpisodes(f, n, season))} />
+                <EpisodeList form={form} aired={aired} onChange={(n, season) => setForm((f) => withEpisodes(f, n, season))} />
               ) : (
                 <div className="card space-y-5 p-4">
                   <div className="flex items-center justify-between">

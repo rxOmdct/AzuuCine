@@ -739,6 +739,8 @@ const dict = {
   'form.startShort': "Commencé le",
   'form.endShort': "Fini le",
   'hero.allSeen': "Tout vu",
+  'hero.nextOn': 'Prochain épisode le {date}',
+  'hero.upToDate': 'À jour',
   'hero.seenEp': "J'ai vu {ep}",
   'hero.seen': "Vu",
   'hero.markSeen': "Marquer comme vu",

@@ -1,6 +1,7 @@
 import { t } from '../i18n'
 import { Heart, Plus } from 'lucide-react'
 import { TYPE_BY_VALUE } from '../lib/constants'
+import { canWatchMore } from '../lib/airing'
 import { episodeCap, seasonPosition } from '../lib/franchise'
 import { useMedia } from '../store'
 import type { MediaItem } from '../types'
@@ -40,7 +41,7 @@ export function MediaCard({ item, onOpen }: { item: MediaItem; onOpen: (item: Me
   const canIncrement =
     TYPE_BY_VALUE[item.type].episodic &&
     item.status === 'en_cours' &&
-    (!episodeCap(item) || item.episodesWatched < episodeCap(item)!)
+    canWatchMore(item)
 
   return (
     <article>

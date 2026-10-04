@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { tmdbLanguage } from '../i18n'
 import type { MediaItem } from '../types'
 import { CLOUD_TMDB, isPlausibleTmdbKey } from './catalogApi'
@@ -38,8 +39,24 @@ const SEASONS_SINCE = '2026-10-04T10:00:00.000Z'
 
 const n0 = (v: unknown, max = 100000) => (typeof v === 'number' && Number.isFinite(v) && v >= 0 ? Math.min(max, Math.round(v)) : 0)
 
+// Dernière lecture (le cache est relu par chaque carte : on évite de le réanalyser à chaque fois)
+let memo: { raw: string | null; cache: AiringCache } | undefined
+
 /** Relit le cache en ne gardant que des entrées bien formées. */
 export function loadAiring(): AiringCache {
+  let text: string | null = null
+  try {
+    text = localStorage.getItem(KEY)
+  } catch {
+    /* stockage indisponible */
+  }
+  if (memo && memo.raw === text) return memo.cache
+  const cache = parseAiring()
+  memo = { raw: text, cache }
+  return cache
+}
+
+function parseAiring(): AiringCache {
   const raw = readStorage(KEY, {})
   const out: AiringCache = {}
   if (!isPlainObject(raw)) return out
@@ -87,17 +104,55 @@ export function needsCheck(item: MediaItem, cache: AiringCache, force = false): 
   return age > (info.ended ? RECHECK_ENDED_MS : RECHECK_MS)
 }
 
+type AiringItem = Pick<MediaItem, 'id' | 'type' | 'externalId'>
+
+const followed = (item: AiringItem) =>
+  TYPE_BY_VALUE[item.type]?.episodic && isSafeExternalId(item.externalId) && (item.externalId.startsWith('tmdb:tv:') || item.externalId.startsWith('anilist:'))
+
+/**
+ * Nombre d'épisodes déjà sortis (toutes saisons), ou undefined si on ne sait pas (fiche manuelle, pas encore vérifiée).
+ * Un épisode annoncé dont la date est passée compte comme sorti, même avant la prochaine vérification.
+ */
+export function airedCount(item: AiringItem, cache: AiringCache = loadAiring()): number | undefined {
+  const info = cache[item.id]
+  if (!info || !info.aired || !followed(item)) return undefined
+  return info.next && info.next.date <= localDay() ? info.aired + 1 : info.aired
+}
+
+/** Date du prochain épisode s'il n'est pas encore sorti. */
+export function nextAirDate(item: AiringItem, cache: AiringCache = loadAiring()): string | undefined {
+  const d = cache[item.id]?.next?.date
+  return d && d > localDay() ? d : undefined
+}
+
+/** Peut-on cocher un épisode de plus ? (non si le suivant n'est pas encore sorti) */
+export function canWatchMore(item: MediaItem, cache: AiringCache = loadAiring()): boolean {
+  const cap = episodeCap(item)
+  if (cap && item.episodesWatched >= cap) return false
+  const aired = airedCount(item, cache)
+  return aired == null || item.episodesWatched < aired
+}
+
 /**
  * À jour : j'ai vu tous les épisodes sortis et la série continue.
  * La fiche quitte « Continuer », puis revient dès que le prochain épisode sort.
  */
 export function isCaughtUp(item: MediaItem, cache: AiringCache): boolean {
-  const info = cache[item.id]
-  if (!info || !info.aired || !trackable([item]).length) return false
-  // Épisode annoncé dont la date est passée : il est sorti, même si on n'a pas encore revérifié
-  const aired = info.next && info.next.date <= localDay() ? info.aired + 1 : info.aired
+  const aired = airedCount(item, cache)
+  if (aired == null || !trackable([item]).length) return false
   const cap = episodeCap(item)
-  return item.episodesWatched >= aired && !(cap && item.episodesWatched >= cap && info.ended)
+  return item.episodesWatched >= aired && !(cap && item.episodesWatched >= cap && cache[item.id]?.ended)
+}
+
+/** Cache des sorties, relu quand il change (pour l'affichage). */
+export function useAiringCache(): AiringCache {
+  const [cache, setCache] = useState(loadAiring)
+  useEffect(() => {
+    const reload = () => setCache(loadAiring())
+    window.addEventListener(CACHE_EVENT, reload)
+    return () => window.removeEventListener(CACHE_EVENT, reload)
+  }, [])
+  return cache
 }
 
 // ───────── TMDB ─────────

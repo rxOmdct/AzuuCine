@@ -737,6 +737,8 @@ const dict: Translations = {
   'form.startShort': "시작일",
   'form.endShort': "완료일",
   'hero.allSeen': "모두 시청함",
+  'hero.nextOn': '다음 에피소드: {date}',
+  'hero.upToDate': '최신 화까지 봤어요',
   'hero.seenEp': "{ep} 봤어요",
   'hero.seen': "봤어요",
   'hero.markSeen': "본 것으로 표시",

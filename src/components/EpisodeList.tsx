@@ -1,4 +1,4 @@
-import { Check, Loader2 } from 'lucide-react'
+import { Check, Loader2, Lock } from 'lucide-react'
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { locale, t } from '../i18n'
 import { getTmdbSeasonEpisodes, type EpisodeInfo } from '../lib/catalogApi'
@@ -9,6 +9,8 @@ import type { MediaInput } from '../types'
 
 interface Props {
   form: Pick<MediaInput, 'externalId' | 'episodesWatched' | 'episodesTotal' | 'seasons' | 'season'>
+  /** Épisodes déjà sortis (toutes saisons), si on le sait : les suivants ne se cochent pas */
+  aired?: number
   /** Nouveau nombre d'épisodes vus (et saison choisie) */
   onChange: (episodesWatched: number, season?: number) => void
 }
@@ -19,7 +21,7 @@ const MAX_GENERIC = 500
  * Liste des épisodes, saison par saison (façon plateforme de streaming).
  * Toucher un épisode le marque comme vu, ainsi que tous ceux d'avant ; retoucher le dernier vu l'annule.
  */
-export default function EpisodeList({ form, onChange }: Props) {
+export default function EpisodeList({ form, aired, onChange }: Props) {
   const { settings } = useMedia()
   const seasons = form.seasons
   const pos = seasonPosition(form)
@@ -105,15 +107,19 @@ export default function EpisodeList({ form, onChange }: Props) {
       <div ref={listRef} className="max-h-[26rem] space-y-1 overflow-y-auto overscroll-contain pr-1">
         {rows.map((e) => {
           const seen = e.number <= watchedHere
-          const upcoming = !!e.date && e.date > today
+          // Pas encore sorti : date à venir (TMDB), ou au-delà des épisodes diffusés
+          const upcoming = e.date ? e.date > today : aired != null && before + e.number > aired
+          // Un épisode à venir ne se coche pas (mais on peut décocher une erreur passée)
+          const locked = upcoming && !seen
           return (
             <button
               key={e.number}
               type="button"
               data-ep={e.number}
               onClick={() => toggle(e.number)}
+              disabled={locked}
               aria-pressed={seen}
-              className={cx('flex w-full items-center gap-3 rounded-xl p-1.5 text-left transition-colors active:bg-surface-2', upcoming && 'opacity-50')}
+              className={cx('flex w-full items-center gap-3 rounded-xl p-1.5 text-left transition-colors', locked ? 'cursor-not-allowed' : 'active:bg-surface-2', upcoming && 'opacity-50')}
             >
               <span className="relative aspect-video w-28 shrink-0 overflow-hidden rounded-lg border border-line bg-surface-2">
                 {e.still ? (
@@ -134,10 +140,10 @@ export default function EpisodeList({ form, onChange }: Props) {
               <span
                 className={cx(
                   'grid size-7 shrink-0 place-items-center rounded-full border transition-colors',
-                  seen ? 'border-accent bg-accent-fill text-on-accent' : 'border-line-strong text-transparent',
+                  seen ? 'border-accent bg-accent-fill text-on-accent' : locked ? 'border-dashed border-line-strong text-ink-3' : 'border-line-strong text-transparent',
                 )}
               >
-                <Check size={14} strokeWidth={3} />
+                {locked ? <Lock size={12} /> : <Check size={14} strokeWidth={3} />}
               </span>
             </button>
           )

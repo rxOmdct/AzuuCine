@@ -14,6 +14,7 @@ import { isPlainObject, LIMITS, readStorage } from './lib/security'
 import { mediaDB, requestPersistentStorage } from './lib/db'
 import { todayISO, uid } from './lib/utils'
 import { episodeCap, seasonPosition } from './lib/franchise'
+import { airedCount } from './lib/airing'
 
 // Clés propres à l'espace actif (compte connecté, ou appareil sans compte)
 const settingsKey = () => scopedKey('settings')
@@ -255,6 +256,9 @@ export function MediaProvider({ children, cloudUser }: { children: ReactNode; cl
       let next = Math.max(0, item.episodesWatched + delta)
       const cap = episodeCap(item)
       if (cap) next = Math.min(next, cap)
+      // On ne peut pas cocher un épisode qui n'est pas encore sorti
+      const aired = airedCount(item)
+      if (delta > 0 && aired != null) next = Math.min(next, Math.max(aired, item.episodesWatched))
       if (next === item.episodesWatched) return
       const patch: Partial<MediaInput> = { episodesWatched: next }
       // Série en plusieurs saisons : la saison suit les épisodes vus

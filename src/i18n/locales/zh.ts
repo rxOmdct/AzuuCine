@@ -737,6 +737,8 @@ const dict: Translations = {
   'form.startShort': "开始于",
   'form.endShort': "看完于",
   'hero.allSeen': "全部看完",
+  'hero.nextOn': '下一集：{date}',
+  'hero.upToDate': '已追平',
   'hero.seenEp': "已看 {ep}",
   'hero.seen': "已看",
   'hero.markSeen': "标记为已看",

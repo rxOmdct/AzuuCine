@@ -737,6 +737,8 @@ const dict: Translations = {
   'form.startShort': "Começou",
   'form.endShort': "Terminou",
   'hero.allSeen': "Tudo visto",
+  'hero.nextOn': 'Próximo episódio em {date}',
+  'hero.upToDate': 'Em dia',
   'hero.seenEp': "Vi {ep}",
   'hero.seen': "Visto",
   'hero.markSeen': "Marcar como visto",
