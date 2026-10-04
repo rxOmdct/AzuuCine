@@ -64,6 +64,9 @@ export type MediaInput = Omit<MediaItem, 'id' | 'createdAt' | 'updatedAt'>
 
 export type RatingScale = '5' | '10'
 
+/** Apparence : auto suit le navigateur (clair/sombre), les autres sont forcés. */
+export type ThemeMode = 'auto' | 'light' | 'dark' | 'night' | 'starfield'
+
 /** Catégories de Top 5 */
 export type TopCategory = 'film' | 'serie' | 'anime' | 'kdrama' | 'cdrama'
 
@@ -81,6 +84,8 @@ export interface Settings {
   topCategories: TopCategory[]
   /** Couleur du thème (hex), rouge par défaut. */
   accentColor: string
+  /** Apparence (clair, sombre, nuit, bleu nuit étoilé). « auto » suit le navigateur. */
+  themeMode: ThemeMode
 }
 
 export interface CustomList {

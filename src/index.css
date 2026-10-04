@@ -60,6 +60,118 @@
   }
 }
 
+/*
+ * Apparences (thèmes de fond). Le bloc @theme ci-dessus reste la palette SOMBRE
+ * par défaut (utilitaires Tailwind bg-bg/text-ink/border-line), et « dark » est
+ * donc l'apparence par défaut. On redéfinit ici UNIQUEMENT les jetons de palette
+ * pour chaque apparence — les jetons d'accent (--color-accent*) sont posés par JS.
+ */
+:root[data-theme='light'] {
+  --color-bg: #fafaf9;
+  --color-surface: #ffffff;
+  --color-surface-2: #f1f0ee;
+  --color-line: #e5e3df;
+  --color-line-strong: #d2cfc9;
+  --color-ink: #1c1b1a;
+  --color-ink-2: #57544e;
+  --color-ink-3: #86837c;
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  --color-bg: #0a0a0a;
+  --color-surface: #111110;
+  --color-surface-2: #181817;
+  --color-line: #262624;
+  --color-line-strong: #3a3936;
+  --color-ink: #f4f2ee;
+  --color-ink-2: #b3b0a8;
+  --color-ink-3: #8a8781;
+  color-scheme: dark;
+}
+
+:root[data-theme='night'] {
+  --color-bg: #000000;
+  --color-surface: #0a0a0a;
+  --color-surface-2: #141414;
+  --color-line: #222222;
+  --color-line-strong: #333333;
+  --color-ink: #f4f2ee;
+  --color-ink-2: #b3b0a8;
+  --color-ink-3: #8a8781;
+  color-scheme: dark;
+}
+
+:root[data-theme='starfield'] {
+  --color-bg: #070b1c;
+  --color-surface: #0c1226;
+  --color-surface-2: #141c38;
+  --color-line: #1f2a4d;
+  --color-line-strong: #2d3a63;
+  --color-ink: #eef1fb;
+  --color-ink-2: #b4bbd6;
+  --color-ink-3: #8089ab;
+  color-scheme: dark;
+}
+
+/* Anti-flash : avant que le JS ne pose data-theme, un utilisateur en préférence
+   claire ne doit pas voir la palette sombre le temps d'une frame. */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) {
+    --color-bg: #fafaf9;
+    --color-surface: #ffffff;
+    --color-surface-2: #f1f0ee;
+    --color-line: #e5e3df;
+    --color-line-strong: #d2cfc9;
+    --color-ink: #1c1b1a;
+    --color-ink-2: #57544e;
+    --color-ink-3: #86837c;
+    color-scheme: light;
+  }
+}
+
+/* Fond étoilé (apparence « bleu nuit »), 100% CSS, sans image ni réseau.
+   Une couche fixe derrière le contenu : nébuleuse bleue + étoiles en tuiles. */
+:root[data-theme='starfield'] #root {
+  background: transparent;
+}
+:root[data-theme='starfield'] body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-color: #070b1c;
+  background-image:
+    radial-gradient(1.5px 1.5px at 40px 60px, #ffffff, transparent),
+    radial-gradient(1px 1px at 120px 20px, rgba(255, 255, 255, 0.8), transparent),
+    radial-gradient(1px 1px at 200px 140px, #cbd5ff, transparent),
+    radial-gradient(1.5px 1.5px at 260px 90px, rgba(255, 255, 255, 0.6), transparent),
+    radial-gradient(1px 1px at 80px 190px, rgba(255, 255, 255, 0.7), transparent),
+    radial-gradient(1px 1px at 300px 250px, #ffffff, transparent),
+    radial-gradient(1.5px 1.5px at 340px 160px, rgba(203, 213, 255, 0.9), transparent),
+    radial-gradient(1200px 600px at 70% -10%, rgba(45, 58, 99, 0.55), transparent 60%),
+    radial-gradient(900px 500px at 15% 5%, rgba(31, 42, 77, 0.45), transparent 55%);
+  background-repeat: repeat, repeat, repeat, repeat, repeat, repeat, repeat, no-repeat, no-repeat;
+  background-size: 360px 360px, 360px 360px, 360px 360px, 360px 360px, 360px 360px, 360px 360px, 360px 360px,
+    100% 100%, 100% 100%;
+  animation: starfield-twinkle 9s ease-in-out infinite;
+}
+@keyframes starfield-twinkle {
+  0%,
+  100% {
+    opacity: 0.85;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  :root[data-theme='starfield'] body::before {
+    animation: none;
+  }
+}
+
 /* Petite étiquette en capitales (titres de section, libellés de champs) */
 @utility eyebrow {
   font-size: 11px;

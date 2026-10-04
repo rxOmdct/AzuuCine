@@ -129,6 +129,7 @@ export function normalizeSettings(raw: unknown): Partial<Settings> | undefined {
   if (raw.ratingScale === '5' || raw.ratingScale === '10') out.ratingScale = raw.ratingScale
   if (Array.isArray(raw.topCategories)) out.topCategories = ALL_TOP_CATEGORIES.filter((c) => (raw.topCategories as unknown[]).includes(c))
   if (isHexColor(raw.accentColor)) out.accentColor = raw.accentColor.toLowerCase()
+  if (raw.themeMode === 'auto' || raw.themeMode === 'light' || raw.themeMode === 'dark' || raw.themeMode === 'night' || raw.themeMode === 'starfield') out.themeMode = raw.themeMode
   return out
 }
 

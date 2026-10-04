@@ -1,47 +1,21 @@
 import Avatar from './social/Avatar'
 import { useSocial } from './social/SocialProvider'
-import { locale, t } from '../i18n'
-import { CloudOff, KeyRound, Loader2, LogOut, RefreshCw, UserRound } from 'lucide-react'
-import { useEffect, useState, type FormEvent } from 'react'
+import { t } from '../i18n'
+import { KeyRound, Loader2, LogOut, UserRound } from 'lucide-react'
+import { useState, type FormEvent } from 'react'
 import { PASSWORD_MIN, updatePassword } from '../lib/cloud/auth'
-import { cx } from '../lib/utils'
 import type { AccountApi } from '../store'
 import ConfirmDialog from './ConfirmDialog'
 import { SectionTitle } from './ui'
 
-function ago(iso?: string): string {
-  if (!iso) return t('time.never')
-  const s = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000)
-  if (s < 60) return t('time.justNow')
-  if (s < 3600) return t('time.minutesAgo', { n: Math.floor(s / 60) })
-  if (s < 86400) return t('time.hoursAgo', { n: Math.floor(s / 3600) })
-  return t('time.onDate', { date: new Date(iso).toLocaleDateString(locale(), { day: 'numeric', month: 'short' }) })
-}
-
-/** Réglages → Mon compte : état de la synchro, mot de passe, déconnexion. */
+/** Réglages → Mon compte : mot de passe, déconnexion. La synchro tourne en arrière-plan. */
 export default function AccountSection({ account, onMessage }: { account: AccountApi; onMessage: (kind: 'ok' | 'error', text: string) => void }) {
   const { sync } = account
   const social = useSocial()
-  const [, tick] = useState(0)
   const [pwOpen, setPwOpen] = useState(false)
   const [pw, setPw] = useState('')
   const [busy, setBusy] = useState<'pw' | 'logout' | 'import' | null>(null)
   const [confirmLogout, setConfirmLogout] = useState(false)
-
-  // Rafraîchit « il y a x min »
-  useEffect(() => {
-    const timer = setInterval(() => tick((n) => n + 1), 30_000)
-    return () => clearInterval(timer)
-  }, [])
-
-  const statusText =
-    sync.state === 'syncing'
-      ? t('account.syncing')
-      : sync.state === 'offline'
-        ? t('account.offline')
-        : sync.state === 'error'
-          ? t('account.syncError')
-          : t('account.synced', { when: ago(sync.lastSyncAt) })
 
   const changePassword = async (e: FormEvent) => {
     e.preventDefault()
@@ -90,20 +64,7 @@ export default function AccountSection({ account, onMessage }: { account: Accoun
           </span>
           <span className="min-w-0 flex-1">
             <span className="block truncate font-medium">{account.email}</span>
-            <span className={cx('mt-0.5 flex items-center gap-1.5 text-xs', sync.state === 'error' ? 'text-accent' : 'text-ink-3')}>
-              {sync.state === 'offline' && <CloudOff size={12} />}
-              {statusText}
-              {sync.pending > 0 && sync.state !== 'syncing' && ` · ${t('account.pending', { count: sync.pending })}`}
-            </span>
           </span>
-          <button
-            onClick={() => account.syncNow()}
-            disabled={sync.state === 'syncing'}
-            className="grid size-10 shrink-0 place-items-center rounded-full border border-line text-ink-2"
-            aria-label={t('account.syncNow')}
-          >
-            {sync.state === 'syncing' ? <Loader2 size={17} className="animate-spin" /> : <RefreshCw size={17} />}
-          </button>
         </div>
 
         <button

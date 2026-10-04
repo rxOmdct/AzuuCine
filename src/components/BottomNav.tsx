@@ -38,7 +38,7 @@ export default function BottomNav({ current, onChange, onAdd }: Props) {
   }
 
   return (
-    <nav className="safe-bottom fixed inset-x-0 bottom-0 z-30 border-t border-line bg-bg/95 backdrop-blur-md">
+    <nav className="safe-bottom fixed inset-x-0 bottom-0 z-30 border-t border-line bg-bg/95 backdrop-blur-md lg:hidden">
       <div className="mx-auto flex max-w-2xl items-center px-2">
         {ITEMS.slice(0, 2).map(button)}
         <div className="flex flex-1 justify-center">

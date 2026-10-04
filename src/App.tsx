@@ -1,6 +1,7 @@
 import { SocialProvider } from './components/social/SocialProvider'
 import { useEffect, useState } from 'react'
 import BottomNav, { type Tab } from './components/BottomNav'
+import SideNav from './components/SideNav'
 import MediaForm from './components/MediaForm'
 import Roulette from './components/Roulette'
 import CalendarView from './components/CalendarView'
@@ -44,8 +45,9 @@ export default function App() {
 
   return (
     <SocialProvider onOpenOwnItem={openItem}>
-    <div className="mx-auto min-h-dvh max-w-2xl">
-      <main className="safe-top px-4 pb-32">
+    <SideNav current={tab} onChange={go} onAdd={openNew} />
+    <div className="mx-auto min-h-dvh max-w-2xl lg:max-w-5xl lg:ps-60">
+      <main className="safe-top px-4 pb-32 lg:pb-10">
         {error && <p className="mt-4 rounded-xl border border-accent p-3 text-sm text-ink">{error}</p>}
         {tab === 'home' && <HomePage onOpen={openItem} onAdd={openNew} onNavigate={go} onRoulette={() => setRoulette(true)} onCalendar={() => setCalendar(true)} />}
         {tab === 'catalog' && <CatalogPage onOpen={openItem} onAdd={openNew} />}

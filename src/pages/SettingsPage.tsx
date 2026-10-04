@@ -1,6 +1,6 @@
 import { t } from '../i18n'
 import { LanguageSelect } from '../i18n/react'
-import { Check, Download, Eye, EyeOff, HardDrive, Trash2, Upload, UserX } from 'lucide-react'
+import { Check, Download, Eye, EyeOff, HardDrive, Smartphone, Trash2, Upload, UserX } from 'lucide-react'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import AccountSection from '../components/AccountSection'
 import ConfirmDialog from '../components/ConfirmDialog'
@@ -9,7 +9,8 @@ import { exportBackup, parseBackupFile, type ParsedBackup } from '../lib/backup'
 import { testTmdbKey } from '../lib/catalogApi'
 import { checkTmdbProxy, type ProxyState } from '../lib/cloud/api'
 import { ALL_TOP_CATEGORIES, TOP_CATEGORIES } from '../lib/constants'
-import { isHexColor, THEME_PRESETS } from '../lib/theme'
+import { isHexColor, THEME_MODES, THEME_PRESETS } from '../lib/theme'
+import { useInstallPrompt } from '../lib/pwa'
 import { cx } from '../lib/utils'
 import { useMedia } from '../store'
 
@@ -30,6 +31,7 @@ function Row({ icon, title, hint, onClick, danger }: { icon: ReactNode; title: s
 
 export default function SettingsPage() {
   const { items, settings, updateSettings, importItems, clearAll, lists, mergeLists, account } = useMedia()
+  const { canInstall, installed, install } = useInstallPrompt()
   const fileRef = useRef<HTMLInputElement>(null)
   const [pending, setPending] = useState<ParsedBackup>()
   const [message, setMessage] = useState<Message>()
@@ -131,6 +133,15 @@ export default function SettingsPage() {
     setMessage({ kind: 'ok', text: t('settings.cleared') })
   }
 
+  const onInstall = async () => {
+    if (canInstall) {
+      const ok = await install()
+      if (ok) setMessage({ kind: 'ok', text: t('settings.installed') })
+    } else {
+      setMessage({ kind: 'ok', text: t('settings.installHint') })
+    }
+  }
+
   return (
     <>
       <PageHeader title={t('settings.pageTitle')} accent={t('settings.pageAccent')} />
@@ -167,7 +178,21 @@ export default function SettingsPage() {
       </div>
       <p className="mt-2.5 text-xs text-ink-3">{t('settings.ratingHint')}</p>
 
-      <SectionTitle>{t('settings.theme')}</SectionTitle>
+      <SectionTitle>{t('settings.appearance')}</SectionTitle>
+      <div className="flex flex-wrap gap-2">
+        {THEME_MODES.map(({ value, label }) => {
+          const on = settings.themeMode === value
+          return (
+            <button key={value} onClick={() => updateSettings({ themeMode: value })} className={cx('chip', on && 'chip-on')} aria-pressed={on}>
+              {on && <Check size={14} />}
+              {label}
+            </button>
+          )
+        })}
+      </div>
+      <p className="mt-2.5 text-xs text-ink-3">{t('settings.appearanceHint')}</p>
+
+      <SectionTitle>{t('settings.accentColor')}</SectionTitle>
       <div className="grid grid-cols-6 gap-3">
         {THEME_PRESETS.map((p) => {
           const on = settings.accentColor.toLowerCase() === p.color
@@ -206,6 +231,23 @@ export default function SettingsPage() {
         </span>
         <span className="text-xs uppercase text-ink-3">{settings.accentColor}</span>
       </label>
+
+      <SectionTitle>{t('settings.installApp')}</SectionTitle>
+      <div className="card overflow-hidden">
+        {installed ? (
+          <div className="flex w-full items-center gap-3.5 px-4 py-4 text-start">
+            <span className="text-ink-2"><Check size={19} /></span>
+            <span className="flex-1 font-medium text-ink-3">{t('settings.installed')}</span>
+          </div>
+        ) : (
+          <button onClick={onInstall} className="flex w-full items-center gap-3.5 px-4 py-4 text-start transition-colors active:bg-surface-2">
+            <span className="text-ink-2"><Smartphone size={19} /></span>
+            <span className="flex-1 font-medium">{t('settings.installApp')}</span>
+            <span className="text-ink-3">→</span>
+          </button>
+        )}
+      </div>
+      <p className="mt-2.5 text-xs text-ink-3">{t('settings.installHint')}</p>
 
       <SectionTitle>{t('settings.databases')}</SectionTitle>
       <div className="card space-y-4 p-4">

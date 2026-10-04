@@ -15,7 +15,7 @@ import { cloudFetch } from './api'
  * En cas de conflit, la modification la plus récente gagne (vérifié aussi par la base).
  */
 
-export type SyncedSettings = Pick<Settings, 'ratingScale' | 'topCategories' | 'accentColor'>
+export type SyncedSettings = Pick<Settings, 'ratingScale' | 'topCategories' | 'accentColor' | 'themeMode'>
 
 export interface SyncHooks {
   getLists: () => CustomList[]

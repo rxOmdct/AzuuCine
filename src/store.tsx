@@ -31,7 +31,7 @@ function persistLists(lists: CustomList[]) {
     /* ignore */
   }
 }
-const DEFAULT_SETTINGS: Settings = { ratingScale: '5', topCategories: ALL_TOP_CATEGORIES, accentColor: DEFAULT_ACCENT }
+const DEFAULT_SETTINGS: Settings = { ratingScale: '5', topCategories: ALL_TOP_CATEGORIES, accentColor: DEFAULT_ACCENT, themeMode: 'auto' }
 
 /** Relit les réglages en ne gardant que des valeurs valides (le localStorage peut avoir été modifié). */
 function loadSettings(): Settings {
@@ -168,8 +168,8 @@ export function MediaProvider({ children, cloudUser }: { children: ReactNode; cl
       getLists: () => listsRef.current,
       applyLists: (next) => setLists(() => next, true),
       getSettings: () => {
-        const { ratingScale, topCategories, accentColor } = settingsRef.current
-        return { ratingScale, topCategories, accentColor }
+        const { ratingScale, topCategories, accentColor, themeMode } = settingsRef.current
+        return { ratingScale, topCategories, accentColor, themeMode }
       },
       applySettings: (patch) => updateSettingsRef.current(patch, true),
       itemsChanged: () => void reloadItems(),
@@ -199,10 +199,18 @@ export function MediaProvider({ children, cloudUser }: { children: ReactNode; cl
   }, [cloudUser?.id])
 
   // Thème de couleur appliqué avant l'affichage (pas de flash de rouge)
-  useLayoutEffect(() => applyTheme(settings.accentColor), [settings.accentColor])
+  useLayoutEffect(() => applyTheme(settings.accentColor, settings.themeMode), [settings.accentColor, settings.themeMode])
+  // En mode « auto », suit le clair/sombre du navigateur en direct
+  useEffect(() => {
+    if (settings.themeMode !== 'auto' || !window.matchMedia) return
+    const mq = window.matchMedia('(prefers-color-scheme: light)')
+    const onChange = () => applyTheme(settingsRef.current.accentColor, 'auto')
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [settings.themeMode])
 
   const updateSettings = useCallback((patch: Partial<Settings>, silent = false) => {
-    if (!silent && syncRef.current && ('ratingScale' in patch || 'topCategories' in patch || 'accentColor' in patch)) syncRef.current.markSettings()
+    if (!silent && syncRef.current && ('ratingScale' in patch || 'topCategories' in patch || 'accentColor' in patch || 'themeMode' in patch)) syncRef.current.markSettings()
     setSettings((prev) => {
       const next = { ...prev, ...patch }
       try {

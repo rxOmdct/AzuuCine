@@ -1,7 +1,8 @@
 import { t } from '../i18n'
+import type { ThemeMode } from '../types'
 /**
  * Thèmes de couleur : à partir d'une seule couleur, on calcule
- *  - accent      : version lisible sur fond noir (texte, icônes, filets)
+ *  - accent      : version lisible comme TEXTE sur le fond du thème résolu
  *  - accentFill  : la couleur choisie, pour les boutons pleins
  *  - onAccent    : texte blanc ou noir sur ces boutons, selon ce qui se lit le mieux
  */
@@ -23,7 +24,13 @@ export const THEME_PRESETS: { readonly name: string; color: string; accent?: str
   { get name() { return t('theme.white') }, color: '#e7e5e4' },
 ]
 
-const BG = '#0a0a0a'
+/** Couleur de fond (canvas) de chaque thème résolu, pour calculer un accent lisible. */
+const CANVAS: Record<Exclude<ThemeMode, 'auto'>, string> = {
+  light: '#ffffff',
+  dark: '#0a0a0a',
+  night: '#000000',
+  starfield: '#0a1230',
+}
 
 export const isHexColor = (v: unknown): v is string => typeof v === 'string' && /^#[0-9a-f]{6}$/i.test(v)
 
@@ -49,12 +56,17 @@ export function contrast(a: string, b: string): number {
   return (x + 0.05) / (y + 0.05)
 }
 
-/** Éclaircit la couleur vers le blanc jusqu'à être lisible sur le fond noir. */
-function readableOnBlack(color: string): string {
+/**
+ * Rend la couleur lisible comme texte sur le canvas donné :
+ *  - canvas clair  → on assombrit vers le noir jusqu'à un contraste suffisant
+ *  - canvas sombre → on éclaircit vers le blanc (comme avant)
+ */
+function readableOn(color: string, canvas: string): string {
+  const target = luminance(canvas) > 0.5 ? 0 : 255 // vers noir ou vers blanc
   let c = color
   const base = rgb(color)
-  for (let t = 0; t <= 1 && contrast(c, BG) < 4.8; t += 0.05) {
-    c = hex(base.map((v) => v + (255 - v) * t) as [number, number, number])
+  for (let m = 0; m <= 1 && contrast(c, canvas) < 4.8; m += 0.05) {
+    c = hex(base.map((v) => v + (target - v) * m) as [number, number, number])
   }
   return c
 }
@@ -65,21 +77,46 @@ export interface ThemeColors {
   onAccent: string
 }
 
-export function themeFromColor(color: string): ThemeColors {
+function themeColors(color: string, resolved: Exclude<ThemeMode, 'auto'>): ThemeColors {
   const fill = isHexColor(color) ? color.toLowerCase() : DEFAULT_ACCENT
+  const canvas = CANVAS[resolved]
+  const darkCanvas = '#0a0a0a'
   const preset = THEME_PRESETS.find((p) => p.color === fill)
+  // Les overrides d'accent des presets sont pensés pour un fond sombre :
+  // sur fond clair on recalcule un accent assombri.
+  const accent = resolved === 'light' ? readableOn(fill, canvas) : (preset?.accent ?? readableOn(fill, canvas))
   return {
-    accent: preset?.accent ?? readableOnBlack(fill),
+    accent,
     accentFill: fill,
-    onAccent: contrast('#ffffff', fill) >= contrast(BG, fill) ? '#ffffff' : BG,
+    onAccent: contrast('#ffffff', fill) >= contrast(darkCanvas, fill) ? '#ffffff' : darkCanvas,
   }
 }
 
-/** Applique le thème à toute l'app (les classes Tailwind lisent ces variables). */
-export function applyTheme(color: string) {
-  const t = themeFromColor(color)
-  const root = document.documentElement.style
-  root.setProperty('--color-accent', t.accent)
-  root.setProperty('--color-accent-fill', t.accentFill)
-  root.setProperty('--color-on-accent', t.onAccent)
+/** Compat : thème calculé pour le rendu sombre par défaut. */
+export function themeFromColor(color: string): ThemeColors {
+  return themeColors(color, 'dark')
 }
+
+/** Applique le thème à toute l'app (les classes Tailwind lisent ces variables). */
+export function applyTheme(accentColor: string, mode: ThemeMode) {
+  const resolved: Exclude<ThemeMode, 'auto'> =
+    mode === 'auto'
+      ? window.matchMedia?.('(prefers-color-scheme: light)').matches
+        ? 'light'
+        : 'dark'
+      : mode
+  document.documentElement.dataset.theme = resolved
+  const c = themeColors(accentColor, resolved)
+  const root = document.documentElement.style
+  root.setProperty('--color-accent', c.accent)
+  root.setProperty('--color-accent-fill', c.accentFill)
+  root.setProperty('--color-on-accent', c.onAccent)
+}
+
+export const THEME_MODES: { value: ThemeMode; readonly label: string }[] = [
+  { value: 'auto', get label() { return t('theme.modeAuto') } },
+  { value: 'light', get label() { return t('theme.modeLight') } },
+  { value: 'dark', get label() { return t('theme.modeDark') } },
+  { value: 'night', get label() { return t('theme.modeNight') } },
+  { value: 'starfield', get label() { return t('theme.modeStarfield') } },
+]
