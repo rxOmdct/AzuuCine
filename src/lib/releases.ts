@@ -3,7 +3,7 @@ import type { MediaItem } from '../types'
 import { loadAiring, trackable, CACHE_EVENT } from './airing'
 import { getAniListReleases, getTmdbRelease, type ReleaseInfo } from './catalogApi'
 import { isPlainObject, isSafeExternalId, isSafeId, readStorage, safeDay, safeIso } from './security'
-import { todayISO } from './utils'
+import { localDay, todayISO } from './utils'
 
 /**
  * Calendrier des sorties :
@@ -92,7 +92,7 @@ export async function refreshReleases(items: MediaItem[], tmdbKey?: string, forc
 
 /** Tous les évènements connus, triés par date (à partir d'il y a 7 jours). */
 export function calendarEvents(items: MediaItem[], releases: ReleaseCache = loadReleases()): CalendarEvent[] {
-  const from = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10)
+  const from = localDay(new Date(Date.now() - 7 * 86400000))
   const airing = loadAiring()
   const events: CalendarEvent[] = []
   for (const item of trackable(items)) {

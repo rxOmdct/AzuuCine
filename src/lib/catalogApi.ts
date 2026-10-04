@@ -5,6 +5,7 @@ import { TYPE_BY_VALUE } from './constants'
 import { subtypeLabel, tmdbGenres } from './genres'
 import { franchiseKey } from './franchise'
 import { cleanText, isSafeExternalId, isSafeTmdbPath, LIMITS, remoteImage, safeCountries, safeDay, safePosterUrl, safeSeasons, safeStringList } from './security'
+import { localDay } from './utils'
 
 /**
  * Recherche dans les bases publiques :
@@ -666,7 +667,7 @@ export async function getTmdbRelease(externalId: string, key: string): Promise<R
     const pick = (type: number) => day(local.filter((r) => r.type === type).map((r) => r.release_date ?? '').sort()[0])
     const cinema = pick(3) ?? pick(2)
     const online = pick(4)
-    const today = new Date().toISOString().slice(0, 10)
+    const today = localDay()
     if (cinema && cinema >= today) return { date: cinema, label: t('release.cinema') }
     if (online && online >= today) return { date: online, label: t('release.online') }
     const primary = day(d.release_date)
@@ -708,7 +709,7 @@ export async function getAniListReleases(ids: number[]): Promise<Map<number, Rel
       if (!Number.isInteger(m?.id)) continue
       const nx = m.nextAiringEpisode
       if (nx && typeof nx.airingAt === 'number' && nx.airingAt > 0 && nx.airingAt < 4102444800) {
-        out.set(m.id, { date: new Date(nx.airingAt * 1000).toISOString().slice(0, 10), label: nx.episode === 1 ? t('release.firstEpisode') : nx.episode ? t('release.episode', { ep: nx.episode }) : t('release.newEpisode') })
+        out.set(m.id, { date: localDay(new Date(nx.airingAt * 1000)), label: nx.episode === 1 ? t('release.firstEpisode') : nx.episode ? t('release.episode', { ep: nx.episode }) : t('release.newEpisode') })
       } else if (m.startDate?.year && m.startDate.month && m.startDate.day) {
         const d = `${m.startDate.year}-${String(m.startDate.month).padStart(2, '0')}-${String(m.startDate.day).padStart(2, '0')}`
         if (day(d)) out.set(m.id, { date: d, label: t('release.firstEpisode') })
@@ -736,8 +737,6 @@ export interface GlobalRelease {
   /** Popularité normalisée 0–100, pour trier les sorties d'un même jour */
   pop: number
 }
-
-const localDay = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 
 function safeRelease(r: GlobalRelease): GlobalRelease | null {
   const title = cleanText(r.title, LIMITS.title)

@@ -10,22 +10,29 @@ on:
 
 jobs:
   deploy:
+    if: github.ref == 'refs/heads/main'
     runs-on: azuucine
     env:
       REQUIRE_SUPABASE: '1' # le build échoue si VITE_SUPABASE_* manquent (garde dans vite.config.ts)
-      VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
-      VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-      GIT_TOKEN: ${{ github.token }}
     steps:
       - name: Récupérer le code
+        # Le jeton n'est visible que de cette étape (pas des scripts npm qui suivent)
+        env:
+          GIT_TOKEN: ${{ github.token }}
+          REF: ${{ github.ref_name }}
+          REPO_URL: ${{ github.server_url }}/${{ github.repository }}.git
         run: |
           rm -rf src
           AUTH=$(printf 'x-access-token:%s' "$GIT_TOKEN" | base64 -w0)
-          git -c http.extraheader="AUTHORIZATION: basic $AUTH" clone --depth 1 --branch "${{ github.ref_name }}" \
-            "${{ github.server_url }}/${{ github.repository }}.git" src
+          git -c http.extraheader="AUTHORIZATION: basic $AUTH" clone --depth 1 --branch "$REF" "$REPO_URL" src
       - name: Installer les dépendances
         run: cd src && npm ci --no-audit --no-fund
       - name: Construire
+        env:
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
         run: cd src && npm run build
       - name: Publier (atomique, 3 versions conservées)
-        run: cd src && bash deploy/release.sh dist "${{ github.sha }}"
+        env:
+          SHA: ${{ github.sha }}
+        run: cd src && bash deploy/release.sh dist "$SHA"

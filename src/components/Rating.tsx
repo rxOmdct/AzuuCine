@@ -61,13 +61,14 @@ export function RatingInput({ value, onChange, scale, size = 'lg', label }: Inpu
   const stars = (value ?? 0) / 2
   const pick = (e: MouseEvent<HTMLButtonElement>, index: number) => {
     const rect = e.currentTarget.getBoundingClientRect()
-    const half = e.clientX - rect.left < rect.width / 2
+    // Clavier (Entrée / Espace) : pas de position de clic, on donne l'étoile entière
+    const half = e.detail !== 0 && e.clientX - rect.left < rect.width / 2
     const next = (index + (half ? 0.5 : 1)) * 2
     onChange(next === value ? undefined : next) // retoucher la même valeur efface la note
   }
 
   return (
-    <div className="flex items-center gap-1" role="group" aria-label={label ?? 'Note sur 5'}>
+    <div className="flex items-center gap-1" role="group" aria-label={label ?? t('rating.outOf5')}>
       {Array.from({ length: 5 }, (_, i) => {
         const fill = Math.max(0, Math.min(1, stars - i))
         return (

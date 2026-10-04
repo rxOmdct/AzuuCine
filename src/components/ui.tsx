@@ -46,27 +46,6 @@ export function LinkArrow({ onClick, children }: { onClick: () => void; children
   )
 }
 
-/** Liste de barres horizontales (une seule série → une seule couleur, valeurs écrites en clair). */
-export function BarList({ data, format = String }: { data: { label: string; value: number }[]; format?: (v: number) => string }) {
-  const max = Math.max(1, ...data.map((d) => d.value))
-  if (!data.some((d) => d.value > 0)) return <p className="text-sm text-ink-3">{t('common.noData')}</p>
-  return (
-    <ul className="space-y-3">
-      {data.map((d) => (
-        <li key={d.label} className="text-sm" title={`${d.label} : ${format(d.value)}`}>
-          <div className="mb-1.5 flex justify-between gap-2">
-            <span className="truncate text-ink-2">{d.label}</span>
-            <span className="shrink-0 text-xs tabular-nums text-ink">{format(d.value)}</span>
-          </div>
-          <div className="h-1 rounded-full bg-surface-2">
-            <div className="h-full rounded-full bg-accent" style={{ width: `${(d.value / max) * 100}%`, minWidth: d.value ? 4 : 0 }} />
-          </div>
-        </li>
-      ))}
-    </ul>
-  )
-}
-
 export function EmptyState({ title, text, action }: { title: string; text?: string; action?: ReactNode }) {
   return (
     <div className="card mt-4 flex flex-col items-center px-6 py-12 text-center">

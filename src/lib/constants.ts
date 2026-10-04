@@ -47,12 +47,6 @@ export const CRITERIA: { key: CriteriaKey; readonly label: string }[] = [
   { key: 'ost', get label() { return t('criteria.ost') } },
 ]
 
-export const PLATFORM_SUGGESTIONS = [
-  'Netflix', 'Prime Video', 'Disney+', 'Crunchyroll', 'ADN', 'Viki', 'Apple TV+', 'Max',
-  'Canal+', 'Paramount+', 'YouTube', 'iQIYI', 'WeTV', 'Youku',
-]
-export const platformSuggestions = () => [...PLATFORM_SUGGESTIONS, t('platform.cinema'), t('platform.dvd'), t('platform.tv')]
-
 export const TOP_CATEGORIES: { value: TopCategory; readonly label: string; readonly plural: string }[] = [
   { value: 'film', get label() { return t('type.film') }, get plural() { return t('typePlural.film') } },
   { value: 'serie', get label() { return t('type.serie') }, get plural() { return t('typePlural.serie') } },

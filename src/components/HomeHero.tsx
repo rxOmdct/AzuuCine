@@ -15,7 +15,7 @@ export function nextEpisodeLabel(item: MediaItem): string | undefined {
   if (cap && item.episodesWatched >= cap) return undefined
   const pos = seasonPosition({ ...item, episodesWatched: item.episodesWatched + 1, season: undefined })
   const ep = t('episodes.short', { n: pos ? pos.episode : item.episodesWatched + 1 })
-  return pos ? `S${pos.season} · ${ep}` : ep
+  return pos ? `${t('episodes.seasonShort', { n: pos.season })} · ${ep}` : ep
 }
 
 /** Grande bannière de l'accueil : défile entre les titres que je regarde en ce moment (ou le prochain à voir). */

@@ -40,7 +40,7 @@ export function cleanText(value: unknown, max: number): string | undefined {
 
 /** Identifiant interne : lettres, chiffres, tirets, max 64 caractères. */
 export function isSafeId(value: unknown): value is string {
-  return typeof value === 'string' && /^[A-Za-z0-9_-]{1,64}$/.test(value)
+  return typeof value === 'string' && /^[A-Za-z0-9_-]{1,64}$/.test(value) && value !== '__proto__'
 }
 
 /**
@@ -77,8 +77,10 @@ export function safePosterUrl(value: unknown): string | undefined {
 /** Date au format AAAA-MM-JJ valide. */
 export function safeDay(value: unknown): string | undefined {
   if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return undefined
-  const d = new Date(value + 'T12:00:00')
-  return Number.isNaN(d.getTime()) ? undefined : value
+  const [y, m, day] = value.split('-').map(Number)
+  const d = new Date(Date.UTC(y, m - 1, day))
+  // « 2026-02-31 » n'existe pas (le moteur JS l'aurait transformé en 3 mars)
+  return d.getUTCFullYear() === y && d.getUTCMonth() === m - 1 && d.getUTCDate() === day ? value : undefined
 }
 
 /** Date-heure ISO valide (ou undefined). */

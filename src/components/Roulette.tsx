@@ -3,6 +3,7 @@ import { locale, t } from '../i18n'
 import { Check, Dices, RotateCcw, X } from 'lucide-react'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type TransitionEvent } from 'react'
 import { MEDIA_TYPES, TYPE_BY_VALUE } from '../lib/constants'
+import { episodeCap } from '../lib/franchise'
 import {
   buildPool,
   loadFilters,
@@ -61,6 +62,8 @@ export default function Roulette({ onClose, onOpen }: Props) {
   const pending = useRef<MediaItem | undefined>(undefined)
   const spinningRef = useRef(false)
   const resultRef = useRef<MediaItem | undefined>(undefined)
+  const timers = useRef<number[]>([])
+  useEffect(() => () => timers.current.forEach((x) => clearTimeout(x)), [])
   resultRef.current = result
 
   const xFor = (index: number, jitter = 0) => {
@@ -115,12 +118,15 @@ export default function Roulette({ onClose, onOpen }: Props) {
     setAnimate(false)
     setOffset(xFor(2))
     // On place le rouleau au départ, puis on lance l'animation juste après
-    window.setTimeout(() => {
-      setAnimate(true)
-      setOffset(xFor(TARGET, (Math.random() - 0.5) * (CARD - 30)))
-    }, 40)
-    // Filet de sécurité si l'événement de fin d'animation n'arrive pas (onglet en arrière-plan…)
-    window.setTimeout(finishSpin, SPIN_MS + 400)
+    timers.current.forEach((x) => clearTimeout(x))
+    timers.current = [
+      window.setTimeout(() => {
+        setAnimate(true)
+        setOffset(xFor(TARGET, (Math.random() - 0.5) * (CARD - 30)))
+      }, 40),
+      // Filet de sécurité si l'événement de fin d'animation n'arrive pas (onglet en arrière-plan…)
+      window.setTimeout(finishSpin, SPIN_MS + 400),
+    ]
   }
 
   const finishSpin = () => {
@@ -214,7 +220,7 @@ export default function Roulette({ onClose, onOpen }: Props) {
                   {result.year && <span>{result.year}</span>}
                   <span>
                     {TYPE_BY_VALUE[result.type].episodic
-                      ? `${result.episodesTotal ? `${t('roulette.nEps', { n: result.episodesTotal })} · ` : ''}${t('roulette.perEp', { duration: formatDuration(sessionMinutes(result)) })}`
+                      ? `${episodeCap(result) ? `${t('roulette.nEps', { n: episodeCap(result)! })} · ` : ''}${t('roulette.perEp', { duration: formatDuration(sessionMinutes(result)) })}`
                       : formatDuration(sessionMinutes(result))}
                   </span>
                   {result.platform && <span>· {result.platform}</span>}
@@ -222,8 +228,8 @@ export default function Roulette({ onClose, onOpen }: Props) {
                 </div>
                 {result.status === 'pause' && (
                   <p className="mt-2 text-xs text-ink-2">
-                    {result.episodesTotal
-                      ? t('roulette.stoppedAtOf', { ep: result.episodesWatched, total: result.episodesTotal })
+                    {episodeCap(result)
+                      ? t('roulette.stoppedAtOf', { ep: result.episodesWatched, total: episodeCap(result)! })
                       : t('roulette.stoppedAt', { ep: result.episodesWatched })}
                   </p>
                 )}

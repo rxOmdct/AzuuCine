@@ -2,6 +2,7 @@ import { genreLabel } from './genres'
 import { t } from '../i18n'
 import type { MediaItem, RatingScale } from '../types'
 import { TYPE_BY_VALUE } from './constants'
+import { episodeCap } from './franchise'
 import { safePosterUrl } from './security'
 import { formatRating } from './utils'
 
@@ -255,8 +256,9 @@ export async function renderItemCard(item: MediaItem, scale: RatingScale, credit
   const episodic = TYPE_BY_VALUE[item.type].episodic
   const minutes = credits?.runtime ?? item.duration
   const rows: [string, string][] = []
-  if (episodic && item.episodesTotal) {
-    rows.push([t('form.episodes'), `${t('stats.episodesN', { count: item.episodesTotal })}${item.episodeDuration ? ` · ${t('common.minutes', { n: item.episodeDuration })}` : ''}`])
+  const totalEps = episodeCap(item)
+  if (episodic && totalEps) {
+    rows.push([t('form.episodes'), `${t('stats.episodesN', { count: totalEps })}${item.episodeDuration ? ` · ${t('common.minutes', { n: item.episodeDuration })}` : ''}`])
   } else if (!episodic && minutes) {
     rows.push([t('form.duration'), t('share.minutesLong', { n: minutes })])
   }

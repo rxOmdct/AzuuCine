@@ -1,5 +1,6 @@
 import { locale } from '../i18n'
 import type { MediaItem, MediaType, WatchStatus } from '../types'
+import { episodeCap } from './franchise'
 import { DEFAULT_FILM_MINUTES, MEDIA_TYPES, STATUSES, TYPE_BY_VALUE } from './constants'
 
 /** Temps estimé (minutes) passé sur une fiche. */
@@ -7,7 +8,10 @@ export function watchMinutes(item: MediaItem): number {
   const epMin = item.episodeDuration || TYPE_BY_VALUE[item.type].episodeMinutes
   if (item.type === 'film') return item.status === 'termine' ? (item.duration || DEFAULT_FILM_MINUTES) * (1 + (item.rewatchDates?.length ?? 0)) : 0
   if (item.episodesWatched > 0) return item.episodesWatched * epMin
-  if (item.status === 'termine') return item.episodesTotal ? item.episodesTotal * epMin : item.duration || 0
+  if (item.status === 'termine') {
+    const cap = episodeCap(item)
+    return cap ? cap * epMin : item.duration || 0
+  }
   return 0
 }
 

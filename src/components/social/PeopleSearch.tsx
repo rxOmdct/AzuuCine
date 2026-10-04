@@ -16,7 +16,10 @@ export default function PeopleSearch({ onClose }: { onClose: () => void }) {
 
   useEffect(() => {
     const term = q.trim()
-    if (term.length < 2) return setResults([])
+    if (term.length < 2) {
+      setLoading(false)
+      return setResults([])
+    }
     let alive = true
     setLoading(true)
     const timer = setTimeout(() => {

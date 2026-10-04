@@ -3,14 +3,15 @@ import { cx } from '../lib/utils'
 
 /** Affiche du média, ou une vignette sobre (aplat + initiale en serif) si aucune image. */
 export default function Poster({ src, title, className }: { src?: string; title: string; className?: string }) {
-  const [broken, setBroken] = useState(false)
-  if (src && !broken) {
+  // On retient quelle image a échoué (une nouvelle affiche doit retenter)
+  const [broken, setBroken] = useState<string>()
+  if (src && broken !== src) {
     return (
       <img
         src={src}
         alt=""
         loading="lazy"
-        onError={() => setBroken(true)}
+        onError={() => setBroken(src)}
         className={cx('aspect-[2/3] w-full rounded-xl border border-line bg-surface-2 object-cover', className)}
       />
     )

@@ -39,13 +39,14 @@ export default function DatabaseSearch({ onPick, initialQuery = '', currentExter
   // Recherche avec un petit délai pendant la frappe
   useEffect(() => {
     const q = query.trim()
+    // Toute réponse d'une recherche précédente devient caduque
+    const id = ++requestId.current
     setError(undefined)
     if (q.length < 2) {
       setResults([])
       setLoading(false)
       return
     }
-    const id = ++requestId.current
     setLoading(true)
     const timer = setTimeout(async () => {
       try {

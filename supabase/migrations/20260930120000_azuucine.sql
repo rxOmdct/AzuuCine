@@ -87,8 +87,15 @@ as $$
 declare
   n integer;
   max_rows integer := case tg_table_name when 'items' then 20000 else 300 end;
+  already boolean;
 begin
-  execute format('select count(*) from public.%I where user_id = $1', tg_table_name) into n using new.user_id;
+  -- Un « upsert » d'une ligne qui existe déjà n'en ajoute pas : jamais bloqué (sinon plus aucune modification possible)
+  execute format('select exists (select 1 from public.%I where user_id = $1 and id = $2)', tg_table_name) into already using new.user_id, new.id;
+  if already then
+    return new;
+  end if;
+  -- Les fiches supprimées (gardées pour la synchro) ne comptent pas
+  execute format('select count(*) from public.%I where user_id = $1 and not deleted', tg_table_name) into n using new.user_id;
   if n >= max_rows then
     raise exception 'quota exceeded for %', tg_table_name;
   end if;
@@ -110,7 +117,8 @@ alter table public.lists force row level security;
 alter table public.settings force row level security;
 
 -- Les visiteurs non connectés n'ont accès à rien
-revoke all on public.items, public.lists, public.settings from anon;
+-- Rien d'autre que lire / écrire ses lignes (pas de TRUNCATE, TRIGGER, REFERENCES…)
+revoke all on public.items, public.lists, public.settings from anon, authenticated;
 grant select, insert, update, delete on public.items, public.lists, public.settings to authenticated;
 
 drop policy if exists "own items" on public.items;

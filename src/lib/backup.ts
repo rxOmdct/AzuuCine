@@ -1,6 +1,7 @@
 import { t } from '../i18n'
 import type { BackupFile, Criteria, CustomList, MediaItem, MediaType, Settings, TopCategory, TopEntry, WatchStatus } from '../types'
 import { ALL_TOP_CATEGORIES, MEDIA_TYPES, STATUSES } from './constants'
+import { episodeCap } from './franchise'
 import { convertLegacyBackup, isLegacyBackup } from './legacyImport'
 import {
   cleanText,
@@ -61,9 +62,7 @@ function safeDates(v: unknown): string[] | undefined {
   return out.length ? out : undefined
 }
 
-/** Valide et nettoie une fiche venant d'un fichier importé. Renvoie null si inutilisable. */
-
-
+/** Valide et nettoie une fiche (import, synchro, écriture locale). Renvoie null si inutilisable. */
 export function normalizeItem(raw: unknown): MediaItem | null {
   if (!isPlainObject(raw)) return null
   const r = raw
@@ -78,8 +77,11 @@ export function normalizeItem(raw: unknown): MediaItem | null {
   }
   const type = (TYPES.has(r.type as string) ? r.type : 'autre') as MediaType
   const episodesTotal = int(r.episodesTotal, 0, 100000) || undefined
+  const seasons = safeSeasons(r.seasons)
   let episodesWatched = int(r.episodesWatched, 0, 100000) ?? 0
-  if (episodesTotal && episodesWatched > episodesTotal) episodesWatched = episodesTotal
+  // Plafond : toutes les saisons connues (la fiche peut en avoir plus que le total enregistré)
+  const cap = episodeCap({ episodesTotal, seasons })
+  if (cap && episodesWatched > cap) episodesWatched = cap
   const listIds = safeStringList(r.listIds, LIMITS.lists, 64).filter(isSafeId)
   return {
     id: isSafeId(r.id) ? r.id : uid(),
@@ -95,7 +97,7 @@ export function normalizeItem(raw: unknown): MediaItem | null {
     episodesWatched,
     episodesTotal,
     season: int(r.season, 0, 1000) || undefined,
-    seasons: safeSeasons(r.seasons),
+    seasons,
     episodeDuration: int(r.episodeDuration, 0, 1440) || undefined,
     duration: int(r.duration, 0, 6000) || undefined,
     startDate: safeDay(r.startDate),
@@ -103,7 +105,6 @@ export function normalizeItem(raw: unknown): MediaItem | null {
     genres: safeStringList(r.genres, LIMITS.genres),
     platform: cleanText(r.platform, LIMITS.shortText),
     notes: cleanText(r.notes, LIMITS.notes),
-    notesPublic: r.notesPublic === true || undefined,
     poster: safePosterUrl(r.poster),
     backdrop: remoteImage(r.backdrop),
     overview: cleanText(r.overview, LIMITS.overview),

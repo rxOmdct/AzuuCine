@@ -209,7 +209,7 @@ export default function MediaForm({ item, onClose, onGoToSettings, onOpenItem }:
       if (cap && form.episodesWatched >= cap) return { label: t('hero.allSeen'), done: true }
       const nextPos = seasonPosition({ ...form, episodesWatched: form.episodesWatched + 1, season: undefined })
       const ep = t('episodes.short', { n: nextPos ? nextPos.episode : form.episodesWatched + 1 })
-      const label = t('hero.seenEp', { ep: nextPos ? `S${nextPos.season} · ${ep}` : ep })
+      const label = t('hero.seenEp', { ep: nextPos ? `${t('episodes.seasonShort', { n: nextPos.season })} · ${ep}` : ep })
       return { label, onClick: () => setForm((f) => withEpisodes(f, f.episodesWatched + 1)) }
     }
     if (form.status === 'termine') return { label: t('hero.seen'), done: true }
@@ -259,13 +259,8 @@ export default function MediaForm({ item, onClose, onGoToSettings, onOpenItem }:
       return next
     })
 
-  const changeEpisodes = (delta: number) =>
-    setForm((f) => {
-      let n = Math.max(0, f.episodesWatched + delta)
-      const cap = episodeCap(f)
-      if (cap) n = Math.min(n, cap)
-      return { ...f, episodesWatched: n }
-    })
+  // Même règles que la liste d'épisodes : le statut et les dates suivent
+  const changeEpisodes = (delta: number) => setForm((f) => withEpisodes(f, f.episodesWatched + delta))
 
   const onPickImage = async (file?: File) => {
     if (!file) return
@@ -468,7 +463,8 @@ export default function MediaForm({ item, onClose, onGoToSettings, onOpenItem }:
           {/* Épisodes / durée */}
           {typeInfo.episodic ? (
             <Section title={t('form.episodes')}>
-              {form.seasons || form.episodesTotal ? (
+              {/* Liste d'épisodes pour une fiche liée (TMDB / AniList) ; compteur + total modifiable pour une fiche manuelle */}
+              {form.seasons || (form.externalId && form.episodesTotal) ? (
                 <EpisodeList form={form} onChange={(n, season) => setForm((f) => withEpisodes(f, n, season))} />
               ) : (
                 <div className="card space-y-5 p-4">

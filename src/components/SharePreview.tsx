@@ -2,6 +2,7 @@ import { t } from '../i18n'
 import { Download, Share2, X } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { shareImage } from '../lib/shareCard'
+import { useEscape } from '../lib/escape'
 
 interface Props {
   blob: Blob
@@ -28,11 +29,7 @@ export default function SharePreview({ blob, filename, title, onClose }: Props) 
     setUrl(u)
     return () => URL.revokeObjectURL(u)
   }, [blob])
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
+  useEscape(onClose)
 
   const go = async () => {
     setBusy(true)

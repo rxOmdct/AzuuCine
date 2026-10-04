@@ -23,7 +23,13 @@ export default function EpisodeList({ form, onChange }: Props) {
   const { settings } = useMedia()
   const seasons = form.seasons
   const pos = seasonPosition(form)
-  const [viewSeason, setViewSeason] = useState(pos?.season ?? 1)
+  const [picked, setViewSeason] = useState(pos?.season ?? 1)
+  // La saison affichée suit la progression (bouton « Vu : S2 · É1 » de l'en-tête) et reste dans les limites
+  const current = pos?.season
+  useEffect(() => {
+    if (current) setViewSeason(current)
+  }, [current])
+  const viewSeason = seasons ? Math.min(Math.max(1, picked), seasons.length) : 1
   const [episodes, setEpisodes] = useState<EpisodeInfo[]>()
   const [loading, setLoading] = useState(false)
   const listRef = useRef<HTMLDivElement>(null)
@@ -33,7 +39,7 @@ export default function EpisodeList({ form, onChange }: Props) {
 
   // Taille de la saison affichée (ou de toute la série si on ne connaît pas le découpage)
   const before = seasons ? episodesBeforeSeason(seasons, viewSeason) : 0
-  const size = seasons ? seasons[viewSeason - 1] : Math.min(episodeCap(form) ?? 0, MAX_GENERIC)
+  const size = seasons ? (seasons[viewSeason - 1] ?? 0) : Math.min(episodeCap(form) ?? 0, MAX_GENERIC)
 
   useEffect(() => {
     if (!isTmdb || !navigator.onLine) return setEpisodes(undefined)

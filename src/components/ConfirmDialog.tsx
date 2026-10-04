@@ -1,5 +1,5 @@
 import { t } from '../i18n'
-import { useEffect } from 'react'
+import { useEscape } from '../lib/escape'
 
 interface Props {
   open: boolean
@@ -12,12 +12,7 @@ interface Props {
 
 /** Fenêtre « Êtes-vous sûr ? » intégrée à l'app (plus fiable que window.confirm sur mobile). */
 export default function ConfirmDialog({ open, title, message, confirmLabel = t('common.confirm'), onConfirm, onCancel }: Props) {
-  useEffect(() => {
-    if (!open) return
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onCancel()
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [open, onCancel])
+  useEscape(onCancel, open)
 
   if (!open) return null
   return (

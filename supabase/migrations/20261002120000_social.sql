@@ -25,7 +25,8 @@ create table if not exists public.profiles (
   updated_at timestamptz not null default now()
 );
 
-create index if not exists profiles_display_name_idx on public.profiles (lower(display_name));
+-- (ancien index inutile : la recherche par nom se fait avec « like '%…%' »)
+drop index if exists public.profiles_display_name_idx;
 
 -- Pseudo de départ aléatoire (l'email n'est jamais utilisé : il resterait visible de tous)
 create or replace function public.azuu_random_username()
@@ -84,7 +85,7 @@ language plpgsql
 set search_path = ''
 as $$
 declare
-  media text := '^https?://[^/?#]+/storage/v1/object/public/profile-media/' || new.id::text || '/[A-Za-z0-9_.-]{1,80}$';
+  media text := '^https://[a-z0-9-]{1,63}\.supabase\.(co|in)/storage/v1/object/public/profile-media/' || new.id::text || '/[A-Za-z0-9_.-]{1,80}$';
 begin
   if tg_op = 'UPDATE' and new.id <> old.id then
     raise exception 'id is immutable';
@@ -261,10 +262,11 @@ begin
   end if;
 
   if st = 'termine' and old_st is distinct from 'termine'
-     and coalesce(public.azuu_day(new.data->>'endDate'), current_date) >= recent then
+     -- Fiche importée sans date : pas d'activité ; changement de statut fait maintenant : aujourd'hui
+     and coalesce(public.azuu_day(new.data->>'endDate'), case when tg_op = 'UPDATE' then current_date end) >= recent then
     perform public.azuu_log(new.user_id, new.id, 'finished');
   elsif st = 'en_cours' and old_st is distinct from 'en_cours'
-     and coalesce(public.azuu_day(new.data->>'startDate'), current_date) >= recent then
+     and coalesce(public.azuu_day(new.data->>'startDate'), case when tg_op = 'UPDATE' then current_date end) >= recent then
     perform public.azuu_log(new.user_id, new.id, 'started');
   elsif st = 'a_voir' and tg_op = 'INSERT' and new.updated_at > now() - interval '2 days' then
     perform public.azuu_log(new.user_id, new.id, 'added');
@@ -288,7 +290,7 @@ alter table public.profiles force row level security;
 alter table public.follows force row level security;
 alter table public.activity force row level security;
 
-revoke all on public.profiles, public.follows, public.activity from anon;
+revoke all on public.profiles, public.follows, public.activity from anon, authenticated;
 grant select, update on public.profiles to authenticated;
 grant select, insert, update, delete on public.follows to authenticated;
 grant select on public.activity to authenticated;
@@ -407,7 +409,13 @@ begin
       ),
       'top', (
         select coalesce(jsonb_agg(public.public_item(data) order by data->'top'->>'category', (data->'top'->>'rank')), '[]'::jsonb)
-        from public.items where user_id = p.id and not deleted and jsonb_typeof(data->'top') = 'object'
+        from public.items i
+        where i.user_id = p.id and not i.deleted and jsonb_typeof(i.data->'top') = 'object'
+          -- Seulement les catégories de Top 5 que la personne a choisi d'afficher (toutes si rien n'est réglé)
+          and coalesce(
+            (select s.data->'topCategories' ? (i.data->'top'->>'category')
+             from public.settings s where s.user_id = p.id and jsonb_typeof(s.data->'topCategories') = 'array'),
+            true)
       ),
       'recent', (
         select coalesce(jsonb_agg(public.public_item(s.data) order by s.k desc nulls last), '[]'::jsonb)
@@ -598,12 +606,27 @@ on conflict (id) do update
 drop policy if exists "profile media read own" on storage.objects;
 create policy "profile media read own" on storage.objects for select to authenticated
   using (bucket_id = 'profile-media' and (storage.foldername(name))[1] = (select auth.uid())::text);
+create or replace function public.azuu_media_count()
+returns integer
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select count(*)::integer from storage.objects
+  where bucket_id = 'profile-media' and (storage.foldername(name))[1] = (select auth.uid())::text
+$$;
+revoke all on function public.azuu_media_count() from public, anon;
+grant execute on function public.azuu_media_count() to authenticated;
+
 drop policy if exists "profile media upload own" on storage.objects;
 create policy "profile media upload own" on storage.objects for insert to authenticated
   with check (
     bucket_id = 'profile-media'
     and (storage.foldername(name))[1] = (select auth.uid())::text
     and name ~ '^[0-9a-f-]{36}/(avatar|banner)-[0-9]{1,15}\.(jpg|webp|png)$'
+    -- Pas plus de 6 images par compte (l'app supprime les anciennes à chaque changement)
+    and public.azuu_media_count() < 6
   );
 drop policy if exists "profile media delete own" on storage.objects;
 create policy "profile media delete own" on storage.objects for delete to authenticated

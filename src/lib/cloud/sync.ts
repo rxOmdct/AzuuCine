@@ -299,15 +299,26 @@ export function createSync(userId: string, hooks: SyncHooks): SyncEngine {
     }
     setStatus({ state: 'syncing', error: undefined })
     try {
-      await push()
+      // Un envoi refusé (fiche trop lourde, quota…) ne doit pas empêcher de recevoir les autres appareils
+      let pushError: unknown
+      try {
+        await push()
+      } catch (e) {
+        pushError = e
+      }
+      // Déconnexion pendant la synchro : on n'écrit plus rien dans la base de cet utilisateur
+      if (stopped) return
       await pullItems()
+      if (stopped) return
       await pullLists()
+      if (stopped) return
       await pullSettings()
+      if (pushError) throw pushError
       meta.lastSyncAt = new Date().toISOString()
       saveMeta()
       setStatus({ state: 'idle', lastSyncAt: meta.lastSyncAt })
     } catch (e) {
-      setStatus({ state: navigator.onLine ? 'error' : 'offline', error: (e as Error).message })
+      if (!stopped) setStatus({ state: navigator.onLine ? 'error' : 'offline', error: (e as Error).message })
     }
   }
 

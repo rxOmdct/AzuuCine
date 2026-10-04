@@ -86,7 +86,7 @@ export default function TopFiveEditor({ category: initialCategory, onClose }: Pr
       <div className="flex-1 overflow-y-auto overscroll-contain">
         <div className="safe-bottom mx-auto max-w-2xl space-y-6 px-4 py-5 pb-16">
           <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4">
-            {TOP_CATEGORIES.map((c) => (
+            {TOP_CATEGORIES.filter((c) => c.value === category || settings.topCategories.includes(c.value)).map((c) => (
               <button key={c.value} onClick={() => switchCategory(c.value)} className={cx('chip py-1! text-[13px]', category === c.value && 'chip-on')}>
                 {c.plural}
               </button>

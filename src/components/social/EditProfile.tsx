@@ -1,5 +1,5 @@
 import { Camera, ImagePlus, Loader2, Lock, Trash2 } from 'lucide-react'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { t } from '../../i18n'
 import { deleteProfileImage, updateProfile, uploadProfileImage, USERNAME_RE, type ProfilePatch } from '../../lib/cloud/social'
 import { cropImageToJpeg } from '../../lib/image'
@@ -21,6 +21,20 @@ export default function EditProfile({ onClose }: { onClose: () => void }) {
   const [error, setError] = useState<string>()
   const avatarInput = useRef<HTMLInputElement>(null)
   const bannerInput = useRef<HTMLInputElement>(null)
+
+  // Aperçus locaux : libérés dès qu'ils sont remplacés ou que la fenêtre se ferme
+  useEffect(() => {
+    const url = avatar.preview
+    return () => {
+      if (url?.startsWith('blob:')) URL.revokeObjectURL(url)
+    }
+  }, [avatar.preview])
+  useEffect(() => {
+    const url = banner.preview
+    return () => {
+      if (url?.startsWith('blob:')) URL.revokeObjectURL(url)
+    }
+  }, [banner.preview])
 
   const cleanUsername = username.trim().toLowerCase().replace(/^@/, '')
   const usernameOk = USERNAME_RE.test(cleanUsername)
@@ -152,7 +166,7 @@ export default function EditProfile({ onClose }: { onClose: () => void }) {
             <span className="mt-1 block text-right text-[11px] text-ink-3">{bio.length}/300</span>
           </label>
 
-          <button type="button" onClick={() => setIsPrivate((v) => !v)} className="flex w-full items-center gap-3 rounded-2xl border border-line px-4 py-3.5 text-left">
+          <button type="button" role="switch" aria-checked={isPrivate} onClick={() => setIsPrivate((v) => !v)} className="flex w-full items-center gap-3 rounded-2xl border border-line px-4 py-3.5 text-left">
             <Lock size={18} className="shrink-0 text-ink-2" />
             <span className="flex-1">
               <span className="block text-sm font-medium">{t('social.privateAccount')}</span>

@@ -1,16 +1,13 @@
 import { X } from 'lucide-react'
-import { useEffect, type ReactNode } from 'react'
+import { type ReactNode } from 'react'
 import { t } from '../../i18n'
 import { useScrollLock } from '../../lib/scrollLock'
+import { useEscape } from '../../lib/escape'
 
 /** Écran plein (profil, recherche…) avec en-tête et bouton fermer. */
 export default function Sheet({ title, onClose, right, children, label }: { title: ReactNode; onClose: () => void; right?: ReactNode; children: ReactNode; label: string }) {
   useScrollLock()
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
+  useEscape(onClose)
   return (
     <div className="sheet-in fixed inset-0 z-50 flex flex-col bg-bg" role="dialog" aria-modal="true" aria-label={label}>
       <header className="safe-top border-b border-line">

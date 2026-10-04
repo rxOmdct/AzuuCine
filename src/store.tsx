@@ -110,7 +110,13 @@ const byUpdatedDesc = (a: MediaItem, b: MediaItem) => b.updatedAt.localeCompare(
  * IndexedDB est la source persistante (chaque écriture y est répercutée).
  */
 export function MediaProvider({ children, cloudUser }: { children: ReactNode; cloudUser?: { id: string; email: string } }) {
-  const [items, setItems] = useState<MediaItem[]>([])
+  const [items, setItemsState] = useState<MediaItem[]>([])
+  // Copie toujours à jour (deux « +1 » rapides ne doivent pas partir de la même version)
+  const itemsRef = useRef(items)
+  const setItems = useCallback((next: MediaItem[] | ((prev: MediaItem[]) => MediaItem[])) => {
+    itemsRef.current = typeof next === 'function' ? next(itemsRef.current) : next
+    setItemsState(itemsRef.current)
+  }, [])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string>()
   const [settings, setSettings] = useState<Settings>(loadSettings)
@@ -230,11 +236,11 @@ export function MediaProvider({ children, cloudUser }: { children: ReactNode; cl
 
   const update = useCallback(
     async (id: string, patch: Partial<MediaInput>) => {
-      const current = items.find((i) => i.id === id)
+      const current = itemsRef.current.find((i) => i.id === id)
       if (!current) return
       await save({ ...current, ...patch, updatedAt: new Date().toISOString() })
     },
-    [items, save],
+    [save],
   )
 
   const remove = useCallback(async (id: string) => {
@@ -244,7 +250,7 @@ export function MediaProvider({ children, cloudUser }: { children: ReactNode; cl
 
   const incrementEpisode = useCallback(
     async (id: string, delta = 1) => {
-      const item = items.find((i) => i.id === id)
+      const item = itemsRef.current.find((i) => i.id === id)
       if (!item) return
       let next = Math.max(0, item.episodesWatched + delta)
       const cap = episodeCap(item)
@@ -264,7 +270,7 @@ export function MediaProvider({ children, cloudUser }: { children: ReactNode; cl
       }
       await update(id, patch)
     },
-    [items, update],
+    [update],
   )
 
   const importItems = useCallback(async (incoming: MediaItem[], mode: 'merge' | 'replace') => {
@@ -279,7 +285,7 @@ export function MediaProvider({ children, cloudUser }: { children: ReactNode; cl
       const ids = orderedIds.slice(0, 5)
       const now = new Date().toISOString()
       const changed: MediaItem[] = []
-      for (const item of items) {
+      for (const item of itemsRef.current) {
         const rank = ids.indexOf(item.id) + 1
         const wasHere = item.top?.category === category
         if (rank > 0) {
@@ -293,7 +299,7 @@ export function MediaProvider({ children, cloudUser }: { children: ReactNode; cl
       const byId = new Map(changed.map((c) => [c.id, c]))
       setItems((prev) => prev.map((i) => byId.get(i.id) ?? i))
     },
-    [items],
+    [setItems],
   )
 
   const clearAll = useCallback(async () => {
@@ -303,7 +309,7 @@ export function MediaProvider({ children, cloudUser }: { children: ReactNode; cl
 
   const patchMany = useCallback(
     async (patches: { id: string; patch: Partial<MediaInput> }[]) => {
-      const byId = new Map(items.map((i) => [i.id, i]))
+      const byId = new Map(itemsRef.current.map((i) => [i.id, i]))
       const changed = patches.flatMap(({ id, patch }) => {
         const cur = byId.get(id)
         const next = cur ? normalizeItem({ ...cur, ...patch }) : null
@@ -314,7 +320,7 @@ export function MediaProvider({ children, cloudUser }: { children: ReactNode; cl
       const map = new Map(changed.map((c) => [c.id, c]))
       setItems((prev) => prev.map((i) => map.get(i.id) ?? i))
     },
-    [items],
+    [setItems],
   )
 
   const createList = useCallback(
@@ -334,27 +340,26 @@ export function MediaProvider({ children, cloudUser }: { children: ReactNode; cl
   const deleteList = useCallback(
     async (id: string) => {
       setLists((prev) => prev.filter((l) => l.id !== id))
-      const changed = items.filter((i) => i.listIds?.includes(id)).map((i) => ({ ...i, listIds: i.listIds!.filter((x) => x !== id) }))
+      const now = new Date().toISOString()
+      const changed = itemsRef.current.filter((i) => i.listIds?.includes(id)).map((i) => ({ ...i, listIds: i.listIds!.filter((x) => x !== id), updatedAt: now }))
       if (changed.length) {
         await mediaDB.putMany(changed)
         const map = new Map(changed.map((c) => [c.id, c]))
         setItems((prev) => prev.map((i) => map.get(i.id) ?? i))
       }
     },
-    [items, setLists],
+    [setItems, setLists],
   )
 
   const toggleInList = useCallback(
     async (itemId: string, listId: string) => {
-      const item = items.find((i) => i.id === itemId)
+      const item = itemsRef.current.find((i) => i.id === itemId)
       if (!item) return
       const has = item.listIds?.includes(listId)
       const listIds = has ? item.listIds!.filter((x) => x !== listId) : [...(item.listIds ?? []), listId]
-      const next = { ...item, listIds }
-      await mediaDB.put(next)
-      setItems((prev) => prev.map((i) => (i.id === itemId ? next : i)))
+      await update(itemId, { listIds })
     },
-    [items],
+    [update],
   )
 
   const mergeLists = useCallback(

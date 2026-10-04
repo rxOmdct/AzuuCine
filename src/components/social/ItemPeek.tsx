@@ -1,5 +1,5 @@
 import { Check, Loader2, Plus, Star } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { t } from '../../i18n'
 import { genreLabel } from '../../lib/genres'
 import { useScrollLock } from '../../lib/scrollLock'
@@ -9,6 +9,7 @@ import type { MediaInput, MediaItem } from '../../types'
 import { StatusPill, TypeBadge } from '../Badges'
 import Poster from '../Poster'
 import Avatar from './Avatar'
+import { useEscape } from '../../lib/escape'
 
 export interface PeekOwner {
   username: string
@@ -27,11 +28,7 @@ export default function ItemPeek({ item, owner, onClose }: { item: MediaItem; ow
 
   useScrollLock()
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
+  useEscape(onClose)
 
   const addToWatchlist = async () => {
     setBusy(true)
@@ -46,11 +43,13 @@ export default function ItemPeek({ item, owner, onClose }: { item: MediaItem; ow
         criteria: {},
         episodesWatched: 0,
         episodesTotal: item.episodesTotal,
+        seasons: item.seasons,
         episodeDuration: item.episodeDuration,
         duration: item.duration,
         genres: item.genres,
         platform: item.platform,
         poster: item.poster,
+        backdrop: item.backdrop,
         overview: item.overview,
         externalId: item.externalId,
         countries: item.countries,

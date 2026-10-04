@@ -76,7 +76,6 @@ let dict: Partial<Translations> = fr
 let plural = new Intl.PluralRules('fr-FR')
 
 export const getLang = () => current
-export const langInfo = () => BY_CODE[current]
 /** Locale BCP 47 pour toLocaleDateString / Intl */
 export const locale = () => BY_CODE[current].locale
 export const tmdbLanguage = () => BY_CODE[current].tmdb

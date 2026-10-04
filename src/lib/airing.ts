@@ -4,6 +4,8 @@ import { CLOUD_TMDB, isPlausibleTmdbKey } from './catalogApi'
 import { tmdbViaCloud } from './cloud/api'
 import { TYPE_BY_VALUE } from './constants'
 import { isPlainObject, isSafeExternalId, isSafeId, isSafeTmdbPath, readStorage, remoteImage, safeDay, safeIso, safeSeasons } from './security'
+import { episodeCap } from './franchise'
+import { localDay } from './utils'
 
 /**
  * Suivi des nouveaux épisodes.
@@ -165,7 +167,7 @@ async function checkAniList(ids: number[]): Promise<Map<number, Omit<AiringInfo,
       out.set(m.id, {
         aired: nx ? Math.max(0, n0(nx.episode) - 1) : n0(m.episodes),
         ended: m.status === 'FINISHED' || m.status === 'CANCELLED',
-        next: nx && ts ? { episode: n0(nx.episode), date: new Date(ts * 1000).toISOString().slice(0, 10) } : undefined,
+        next: nx && ts ? { episode: n0(nx.episode), date: localDay(new Date(ts * 1000)) } : undefined,
       })
     }
   }
@@ -227,7 +229,7 @@ export function novelties(items: MediaItem[], cache: AiringCache): Novelty[] {
     const unwatched = Math.max(0, info.aired - item.episodesWatched)
     if (item.status === 'termine') {
       // Terminé de mon côté, mais de nouveaux épisodes sont sortis depuis → nouvelle saison
-      if (unwatched > 0 && item.episodesTotal && info.aired > item.episodesTotal) out.push({ item, info, unwatched, kind: 'new_season' })
+      if (unwatched > 0 && episodeCap(item) && info.aired > episodeCap(item)!) out.push({ item, info, unwatched, kind: 'new_season' })
     } else if (unwatched > 0) {
       out.push({ item, info, unwatched, kind: 'new_episodes' })
     } else if (info.next && new Date(info.next.date).getTime() < soon) {

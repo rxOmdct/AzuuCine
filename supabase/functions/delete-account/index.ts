@@ -22,21 +22,25 @@ Deno.serve(async (req) => {
   }
   if (body.confirm !== 'SUPPRIMER') return json(req, 400, { error: 'confirm' })
 
-  // Photos de profil et bannières (le stockage n'est pas effacé automatiquement avec le compte)
+  // Photos de profil et bannières : elles sont publiques et ne partent pas avec le compte.
+  // Si on n'arrive pas à les effacer, on ne supprime rien (l'utilisateur pourra réessayer).
+  const admin = { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json' }
   try {
-    const admin = { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}`, 'Content-Type': 'application/json' }
-    const list = await fetch(`${SUPABASE_URL}/storage/v1/object/list/profile-media`, {
-      method: 'POST',
-      headers: admin,
-      body: JSON.stringify({ prefix: userId, limit: 1000 }),
-    })
-    const files = list.ok ? ((await list.json()) as { name?: string }[]) : []
-    const prefixes = files.filter((f) => typeof f.name === 'string').map((f) => `${userId}/${f.name}`)
-    if (prefixes.length) {
-      await fetch(`${SUPABASE_URL}/storage/v1/object/profile-media`, { method: 'DELETE', headers: admin, body: JSON.stringify({ prefixes }) })
+    for (let round = 0; round < 20; round++) {
+      const list = await fetch(`${SUPABASE_URL}/storage/v1/object/list/profile-media`, {
+        method: 'POST',
+        headers: admin,
+        body: JSON.stringify({ prefix: userId, limit: 100, offset: 0 }),
+      })
+      if (!list.ok) throw new Error('list')
+      const files = (await list.json()) as { name?: unknown }[]
+      const prefixes = files.filter((f) => typeof f.name === 'string' && /^[A-Za-z0-9_.-]{1,120}$/.test(f.name)).map((f) => `${userId}/${f.name}`)
+      if (!prefixes.length) break
+      const del = await fetch(`${SUPABASE_URL}/storage/v1/object/profile-media`, { method: 'DELETE', headers: admin, body: JSON.stringify({ prefixes }) })
+      if (!del.ok) throw new Error('remove')
     }
   } catch {
-    /* on supprime le compte quand même */
+    return json(req, 500, { error: 'storage' })
   }
 
   const res = await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${encodeURIComponent(userId)}`, {

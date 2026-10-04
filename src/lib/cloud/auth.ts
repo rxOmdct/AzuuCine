@@ -261,12 +261,14 @@ async function refresh(): Promise<Session | null> {
     try {
       const data = await gotrue('/token?grant_type=refresh_token', { body: { refresh_token: s.refreshToken } })
       const next = toSession(data)
-      if (next && next.user.id === s.user.id) setSession(next)
+      // Déconnexion (ou autre compte) pendant le renouvellement : on ne ressuscite pas l'ancienne session
+      if (!next || next.user.id !== s.user.id || current?.user.id !== s.user.id) return null
+      setSession(next)
       return next
     } catch (e) {
       // Jeton de renouvellement refusé (révoqué, compte supprimé…) : on déconnecte
       const status = (e as { status?: number }).status
-      if (status === 400 || status === 401 || status === 403) setSession(null)
+      if ((status === 400 || status === 401 || status === 403) && current?.user.id === s.user.id) setSession(null)
       return null
     } finally {
       refreshing = null
@@ -300,6 +302,7 @@ export async function consumeAuthRedirect(): Promise<{ type?: string; error?: st
     return { error: code === 'otp_expired' ? t('auth.err.linkExpired') : t('auth.err.linkUsed') }
   }
   const accessToken = params.get('access_token') ?? ''
+  if (!TOKEN.test(accessToken)) return { error: t('auth.err.linkInvalid') }
   try {
     const user = await gotrue('/user', { method: 'GET', token: accessToken })
     const s = toSession({
@@ -310,6 +313,8 @@ export async function consumeAuthRedirect(): Promise<{ type?: string; error?: st
       user,
     })
     if (!s) return { error: t('auth.err.linkInvalid') }
+    // Un lien ne doit jamais remplacer en douce le compte déjà ouvert sur cet appareil
+    if (current && current.user.id !== s.user.id) return { error: t('auth.err.linkInvalid') }
     setSession(s)
     return { type: params.get('type') ?? undefined }
   } catch (e) {

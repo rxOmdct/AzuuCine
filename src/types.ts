@@ -35,9 +35,8 @@ export interface MediaItem {
   endDate?: string // AAAA-MM-JJ
   genres: string[]
   platform?: string
+  /** Mon avis (visible sur mon profil, comme ma note) */
   notes?: string
-  /** Avis visible sur mon profil public (sinon il reste privé) */
-  notesPublic?: boolean
   /** URL d'image ou image compressée en data URL (reste locale). */
   poster?: string
   /** Grande image horizontale (TMDB), pour l'en-tête de la fiche et l'accueil. */

@@ -1,6 +1,6 @@
 import { Check, Loader2, Lock, Share2, Star, UserPlus } from 'lucide-react'
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { t } from '../../i18n'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { fmtNumber, t } from '../../i18n'
 import { follow, getProfile, getProfileItems, profileLink, unfollow, type Profile } from '../../lib/cloud/social'
 import { STATUSES, TOP_CATEGORIES } from '../../lib/constants'
 import { cx, formatRating } from '../../lib/utils'
@@ -35,7 +35,7 @@ function PosterTile({ item, onOpen, caption }: { item: MediaItem; onOpen: () => 
 function Stat({ value, label, onClick }: { value?: number; label: string; onClick?: () => void }) {
   const body = (
     <>
-      <span className="block text-lg font-bold tabular-nums leading-tight">{value == null ? '—' : value.toLocaleString()}</span>
+      <span className="block text-lg font-bold tabular-nums leading-tight">{value == null ? '—' : fmtNumber(value)}</span>
       <span className="block text-[11px] text-ink-3">{label}</span>
     </>
   )
@@ -51,6 +51,7 @@ function Stat({ value, label, onClick }: { value?: number; label: string; onClic
 /** Page de profil (la mienne ou celle d'un autre). */
 export default function ProfileView({ username, onClose }: { username: string; onClose: () => void }) {
   const social = useSocial()
+  const { settings } = useMedia()
   const [profile, setProfile] = useState<Profile | null>()
   const [error, setError] = useState<string>()
   const [tab, setTab] = useState<'profile' | 'library'>('profile')
@@ -133,12 +134,14 @@ export default function ProfileView({ username, onClose }: { username: string; o
 
   const topByCategory = useMemo(() => {
     const out: { label: string; items: MediaItem[] }[] = []
-    for (const c of TOP_CATEGORIES) {
+    // Mon profil : mes réglages locaux font foi tout de suite (même avant la synchro)
+    const shown = profile?.isMe ? TOP_CATEGORIES.filter((c) => settings.topCategories.includes(c.value)) : TOP_CATEGORIES
+    for (const c of shown) {
       const list = (profile?.top ?? []).filter((i) => i.top?.category === c.value).sort((a, b) => a.top!.rank - b.top!.rank)
       if (list.length) out.push({ label: c.plural, items: list })
     }
     return out
-  }, [profile])
+  }, [profile, settings.topCategories])
 
   return (
     <Sheet
@@ -335,7 +338,7 @@ function ProfileTab({ profile, topByCategory, onOpen }: { profile: Profile; topB
             ].map(([v, label]) => (
               <div key={label as string} className="card p-4">
                 <div className="eyebrow">{label}</div>
-                <div className="mt-2 text-2xl font-bold tabular-nums leading-none">{(v as number).toLocaleString()}</div>
+                <div className="mt-2 text-2xl font-bold tabular-nums leading-none">{fmtNumber(v as number)}</div>
               </div>
             ))}
           </div>
@@ -351,15 +354,23 @@ function LibraryTab({ profile, onOpen }: { profile: Profile; onOpen: (i: MediaIt
   const [loading, setLoading] = useState(false)
   const [done, setDone] = useState(false)
 
+  const request = useRef(0)
+
   const loadPage = useCallback(
     async (reset: boolean) => {
+      // Une réponse arrivée après un changement de filtre ne doit pas écraser la nouvelle liste
+      const id = ++request.current
       setLoading(true)
+      if (reset) setList([])
       try {
         const page = await getProfileItems(profile.id, status || null, reset ? 0 : list.length)
+        if (id !== request.current) return
         setList((prev) => (reset ? page : [...prev, ...page]))
         setDone(page.length < 48)
+      } catch {
+        if (id === request.current) setDone(true)
       } finally {
-        setLoading(false)
+        if (id === request.current) setLoading(false)
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps

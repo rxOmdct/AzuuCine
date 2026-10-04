@@ -13,7 +13,9 @@ type Tab = 'followers' | 'following' | 'requests'
 export default function FollowList({ profile, initial, onClose }: { profile: Profile; initial: 'followers' | 'following'; onClose: () => void }) {
   const social = useSocial()
   const showRequests = profile.isMe && social.requests.length > 0
-  const [tab, setTab] = useState<Tab>(showRequests && initial === 'followers' ? 'requests' : initial)
+  const [picked, setTab] = useState<Tab>(showRequests && initial === 'followers' ? 'requests' : initial)
+  // Dernière demande acceptée : l'onglet « Demandes » disparaît, on retombe sur les abonnés
+  const tab: Tab = picked === 'requests' && !showRequests ? 'followers' : picked
   const [list, setList] = useState<ProfileCard[]>()
   const [busy, setBusy] = useState<string>()
 
