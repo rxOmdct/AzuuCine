@@ -12,7 +12,7 @@ function PasswordField({ value, onChange, placeholder, autoComplete }: { value: 
   return (
     <div className="relative">
       <input
-        className="field pr-11"
+        className="field pe-11"
         type={show ? 'text' : 'password'}
         value={value}
         onChange={(e) => onChange(e.target.value)}
@@ -22,7 +22,7 @@ function PasswordField({ value, onChange, placeholder, autoComplete }: { value: 
         maxLength={72}
         required
       />
-      <button type="button" onClick={() => setShow((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-3" aria-label={show ? t('auth.hidePassword') : t('auth.showPassword')}>
+      <button type="button" onClick={() => setShow((v) => !v)} className="absolute end-3 top-1/2 -translate-y-1/2 text-ink-3" aria-label={show ? t('auth.hidePassword') : t('auth.showPassword')}>
         {show ? <EyeOff size={17} /> : <Eye size={17} />}
       </button>
     </div>

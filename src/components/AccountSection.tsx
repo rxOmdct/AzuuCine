@@ -108,7 +108,7 @@ export default function AccountSection({ account, onMessage }: { account: Accoun
 
         <button
           onClick={() => (social.me ? social.openProfile(social.me.username) : social.openSearch())}
-          className="flex w-full items-center gap-3.5 px-4 py-4 text-left transition-colors active:bg-surface-2"
+          className="flex w-full items-center gap-3.5 px-4 py-4 text-start transition-colors active:bg-surface-2"
         >
           <Avatar url={social.me?.avatarUrl} name={social.me?.displayName ?? account.email} size={22} />
           <span className="flex-1">
@@ -143,14 +143,14 @@ export default function AccountSection({ account, onMessage }: { account: Accoun
             </div>
           </form>
         ) : (
-          <button onClick={() => setPwOpen(true)} className="flex w-full items-center gap-3.5 px-4 py-4 text-left transition-colors active:bg-surface-2">
+          <button onClick={() => setPwOpen(true)} className="flex w-full items-center gap-3.5 px-4 py-4 text-start transition-colors active:bg-surface-2">
             <KeyRound size={19} className="text-ink-2" />
             <span className="flex-1 font-medium">{t('account.changePassword')}</span>
             <span className="text-ink-3">→</span>
           </button>
         )}
 
-        <button onClick={() => logout(false)} disabled={busy === 'logout'} className="flex w-full items-center gap-3.5 px-4 py-4 text-left transition-colors active:bg-surface-2">
+        <button onClick={() => logout(false)} disabled={busy === 'logout'} className="flex w-full items-center gap-3.5 px-4 py-4 text-start transition-colors active:bg-surface-2">
           {busy === 'logout' ? <Loader2 size={19} className="animate-spin text-ink-2" /> : <LogOut size={19} className="text-ink-2" />}
           <span className="flex-1">
             <span className="block font-medium">{t('account.logout')}</span>

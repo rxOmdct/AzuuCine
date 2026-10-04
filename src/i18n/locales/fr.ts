@@ -202,6 +202,7 @@ const dict = {
   'auth.err.linkInvalid': 'Ce lien est invalide.',
 
   'settings.language': 'Langue',
+  'settings.langAuto': 'Automatique ({lang})',
   'settings.backupShared': 'Sauvegarde partagée.',
   'settings.backupDownloaded': 'Sauvegarde téléchargée.',
   'settings.exportFailed': 'L\'export a échoué.',

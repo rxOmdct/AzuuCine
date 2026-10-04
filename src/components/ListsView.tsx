@@ -122,15 +122,15 @@ function ListDetail({ list, onBack, onOpen }: { list: CustomList; onBack: () => 
       {adding ? (
         <div>
           <div className="relative mb-2">
-            <Search size={17} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-3" />
-            <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t('lists.searchLibrary')} className="field pl-10" autoFocus />
+            <Search size={17} className="pointer-events-none absolute start-3.5 top-1/2 -translate-y-1/2 text-ink-3" />
+            <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t('lists.searchLibrary')} className="field ps-10" autoFocus />
           </div>
           <ul className="divide-y divide-line">
             {candidates.map((item) => {
               const inList = item.listIds?.includes(list.id)
               return (
                 <li key={item.id}>
-                  <button onClick={() => toggleInList(item.id, list.id)} className="flex w-full items-center gap-3 py-2.5 text-left">
+                  <button onClick={() => toggleInList(item.id, list.id)} className="flex w-full items-center gap-3 py-2.5 text-start">
                     <div className="w-9 shrink-0">
                       <Poster src={item.poster} title={item.title} />
                     </div>
@@ -217,7 +217,7 @@ export default function ListsView({ onOpen }: { onOpen: (item: MediaItem) => voi
           {lists.map((l) => {
             const members = items.filter((i) => i.listIds?.includes(l.id))
             return (
-              <button key={l.id} onClick={() => setOpenId(l.id)} className="text-left">
+              <button key={l.id} onClick={() => setOpenId(l.id)} className="text-start">
                 <Mosaic items={members} />
                 <p className="mt-2 truncate text-sm font-semibold">{l.name}</p>
                 <p className="text-xs text-ink-3">

@@ -118,7 +118,7 @@ export default function HomeHero({ items, onOpen }: { items: MediaItem[]; onOpen
             <Info size={17} /> {t('homeHero.details')}
           </button>
           {count > 1 && (
-            <span className="ml-auto flex items-center gap-1.5">
+            <span className="ms-auto flex items-center gap-1.5">
               {items.map((it, k) => (
                 <button
                   key={it.id}
@@ -151,14 +151,14 @@ export function ContinueCard({ item, onOpen }: { item: MediaItem; onOpen: (item:
         {next && (
           <button
             onClick={() => incrementEpisode(item.id)}
-            className="absolute bottom-3 right-2 flex h-8 items-center gap-0.5 rounded-full bg-accent-fill px-3 text-xs font-semibold text-on-accent transition active:scale-90"
+            className="absolute bottom-3 end-2 flex h-8 items-center gap-0.5 rounded-full bg-accent-fill px-3 text-xs font-semibold text-on-accent transition active:scale-90"
             aria-label={t('card.plusOne', { title: item.title })}
           >
             <Plus size={13} strokeWidth={2.5} />1
           </button>
         )}
       </div>
-      <button onClick={() => onOpen(item)} className="mt-2 block w-full text-left">
+      <button onClick={() => onOpen(item)} className="mt-2 block w-full text-start">
         <span className="block truncate text-sm font-semibold">{item.title}</span>
         <span className="block text-xs text-ink-3">{next ? t('homeHero.nextUp', { ep: next }) : waitingLabel(item)}</span>
       </button>

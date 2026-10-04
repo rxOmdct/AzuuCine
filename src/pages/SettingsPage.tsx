@@ -17,7 +17,7 @@ type Message = { kind: 'ok' | 'error'; text: string }
 
 function Row({ icon, title, hint, onClick, danger }: { icon: ReactNode; title: string; hint?: string; onClick: () => void; danger?: boolean }) {
   return (
-    <button onClick={onClick} className={cx('flex w-full items-center gap-3.5 px-4 py-4 text-left transition-colors active:bg-surface-2', danger && 'text-accent')}>
+    <button onClick={onClick} className={cx('flex w-full items-center gap-3.5 px-4 py-4 text-start transition-colors active:bg-surface-2', danger && 'text-accent')}>
       <span className={danger ? 'text-accent' : 'text-ink-2'}>{icon}</span>
       <span className="flex-1">
         <span className="block font-medium">{title}</span>
@@ -263,7 +263,7 @@ export default function SettingsPage() {
             <div className="mt-3 flex gap-2">
               <div className="relative flex-1">
                 <input
-                  className="field pr-11 text-sm"
+                  className="field pe-11 text-sm"
                   type={showKey ? 'text' : 'password'}
                   value={keyDraft}
                   onChange={(e) => {
@@ -275,7 +275,7 @@ export default function SettingsPage() {
                   autoCapitalize="off"
                   spellCheck={false}
                 />
-                <button type="button" onClick={() => setShowKey((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-3" aria-label={showKey ? t('settings.hideKey') : t('settings.showKey')}>
+                <button type="button" onClick={() => setShowKey((v) => !v)} className="absolute end-3 top-1/2 -translate-y-1/2 text-ink-3" aria-label={showKey ? t('settings.hideKey') : t('settings.showKey')}>
                   {showKey ? <EyeOff size={17} /> : <Eye size={17} />}
                 </button>
               </div>

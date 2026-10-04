@@ -50,7 +50,7 @@ export function RatingInput({ value, onChange, scale, size = 'lg', label }: Inpu
           }}
           className="h-2 flex-1 accent-accent-fill"
         />
-        <span className={cx('w-14 text-right font-semibold tabular-nums', size === 'lg' ? 'text-xl' : 'text-sm')}>
+        <span className={cx('w-14 text-end font-semibold tabular-nums', size === 'lg' ? 'text-xl' : 'text-sm')}>
           {value ? formatRating(value, '10') : '—'}
           <span className="text-xs font-normal text-ink-3">/10</span>
         </span>
@@ -87,11 +87,11 @@ export function RatingInput({ value, onChange, scale, size = 'lg', label }: Inpu
           </button>
         )
       })}
-      <span className={cx('ml-2 tabular-nums text-ink-2', size === 'lg' ? 'text-base' : 'text-xs')}>
+      <span className={cx('ms-2 tabular-nums text-ink-2', size === 'lg' ? 'text-base' : 'text-xs')}>
         {value ? formatRating(value, '5') : ''}
       </span>
       {value != null && size === 'lg' && (
-        <button type="button" onClick={() => onChange(undefined)} className="ml-auto p-1 text-ink-3" aria-label={t('rating.clear')}>
+        <button type="button" onClick={() => onChange(undefined)} className="ms-auto p-1 text-ink-3" aria-label={t('rating.clear')}>
           <X size={18} />
         </button>
       )}

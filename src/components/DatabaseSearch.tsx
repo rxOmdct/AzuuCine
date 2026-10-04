@@ -91,24 +91,24 @@ export default function DatabaseSearch({ onPick, initialQuery = '', currentExter
       </div>
 
       <div className="relative">
-        <Search size={17} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-3" />
+        <Search size={17} className="pointer-events-none absolute start-3.5 top-1/2 -translate-y-1/2 text-ink-3" />
         <input
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Parasite, Frieren, Crash Landing on You…"
-          className="field pl-10"
+          className="field ps-10"
           enterKeyHint="search"
           autoComplete="off"
         />
-        {loading && <Loader2 size={17} className="absolute right-3.5 top-1/2 -translate-y-1/2 animate-spin text-ink-3" />}
+        {loading && <Loader2 size={17} className="absolute end-3.5 top-1/2 -translate-y-1/2 animate-spin text-ink-3" />}
       </div>
 
       {!hasKey && (
         <div className="mt-2 text-xs text-ink-3">
           {t('search.animeOnly')}
           {onGoToSettings && (
-            <button type="button" onClick={onGoToSettings} className="ml-1 font-medium text-ink">
+            <button type="button" onClick={onGoToSettings} className="ms-1 font-medium text-ink">
               {t('search.openSettings')} <span className="text-accent">→</span>
             </button>
           )}
@@ -128,7 +128,7 @@ export default function DatabaseSearch({ onPick, initialQuery = '', currentExter
                   type="button"
                   onClick={() => pick(r)}
                   disabled={!!picking}
-                  className="flex w-full items-center gap-3 rounded-lg px-1 py-2.5 text-left transition-colors active:bg-surface-2 disabled:opacity-60"
+                  className="flex w-full items-center gap-3 rounded-lg px-1 py-2.5 text-start transition-colors active:bg-surface-2 disabled:opacity-60"
                 >
                   {r.thumb ? (
                     <img src={r.thumb} alt="" loading="lazy" className="h-[4.2rem] w-11 shrink-0 rounded-md border border-line object-cover" />

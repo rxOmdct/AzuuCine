@@ -30,14 +30,14 @@ function Row({ item, scale }: { item: MediaItem; scale: RatingScale }) {
           {t('public.me')} <span className="text-ink-2">{formatRating(item.rating, scale)}</span> · {t('public.label')} <span className="text-ink-2">{formatRating(item.publicRating, scale)}</span>
         </p>
         <div className="relative mt-1.5 h-1.5 rounded-full bg-surface-2">
-          <span className="absolute inset-y-0 left-1/2 w-px bg-line" />
+          <span className="absolute inset-y-0 start-1/2 w-px bg-line" />
           <span
             className={cx('absolute inset-y-0 rounded-full', gap >= 0 ? 'bg-accent' : 'bg-ink-3')}
             style={gap >= 0 ? { left: '50%', width: `${width}%` } : { right: '50%', width: `${width}%` }}
           />
         </div>
       </div>
-      <span className={cx('w-11 shrink-0 text-right text-sm font-bold tabular-nums', gap >= 0 ? 'text-accent' : 'text-ink-2')}>{signed(gap, scale)}</span>
+      <span className={cx('w-11 shrink-0 text-end text-sm font-bold tabular-nums', gap >= 0 ? 'text-accent' : 'text-ink-2')}>{signed(gap, scale)}</span>
     </li>
   )
 }

@@ -80,7 +80,7 @@ export default function ItemHero({ form, typeLabel, editing, onEdit, primary }: 
         </div>
 
         {form.overview && (
-          <button type="button" onClick={() => setMoreText((v) => !v)} className="mt-4 block text-left text-sm leading-relaxed text-ink-2">
+          <button type="button" onClick={() => setMoreText((v) => !v)} className="mt-4 block text-start text-sm leading-relaxed text-ink-2">
             <span className={moreText ? 'whitespace-pre-line' : 'line-clamp-3'}>{form.overview}</span>
             {form.overview.length > 160 && <span className="mt-1 block text-xs font-medium text-ink">{moreText ? t('hero.less') : t('hero.more')}</span>}
           </button>

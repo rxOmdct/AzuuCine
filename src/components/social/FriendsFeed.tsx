@@ -67,7 +67,7 @@ export default function FriendsFeed() {
           <Loader2 size={14} className="animate-spin" /> {t('social.loading')}
         </p>
       ) : entries.length === 0 ? (
-        <button onClick={social.openSearch} className="flex w-full items-center gap-3 rounded-2xl border border-dashed border-line-strong p-4 text-left">
+        <button onClick={social.openSearch} className="flex w-full items-center gap-3 rounded-2xl border border-dashed border-line-strong p-4 text-start">
           <span className="grid size-10 shrink-0 place-items-center rounded-full bg-surface-2 text-accent">
             <UserPlus size={18} />
           </span>
@@ -81,7 +81,7 @@ export default function FriendsFeed() {
                 <button onClick={() => social.openProfile(e.user.username)} aria-label={e.user.displayName}>
                   <Avatar url={e.user.avatarUrl} name={e.user.displayName} size={36} />
                 </button>
-                <button onClick={() => social.openItem(e.item, e.user)} className="flex min-w-0 flex-1 items-center gap-3 text-left">
+                <button onClick={() => social.openItem(e.item, e.user)} className="flex min-w-0 flex-1 items-center gap-3 text-start">
                   <span className="min-w-0 flex-1">
                     <span className="line-clamp-2 text-sm leading-snug text-ink-2">
                       <span className="font-semibold text-ink">{e.user.displayName}</span> {t(VERB[e.kind])}{' '}

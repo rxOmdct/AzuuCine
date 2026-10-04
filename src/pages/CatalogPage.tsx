@@ -125,13 +125,13 @@ export default function CatalogPage({ onOpen, onAdd }: Props) {
       <div className="sticky top-0 z-20 -mx-4 space-y-3 bg-bg/90 px-4 pb-3 pt-[max(0.5rem,env(safe-area-inset-top))] backdrop-blur-xl">
         <div className="flex gap-2">
           <div className="relative flex-1">
-            <Search size={18} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-3" />
+            <Search size={18} className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-ink-3" />
             <input
               type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={t('catalog.searchPh')}
-              className="field pl-10"
+              className="field ps-10"
               enterKeyHint="search"
             />
           </div>
@@ -143,7 +143,7 @@ export default function CatalogPage({ onOpen, onAdd }: Props) {
           >
             <SlidersHorizontal size={18} />
             {activeAdvanced > 0 && (
-              <span className="absolute -right-1.5 -top-1.5 grid size-5 place-items-center rounded-full bg-accent-fill text-[10px] text-on-accent">{activeAdvanced}</span>
+              <span className="absolute -end-1.5 -top-1.5 grid size-5 place-items-center rounded-full bg-accent-fill text-[10px] text-on-accent">{activeAdvanced}</span>
             )}
           </button>
         </div>

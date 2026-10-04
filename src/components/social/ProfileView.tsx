@@ -16,7 +16,7 @@ import { useSocial } from './SocialProvider'
 function PosterTile({ item, onOpen, caption }: { item: MediaItem; onOpen: () => void; caption?: string }) {
   const { settings } = useMedia()
   return (
-    <button onClick={onOpen} className="block w-full text-left">
+    <button onClick={onOpen} className="block w-full text-start">
       <Poster src={item.poster} title={item.title} />
       <p className="mt-1.5 truncate text-[11px] font-medium text-ink-2">{item.title}</p>
       <p className="flex h-4 items-center gap-1 text-[11px] text-ink-3">
@@ -286,7 +286,7 @@ function ProfileTab({ profile, topByCategory, onOpen }: { profile: Profile; topB
             {c.items.map((item) => (
               <div key={item.id} className="relative">
                 <PosterTile item={item} onOpen={() => onOpen(item)} />
-                <span className="absolute left-1 top-1 grid size-5 place-items-center rounded-full bg-bg/85 text-[10px] font-bold">{item.top!.rank}</span>
+                <span className="absolute start-1 top-1 grid size-5 place-items-center rounded-full bg-bg/85 text-[10px] font-bold">{item.top!.rank}</span>
               </div>
             ))}
           </div>

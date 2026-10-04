@@ -60,9 +60,9 @@ export default function WelcomeProfile({ onLater }: { onLater: () => void }) {
           <label className="block">
             <span className="label">{t('social.username')}</span>
             <div className="relative">
-              <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-3">@</span>
+              <span className="pointer-events-none absolute start-3.5 top-1/2 -translate-y-1/2 text-ink-3">@</span>
               <input
-                className={cx('field pl-8', clean && !usernameOk && 'border-accent!')}
+                className={cx('field ps-8', clean && !usernameOk && 'border-accent!')}
                 value={username}
                 onChange={(e) => setUsername(toUsername(e.target.value))}
                 maxLength={21}

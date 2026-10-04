@@ -38,7 +38,7 @@ export default function TagInput({ value, onChange, suggestions, placeholder, di
     <div>
       <div className="field flex flex-wrap items-center gap-1.5 py-2!">
         {value.map((tag) => (
-          <span key={tag} className="inline-flex items-center gap-1 rounded-full border border-line-strong py-1 pl-3 pr-1.5 text-sm text-ink">
+          <span key={tag} className="inline-flex items-center gap-1 rounded-full border border-line-strong py-1 ps-3 pe-1.5 text-sm text-ink">
             {display(tag)}
             <button type="button" onClick={() => onChange(value.filter((v) => v !== tag))} aria-label={t('common.removeX', { name: display(tag) })} className="text-ink-3">
               <X size={14} />

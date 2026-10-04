@@ -97,7 +97,7 @@ function PublicCompare({ mine, pub, scale, source }: { mine?: number; pub: numbe
       <span className="text-ink-2">
         {t('public.label')} <span className="font-semibold text-ink">{show(pub)}</span> <span className="text-xs text-ink-3">· {source}</span>
       </span>
-      {gapText && <span className={cx('text-right text-xs font-semibold', gap! >= 0.5 ? 'text-accent' : 'text-ink-3')}>{gapText}</span>}
+      {gapText && <span className={cx('text-end text-xs font-semibold', gap! >= 0.5 ? 'text-accent' : 'text-ink-3')}>{gapText}</span>}
     </div>
   )
 }
@@ -378,7 +378,7 @@ export default function MediaForm({ item, onClose, onGoToSettings, onOpenItem }:
             <button
               type="button"
               onClick={() => setShowSearch(true)}
-              className="flex w-full items-center justify-between rounded-2xl border border-dashed border-line-strong px-4 py-3 text-left text-sm text-ink-2"
+              className="flex w-full items-center justify-between rounded-2xl border border-dashed border-line-strong px-4 py-3 text-start text-sm text-ink-2"
             >
               <span>
                 {filledFrom ? (
@@ -400,7 +400,7 @@ export default function MediaForm({ item, onClose, onGoToSettings, onOpenItem }:
             <div className="w-28 shrink-0">
               <button type="button" onClick={() => fileRef.current?.click()} className="relative block w-full" aria-label={t('form.pickPoster')}>
                 <Poster src={form.poster} title={form.title || '?'} />
-                <span className="absolute bottom-2 right-2 grid size-8 place-items-center rounded-full bg-bg/85 text-ink">
+                <span className="absolute bottom-2 end-2 grid size-8 place-items-center rounded-full bg-bg/85 text-ink">
                   <ImagePlus size={15} />
                 </span>
               </button>

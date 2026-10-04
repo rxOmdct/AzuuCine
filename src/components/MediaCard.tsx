@@ -49,21 +49,21 @@ export function MediaCard({ item, onOpen }: { item: MediaItem; onOpen: (item: Me
         <button onClick={() => onOpen(item)} className="block w-full" aria-label={t('card.open', { title: item.title })}>
           <Poster src={item.poster} title={item.title} />
         </button>
-        <TypeBadge item={item} className="pointer-events-none absolute left-2 top-2 border-transparent bg-bg/85" />
+        <TypeBadge item={item} className="pointer-events-none absolute start-2 top-2 border-transparent bg-bg/85" />
         {item.favorite && (
-          <Heart size={15} className="pointer-events-none absolute right-2 top-2 fill-accent text-accent" />
+          <Heart size={15} className="pointer-events-none absolute end-2 top-2 fill-accent text-accent" />
         )}
         {canIncrement && (
           <button
             onClick={() => incrementEpisode(item.id)}
-            className="absolute bottom-2 right-2 flex h-8 items-center gap-0.5 rounded-full bg-accent-fill px-3 text-xs font-medium text-on-accent transition active:scale-90"
+            className="absolute bottom-2 end-2 flex h-8 items-center gap-0.5 rounded-full bg-accent-fill px-3 text-xs font-medium text-on-accent transition active:scale-90"
             aria-label={t('card.plusOne', { title: item.title })}
           >
             <Plus size={13} strokeWidth={2.5} />1
           </button>
         )}
       </div>
-      <button onClick={() => onOpen(item)} className="block w-full text-left">
+      <button onClick={() => onOpen(item)} className="block w-full text-start">
         <h3 className="mt-2.5 line-clamp-2 font-sans text-sm font-semibold leading-snug tracking-normal">{item.title}</h3>
         <div className="mt-1 flex items-center justify-between gap-2">
           <StatusPill status={item.status} />

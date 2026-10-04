@@ -31,7 +31,7 @@ export default function BottomNav({ current, onChange, onAdd }: Props) {
         <span className="relative">
           {label}
           {/* soulignement fin, comme le lien actif de rdacet.fr */}
-          <span className={cx('absolute -bottom-1 left-0 h-px w-full bg-accent transition-opacity', active ? 'opacity-100' : 'opacity-0')} />
+          <span className={cx('absolute -bottom-1 start-0 h-px w-full bg-accent transition-opacity', active ? 'opacity-100' : 'opacity-0')} />
         </span>
       </button>
     )

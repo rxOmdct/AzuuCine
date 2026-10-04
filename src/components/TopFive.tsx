@@ -96,7 +96,7 @@ export default function TopFive({ onOpen }: { onOpen: (item: MediaItem) => void 
       {/* N°1 : grand chiffre rouge + affiche + infos */}
       <div className="flex items-end">
         <div className="relative flex shrink-0 items-end">
-          <span className="-mr-3 mb-1">
+          <span className="-me-3 mb-1">
             <RankNumber rank={1} big />
           </span>
           {first ? (
@@ -107,11 +107,11 @@ export default function TopFive({ onOpen }: { onOpen: (item: MediaItem) => void 
             <EmptySlot rank={1} onClick={edit} big />
           )}
         </div>
-        <div className="min-w-0 flex-1 pb-1 pl-4">
+        <div className="min-w-0 flex-1 pb-1 ps-4">
           <span className="eyebrow text-accent">{t('top.number', { rank: 1 })} · {current.plural}</span>
           {first ? (
             <>
-              <button onClick={() => onOpen(first)} className="mt-1.5 block text-left text-lg font-bold leading-snug">
+              <button onClick={() => onOpen(first)} className="mt-1.5 block text-start text-lg font-bold leading-snug">
                 {first.title}
               </button>
               <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink-3">
@@ -133,10 +133,10 @@ export default function TopFive({ onOpen }: { onOpen: (item: MediaItem) => void 
           return (
             <div key={rank} className="min-w-0">
               <div className="relative">
-                <span className="absolute -left-1 -top-9 z-0">
+                <span className="absolute -start-1 -top-9 z-0">
                   <RankNumber rank={rank} />
                 </span>
-                <div className="relative z-10 ml-4">
+                <div className="relative z-10 ms-4">
                   {item ? (
                     <button onClick={() => onOpen(item)} className="block w-full">
                       <Poster src={item.poster} title={item.title} />
@@ -146,10 +146,10 @@ export default function TopFive({ onOpen }: { onOpen: (item: MediaItem) => void 
                   )}
                 </div>
               </div>
-              <p className="ml-4 mt-1.5 truncate text-[11px] font-medium text-ink-2" title={item?.title}>
+              <p className="ms-4 mt-1.5 truncate text-[11px] font-medium text-ink-2" title={item?.title}>
                 {item ? item.title : '—'}
               </p>
-              {item?.rating ? <p className="ml-4 text-[10px] text-ink-3">{formatRating(item.rating, settings.ratingScale)}/{settings.ratingScale}</p> : null}
+              {item?.rating ? <p className="ms-4 text-[10px] text-ink-3">{formatRating(item.rating, settings.ratingScale)}/{settings.ratingScale}</p> : null}
             </div>
           )
         })}

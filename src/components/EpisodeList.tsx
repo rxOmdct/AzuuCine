@@ -86,7 +86,7 @@ export default function EpisodeList({ form, aired, onChange }: Props) {
           <select
             value={viewSeason}
             onChange={(e) => setViewSeason(Number(e.target.value))}
-            className="field w-auto py-2 pr-9 text-sm font-semibold"
+            className="field w-auto py-2 pe-9 text-sm font-semibold"
             aria-label={t('form.season')}
           >
             {seasons.map((n, k) => (
@@ -104,7 +104,7 @@ export default function EpisodeList({ form, aired, onChange }: Props) {
         </span>
       </div>
 
-      <div ref={listRef} className="max-h-[26rem] space-y-1 overflow-y-auto overscroll-contain pr-1">
+      <div ref={listRef} className="max-h-[26rem] space-y-1 overflow-y-auto overscroll-contain pe-1">
         {rows.map((e) => {
           const seen = e.number <= watchedHere
           // Pas encore sorti : date à venir (TMDB), ou au-delà des épisodes diffusés
@@ -119,7 +119,7 @@ export default function EpisodeList({ form, aired, onChange }: Props) {
               onClick={() => toggle(e.number)}
               disabled={locked}
               aria-pressed={seen}
-              className={cx('flex w-full items-center gap-3 rounded-xl p-1.5 text-left transition-colors', locked ? 'cursor-not-allowed' : 'active:bg-surface-2', upcoming && 'opacity-50')}
+              className={cx('flex w-full items-center gap-3 rounded-xl p-1.5 text-start transition-colors', locked ? 'cursor-not-allowed' : 'active:bg-surface-2', upcoming && 'opacity-50')}
             >
               <span className="relative aspect-video w-28 shrink-0 overflow-hidden rounded-lg border border-line bg-surface-2">
                 {e.still ? (

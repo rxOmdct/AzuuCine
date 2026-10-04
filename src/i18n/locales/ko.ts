@@ -200,6 +200,7 @@ const dict: Translations = {
   'auth.err.linkInvalid': '유효하지 않은 링크예요.',
 
   'settings.language': '언어',
+  'settings.langAuto': '자동 ({lang})',
   'settings.backupShared': '백업을 공유했어요.',
   'settings.backupDownloaded': '백업을 다운로드했어요.',
   'settings.exportFailed': '내보내기에 실패했어요.',

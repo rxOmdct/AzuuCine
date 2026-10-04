@@ -169,7 +169,7 @@ export default function Roulette({ onClose, onOpen }: Props) {
       <div className="flex-1 overflow-y-auto overscroll-contain">
         <div className="safe-bottom mx-auto max-w-2xl pb-16">
           {/* Rouleau d'affiches */}
-          <div ref={viewport} className="relative mt-6 h-[184px] overflow-hidden">
+          <div ref={viewport} dir="ltr" className="relative mt-6 h-[184px] overflow-hidden">
             {reel.length > 0 ? (
               <div
                 className="flex gap-3"

@@ -52,20 +52,20 @@ export default function PeopleSearch({ onClose }: { onClose: () => void }) {
     <Sheet label={t('social.findFriends')} title={t('social.findFriends')} onClose={onClose}>
       <div className="px-4 pt-4">
         <div className="relative">
-          <Search size={17} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-3" />
+          <Search size={17} className="pointer-events-none absolute start-3.5 top-1/2 -translate-y-1/2 text-ink-3" />
           <input
             type="search"
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder={t('social.searchPh')}
-            className="field pl-10"
+            className="field ps-10"
             autoFocus
             autoCapitalize="off"
             autoComplete="off"
             spellCheck={false}
             enterKeyHint="search"
           />
-          {loading && <Loader2 size={17} className="absolute right-3.5 top-1/2 -translate-y-1/2 animate-spin text-ink-3" />}
+          {loading && <Loader2 size={17} className="absolute end-3.5 top-1/2 -translate-y-1/2 animate-spin text-ink-3" />}
         </div>
 
         {results.length > 0 ? (

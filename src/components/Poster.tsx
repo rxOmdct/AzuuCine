@@ -20,7 +20,7 @@ export default function Poster({ src, title, className }: { src?: string; title:
   return (
     <div className={cx('relative grid aspect-[2/3] w-full place-items-center overflow-hidden rounded-xl border border-line bg-surface-2', className)}>
       <span className="text-3xl font-bold text-ink-3">{initial}</span>
-      <span className="absolute bottom-0 left-0 h-[3px] w-1/3 bg-accent-fill" />
+      <span className="absolute bottom-0 start-0 h-[3px] w-1/3 bg-accent-fill" />
     </div>
   )
 }

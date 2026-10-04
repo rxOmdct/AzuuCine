@@ -140,8 +140,8 @@ export default function TopFiveEditor({ category: initialCategory, onClose }: Pr
               </button>
             </div>
             <div className="relative mb-2">
-              <Search size={17} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-3" />
-              <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t('top.searchTitle')} className="field pl-10" />
+              <Search size={17} className="pointer-events-none absolute start-3.5 top-1/2 -translate-y-1/2 text-ink-3" />
+              <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t('top.searchTitle')} className="field ps-10" />
             </div>
             {ids.length >= 5 && <p className="py-2 text-xs text-ink-3">{t('top.full')}</p>}
             <ul className="divide-y divide-line">
@@ -150,7 +150,7 @@ export default function TopFiveEditor({ category: initialCategory, onClose }: Pr
                   <button
                     onClick={() => setIds((p) => (p.length < 5 ? [...p, item.id] : p))}
                     disabled={ids.length >= 5}
-                    className="flex w-full items-center gap-3 py-2.5 text-left disabled:opacity-40"
+                    className="flex w-full items-center gap-3 py-2.5 text-start disabled:opacity-40"
                   >
                     <div className="w-9 shrink-0">
                       <Poster src={item.poster} title={item.title} />

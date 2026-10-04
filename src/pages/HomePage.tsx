@@ -31,7 +31,7 @@ function PosterStrip({ items, onOpen }: { items: MediaItem[]; onOpen: (item: Med
   return (
     <div className="no-scrollbar -mx-4 flex gap-3 overflow-x-auto px-4 pb-1">
       {items.map((item) => (
-        <button key={item.id} onClick={() => onOpen(item)} className="w-32 shrink-0 text-left">
+        <button key={item.id} onClick={() => onOpen(item)} className="w-32 shrink-0 text-start">
           <Poster src={item.poster} title={item.title} />
           <p className="mt-2 truncate text-sm font-semibold leading-snug">{item.title}</p>
           <p className="truncate text-[11px] text-ink-3">{[TYPE_BY_VALUE[item.type].label, item.year].filter(Boolean).join(' · ')}</p>
@@ -129,14 +129,14 @@ export default function HomePage({ onOpen, onAdd, onNavigate, onRoulette, onCale
           >
             <CalendarDays size={20} />
             {soon > 0 && (
-              <span className="absolute -right-1 -top-1 grid min-w-5 place-items-center rounded-full bg-accent-fill px-1 text-[10px] font-bold text-on-accent">{soon}</span>
+              <span className="absolute -end-1 -top-1 grid min-w-5 place-items-center rounded-full bg-accent-fill px-1 text-[10px] font-bold text-on-accent">{soon}</span>
             )}
           </button>
           {social.enabled && (
             <button onClick={() => (social.me ? social.openProfile(social.me.username) : social.openSearch())} className="relative shrink-0 rounded-full" aria-label={t('social.myProfile')}>
               <Avatar url={social.me?.avatarUrl} name={social.me?.displayName ?? '?'} size={44} />
               {social.requests.length > 0 && (
-                <span className="absolute -right-1 -top-1 grid min-w-5 place-items-center rounded-full bg-accent-fill px-1 text-[10px] font-bold text-on-accent">{social.requests.length}</span>
+                <span className="absolute -end-1 -top-1 grid min-w-5 place-items-center rounded-full bg-accent-fill px-1 text-[10px] font-bold text-on-accent">{social.requests.length}</span>
               )}
             </button>
           )}
@@ -164,7 +164,7 @@ export default function HomePage({ onOpen, onAdd, onNavigate, onRoulette, onCale
           <FriendsFeed />
 
           {/* Roulette : pour les soirs sans idée */}
-          <button onClick={onRoulette} className="card mt-8 flex w-full items-center gap-4 p-4 text-left transition-colors active:bg-surface-2">
+          <button onClick={onRoulette} className="card mt-8 flex w-full items-center gap-4 p-4 text-start transition-colors active:bg-surface-2">
             <span className="grid size-12 shrink-0 place-items-center rounded-full bg-accent-fill text-on-accent">
               <Dices size={24} />
             </span>

@@ -200,6 +200,7 @@ const dict: Translations = {
   'auth.err.linkInvalid': 'このリンクは無効です。',
 
   'settings.language': '言語',
+  'settings.langAuto': '自動（{lang}）',
   'settings.backupShared': 'バックアップを共有しました。',
   'settings.backupDownloaded': 'バックアップをダウンロードしました。',
   'settings.exportFailed': 'エクスポートに失敗しました。',

@@ -89,7 +89,7 @@ export default function JournalView({ onOpen }: { onOpen: (item: MediaItem) => v
                 const d = new Date(e.date + 'T12:00:00')
                 return (
                   <li key={e.item.id + e.date + e.kind}>
-                    <button onClick={() => onOpen(e.item)} className="flex w-full items-center gap-3 py-2.5 text-left">
+                    <button onClick={() => onOpen(e.item)} className="flex w-full items-center gap-3 py-2.5 text-start">
                       <span className="w-9 shrink-0 text-center">
                         <span className="block text-xl font-bold leading-none tabular-nums">{d.getDate()}</span>
                         <span className="block text-[10px] uppercase text-ink-3">{d.toLocaleDateString(locale(), { weekday: 'short' }).replace('.', '')}</span>

@@ -120,7 +120,7 @@ export default function EditProfile({ onClose }: { onClose: () => void }) {
         <div className="-mt-11 flex items-end gap-3">
           <button type="button" onClick={() => avatarInput.current?.click()} className="relative rounded-full" aria-label={t('social.changeAvatar')}>
             <Avatar url={avatar.removed ? undefined : avatar.preview} name={displayName || me.username} size={88} className="border-4 border-bg" />
-            <span className="absolute bottom-1 right-1 grid size-7 place-items-center rounded-full bg-accent-fill text-on-accent">
+            <span className="absolute bottom-1 end-1 grid size-7 place-items-center rounded-full bg-accent-fill text-on-accent">
               <Camera size={14} />
             </span>
           </button>
@@ -147,9 +147,9 @@ export default function EditProfile({ onClose }: { onClose: () => void }) {
           <label className="block">
             <span className="label">{t('social.username')}</span>
             <div className="relative">
-              <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-3">@</span>
+              <span className="pointer-events-none absolute start-3.5 top-1/2 -translate-y-1/2 text-ink-3">@</span>
               <input
-                className={cx('field pl-8', username && !usernameOk && 'border-accent!')}
+                className={cx('field ps-8', username && !usernameOk && 'border-accent!')}
                 value={username}
                 onChange={(e) => setUsername(e.target.value.toLowerCase())}
                 maxLength={21}
@@ -163,17 +163,17 @@ export default function EditProfile({ onClose }: { onClose: () => void }) {
           <label className="block">
             <span className="label">{t('social.bio')}</span>
             <textarea className="field min-h-24 resize-y" value={bio} onChange={(e) => setBio(e.target.value)} maxLength={300} placeholder={t('social.bioPh')} />
-            <span className="mt-1 block text-right text-[11px] text-ink-3">{bio.length}/300</span>
+            <span className="mt-1 block text-end text-[11px] text-ink-3">{bio.length}/300</span>
           </label>
 
-          <button type="button" role="switch" aria-checked={isPrivate} onClick={() => setIsPrivate((v) => !v)} className="flex w-full items-center gap-3 rounded-2xl border border-line px-4 py-3.5 text-left">
+          <button type="button" role="switch" aria-checked={isPrivate} onClick={() => setIsPrivate((v) => !v)} className="flex w-full items-center gap-3 rounded-2xl border border-line px-4 py-3.5 text-start">
             <Lock size={18} className="shrink-0 text-ink-2" />
             <span className="flex-1">
               <span className="block text-sm font-medium">{t('social.privateAccount')}</span>
               <span className="mt-0.5 block text-xs text-ink-3">{t('social.privateHint')}</span>
             </span>
             <span className={cx('relative h-6 w-11 shrink-0 rounded-full transition-colors', isPrivate ? 'bg-accent-fill' : 'bg-surface-2 border border-line-strong')}>
-              <span className={cx('absolute top-0.5 size-5 rounded-full bg-ink transition-all', isPrivate ? 'left-[22px] bg-on-accent' : 'left-0.5')} />
+              <span className={cx('absolute top-0.5 size-5 rounded-full bg-ink transition-all', isPrivate ? 'start-[22px] bg-on-accent' : 'start-0.5')} />
             </span>
           </button>
 

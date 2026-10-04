@@ -134,7 +134,7 @@ export default function Recommendations() {
                   <button
                     onClick={() => addToWatchlist(r)}
                     disabled={done || !!busy}
-                    className="absolute bottom-2 right-2 flex h-8 items-center gap-1 rounded-full bg-accent-fill px-2.5 text-xs font-semibold text-on-accent transition active:scale-90 disabled:opacity-90"
+                    className="absolute bottom-2 end-2 flex h-8 items-center gap-1 rounded-full bg-accent-fill px-2.5 text-xs font-semibold text-on-accent transition active:scale-90 disabled:opacity-90"
                     aria-label={done ? t('reco.added', { title: r.title }) : t('reco.addLabel', { title: r.title })}
                   >
                     {busy === r.externalId ? <Loader2 size={13} className="animate-spin" /> : done ? <Check size={13} strokeWidth={3} /> : <Plus size={13} strokeWidth={3} />}

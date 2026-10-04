@@ -200,6 +200,7 @@ const dict: Translations = {
   'auth.err.linkInvalid': 'Dieser Link ist ungültig.',
 
   'settings.language': 'Sprache',
+  'settings.langAuto': 'Automatisch ({lang})',
   'settings.backupShared': 'Backup geteilt.',
   'settings.backupDownloaded': 'Backup heruntergeladen.',
   'settings.exportFailed': 'Export fehlgeschlagen.',

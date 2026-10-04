@@ -208,8 +208,8 @@ export default function StatsPage() {
                     <span className="size-3 shrink-0 rounded-full" style={{ background: TYPE_COLORS[row.type] }} />
                     <span className="flex-1 text-ink-2">{row.label}</span>
                     <span className="text-xs text-ink-3">{t('journal.seen', { count: row.completed })}</span>
-                    <span className="w-16 text-right text-xs font-semibold tabular-nums">{formatDuration(row.minutes)}</span>
-                    <span className="w-10 text-right text-xs tabular-nums text-ink-3">{Math.round((row.minutes / typeTotal) * 100)} %</span>
+                    <span className="w-16 text-end text-xs font-semibold tabular-nums">{formatDuration(row.minutes)}</span>
+                    <span className="w-10 text-end text-xs tabular-nums text-ink-3">{Math.round((row.minutes / typeTotal) * 100)} %</span>
                   </li>
                 ))}
               </ul>
@@ -375,7 +375,7 @@ export default function StatsPage() {
                     title={t('account.nTitles', { count: g.value })}
                   >
                     {genreLabel(g.label)}
-                    <sup className="ml-0.5 text-[10px] font-medium text-ink-3">{g.value}</sup>
+                    <sup className="ms-0.5 text-[10px] font-medium text-ink-3">{g.value}</sup>
                   </span>
                 )
               })}
@@ -394,7 +394,7 @@ export default function StatsPage() {
                   <span className="h-2 flex-1 overflow-hidden rounded-full bg-surface-2">
                     <span className="block h-full rounded-full bg-accent" style={{ width: `${(c.count / maxCountry) * 100}%` }} />
                   </span>
-                  <span className="w-8 text-right text-xs font-semibold tabular-nums">{c.count}</span>
+                  <span className="w-8 text-end text-xs font-semibold tabular-nums">{c.count}</span>
                 </li>
               ))}
             </ul>
