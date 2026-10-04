@@ -10,7 +10,7 @@ import { testTmdbKey } from '../lib/catalogApi'
 import { checkTmdbProxy, type ProxyState } from '../lib/cloud/api'
 import { ALL_TOP_CATEGORIES, TOP_CATEGORIES } from '../lib/constants'
 import { isHexColor, THEME_MODES, THEME_PRESETS } from '../lib/theme'
-import { useInstallPrompt } from '../lib/pwa'
+import { detectPlatform, useInstallPrompt } from '../lib/pwa'
 import { cx } from '../lib/utils'
 import { useMedia } from '../store'
 
@@ -133,13 +133,13 @@ export default function SettingsPage() {
     setMessage({ kind: 'ok', text: t('settings.cleared') })
   }
 
-  const onInstall = async () => {
-    if (canInstall) {
-      const ok = await install()
-      if (ok) setMessage({ kind: 'ok', text: t('settings.installed') })
-    } else {
-      setMessage({ kind: 'ok', text: t('settings.installHint') })
-    }
+  const [showInstall, setShowInstall] = useState(false)
+  const platform = detectPlatform()
+
+  const doNativeInstall = async () => {
+    const ok = await install()
+    setShowInstall(false)
+    if (ok) setMessage({ kind: 'ok', text: t('settings.installed') })
   }
 
   return (
@@ -240,7 +240,7 @@ export default function SettingsPage() {
             <span className="flex-1 font-medium text-ink-3">{t('settings.installed')}</span>
           </div>
         ) : (
-          <button onClick={onInstall} className="flex w-full items-center gap-3.5 px-4 py-4 text-start transition-colors active:bg-surface-2">
+          <button onClick={() => setShowInstall(true)} className="flex w-full items-center gap-3.5 px-4 py-4 text-start transition-colors active:bg-surface-2">
             <span className="text-ink-2"><Smartphone size={19} /></span>
             <span className="flex-1 font-medium">{t('settings.installApp')}</span>
             <span className="text-ink-3">→</span>
@@ -248,6 +248,32 @@ export default function SettingsPage() {
         )}
       </div>
       <p className="mt-2.5 text-xs text-ink-3">{t('settings.installHint')}</p>
+
+      {showInstall && (
+        <div className="fixed inset-0 z-[70] flex items-end justify-center bg-black/70 p-4 sm:items-center" onClick={() => setShowInstall(false)}>
+          <div role="dialog" aria-modal="true" className="sheet-in safe-bottom w-full max-w-sm rounded-3xl border border-line-strong bg-surface p-5" onClick={(e) => e.stopPropagation()}>
+            <h2 className="flex items-center gap-2 text-lg"><Smartphone size={20} className="text-accent" /> {t('install.title')}</h2>
+            <ol className="mt-4 space-y-3">
+              {t(`install.${platform}`).split('\n').map((step, i) => (
+                <li key={i} className="flex gap-3 text-sm leading-relaxed text-ink-2">
+                  <span className="grid size-6 shrink-0 place-items-center rounded-full bg-surface-2 text-xs font-bold text-ink">{i + 1}</span>
+                  <span>{step}</span>
+                </li>
+              ))}
+            </ol>
+            <div className="mt-5 flex gap-2">
+              {canInstall && (
+                <button onClick={doNativeInstall} className="btn btn-primary flex-1">
+                  <Download size={17} /> {t('settings.installApp')}
+                </button>
+              )}
+              <button onClick={() => setShowInstall(false)} className={cx('btn', canInstall ? 'btn-ghost px-5' : 'btn-light flex-1')}>
+                {t('install.gotIt')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <SectionTitle>{t('settings.databases')}</SectionTitle>
       <div className="card space-y-4 p-4">

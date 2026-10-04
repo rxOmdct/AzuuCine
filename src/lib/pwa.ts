@@ -30,6 +30,21 @@ function isStandalone(): boolean {
   return window.matchMedia?.('(display-mode: standalone)').matches || (navigator as { standalone?: boolean }).standalone === true
 }
 
+/** Plateforme, pour expliquer comment ajouter l'app à l'écran d'accueil. */
+export type Platform = 'ios' | 'android' | 'desktop' | 'other'
+
+export function detectPlatform(): Platform {
+  if (typeof navigator === 'undefined') return 'other'
+  const ua = navigator.userAgent || ''
+  const touch = navigator.maxTouchPoints ?? 0
+  // iPhone / iPad (iPadOS récent se présente comme « MacIntel » mais avec un écran tactile)
+  if (/iphone|ipod|ipad/i.test(ua) || ((navigator.platform === 'MacIntel' || /Mac/.test(ua)) && touch > 1)) return 'ios'
+  if (/android/i.test(ua)) return 'android'
+  // Ordinateur « classique » : pas d'écran tactile principal
+  if (/windows|macintosh|linux|cros/i.test(ua) && touch <= 1) return 'desktop'
+  return 'other'
+}
+
 export function useInstallPrompt(): { canInstall: boolean; installed: boolean; install: () => Promise<boolean> } {
   const [canInstall, setCanInstall] = useState(() => deferredPrompt !== null)
   const [installed, setInstalled] = useState(isStandalone)
