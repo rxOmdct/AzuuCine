@@ -2,12 +2,13 @@ import { useSocial } from '../components/social/SocialProvider'
 import { t } from '../i18n'
 import { CalendarDays, Dices, Plus } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { MediaRow } from '../components/MediaCard'
+import { TYPE_BY_VALUE } from '../lib/constants'
 import Avatar from '../components/social/Avatar'
 import FriendsFeed from '../components/social/FriendsFeed'
 import Poster from '../components/Poster'
 import TopFive from '../components/TopFive'
 import Recommendations from '../components/Recommendations'
+import HomeHero, { ContinueCard } from '../components/HomeHero'
 import type { Tab } from '../components/BottomNav'
 import { EmptyState, LinkArrow, PageHeader, SectionTitle, StatTile } from '../components/ui'
 import { CACHE_EVENT, loadAiring, needsCheck, refreshAiring, saveAiring, trackable } from '../lib/airing'
@@ -29,9 +30,10 @@ function PosterStrip({ items, onOpen }: { items: MediaItem[]; onOpen: (item: Med
   return (
     <div className="no-scrollbar -mx-4 flex gap-3 overflow-x-auto px-4 pb-1">
       {items.map((item) => (
-        <button key={item.id} onClick={() => onOpen(item)} className="w-24 shrink-0 text-left">
+        <button key={item.id} onClick={() => onOpen(item)} className="w-32 shrink-0 text-left">
           <Poster src={item.poster} title={item.title} />
-          <p className="mt-2 line-clamp-2 text-xs font-medium leading-snug text-ink-2">{item.title}</p>
+          <p className="mt-2 truncate text-sm font-semibold leading-snug">{item.title}</p>
+          <p className="truncate text-[11px] text-ink-3">{[TYPE_BY_VALUE[item.type].label, item.year].filter(Boolean).join(' · ')}</p>
         </button>
       ))}
     </div>
@@ -60,6 +62,7 @@ export default function HomePage({ onOpen, onAdd, onNavigate, onRoulette, onCale
           if (i.status !== 'termine' && info.aired > (i.episodesTotal ?? 0)) patch.episodesTotal = info.aired
           // Découpage par saison (nouvelle saison annoncée, ou fiche ajoutée avant le suivi par saison)
           if (info.seasonSizes && info.seasonSizes.join() !== (i.seasons ?? []).join()) patch.seasons = info.seasonSizes
+          if (info.backdrop && !i.backdrop) patch.backdrop = info.backdrop
           return Object.keys(patch).length ? [{ id: i.id, patch }] : []
         })
         if (patches.length) return patchMany(patches)
@@ -82,6 +85,8 @@ export default function HomePage({ onOpen, onAdd, onNavigate, onRoulette, onCale
   }, [items, cacheVersion])
 
   const inProgress = items.filter((i) => i.status === 'en_cours')
+  // Bannière : ce que je regarde en ce moment (le plus récemment touché), sinon le prochain « à voir »
+  const featured = [...inProgress].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))[0] ?? items.find((i) => i.status === 'a_voir')
   const toWatch = items.filter((i) => i.status === 'a_voir').slice(0, 12)
   const recent = items
     .filter((i) => i.status === 'termine')
@@ -135,15 +140,32 @@ export default function HomePage({ onOpen, onAdd, onNavigate, onRoulette, onCale
         </>
       ) : (
         <>
-          <div className="grid grid-cols-2 gap-3">
-            <StatTile label={t('home.completed')} value={stats.completed} hint={t('home.thisYear', { count: stats.completedThisYear })} />
-            <StatTile label={t('status.en_cours')} value={stats.inProgress} hint={t('home.toWatchN', { count: stats.toWatch })} />
-            <StatTile label={t('home.screenTime')} value={formatDuration(stats.totalMinutes)} hint={t('home.estimate')} />
-            <StatTile label={t('home.episodesSeen')} value={stats.episodesWatched} />
-          </div>
+          {featured && <HomeHero item={featured} onOpen={onOpen} />}
+
+          {inProgress.length > 0 && (
+            <>
+              <SectionTitle>{t('homeHero.continueRow')}</SectionTitle>
+              <div className="no-scrollbar -mx-4 flex gap-3 overflow-x-auto px-4 pb-1">
+                {[...inProgress]
+                  .sort((x, y) => y.updatedAt.localeCompare(x.updatedAt))
+                  .map((item) => (
+                    <ContinueCard key={item.id} item={item} onOpen={onOpen} />
+                  ))}
+              </div>
+            </>
+          )}
+
+          {toWatch.length > 0 && (
+            <>
+              <SectionTitle action={seeAll}>{t('status.a_voir')}</SectionTitle>
+              <PosterStrip items={toWatch} onOpen={onOpen} />
+            </>
+          )}
+
+          <FriendsFeed />
 
           {/* Roulette : pour les soirs sans idée */}
-          <button onClick={onRoulette} className="card mt-3 flex w-full items-center gap-4 p-4 text-left transition-colors active:bg-surface-2">
+          <button onClick={onRoulette} className="card mt-8 flex w-full items-center gap-4 p-4 text-left transition-colors active:bg-surface-2">
             <span className="grid size-12 shrink-0 place-items-center rounded-full bg-accent-fill text-on-accent">
               <Dices size={24} />
             </span>
@@ -158,29 +180,10 @@ export default function HomePage({ onOpen, onAdd, onNavigate, onRoulette, onCale
             <span className="text-accent">→</span>
           </button>
 
-          <FriendsFeed />
-
-          {inProgress.length > 0 && (
-            <>
-              <SectionTitle>{t('status.en_cours')}</SectionTitle>
-              <div className="space-y-2.5">
-                {inProgress.map((item) => (
-                  <MediaRow key={item.id} item={item} onOpen={onOpen} />
-                ))}
-              </div>
-            </>
-          )}
 
           <TopFive onOpen={onOpen} />
 
           <Recommendations />
-
-          {toWatch.length > 0 && (
-            <>
-              <SectionTitle action={seeAll}>{t('status.a_voir')}</SectionTitle>
-              <PosterStrip items={toWatch} onOpen={onOpen} />
-            </>
-          )}
 
           {recent.length > 0 && (
             <>
@@ -188,6 +191,15 @@ export default function HomePage({ onOpen, onAdd, onNavigate, onRoulette, onCale
               <PosterStrip items={recent} onOpen={onOpen} />
             </>
           )}
+
+          <SectionTitle>{t('nav.stats')}</SectionTitle>
+          <div className="grid grid-cols-2 gap-3">
+            <StatTile label={t('home.completed')} value={stats.completed} hint={t('home.thisYear', { count: stats.completedThisYear })} />
+            <StatTile label={t('status.en_cours')} value={stats.inProgress} hint={t('home.toWatchN', { count: stats.toWatch })} />
+            <StatTile label={t('home.screenTime')} value={formatDuration(stats.totalMinutes)} hint={t('home.estimate')} />
+            <StatTile label={t('home.episodesSeen')} value={stats.episodesWatched} />
+          </div>
+
         </>
       )}
     </>

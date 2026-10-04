@@ -1,11 +1,11 @@
 import { locale, t } from '../i18n'
-import { Check, ChevronDown, Heart, ImagePlus, Loader2, Minus, Plus, Share2, Trash2, X } from 'lucide-react'
+import { Check, Heart, ImagePlus, Loader2, Minus, Plus, Share2, Trash2, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { CRITERIA, DEFAULT_FILM_MINUTES, MEDIA_TYPES, platformSuggestions as defaultPlatforms, STATUSES, TYPE_BY_VALUE } from '../lib/constants'
+import { CRITERIA, DEFAULT_FILM_MINUTES, MEDIA_TYPES, STATUSES, TYPE_BY_VALUE } from '../lib/constants'
 import { canonicalGenre, canonicalSubtype, genreLabel, genreSuggestions as defaultGenres, subtypeLabel, subtypeSuggestions } from '../lib/genres'
 import { fileToPosterDataURL } from '../lib/image'
-import { getTmdbCredits, getTmdbSeasons } from '../lib/catalogApi'
-import { episodesBeforeSeason, seasonPosition } from '../lib/franchise'
+import { getTmdbCredits, getTmdbExtras } from '../lib/catalogApi'
+import { episodeCap, seasonPosition } from '../lib/franchise'
 import { renderItemCard, slug } from '../lib/shareCard'
 import { useScrollLock } from '../lib/scrollLock'
 import { cx, formatRating, todayISO } from '../lib/utils'
@@ -15,6 +15,8 @@ import { StatusDot } from './Badges'
 import ConfirmDialog from './ConfirmDialog'
 import SharePreview from './SharePreview'
 import DatabaseSearch from './DatabaseSearch'
+import EpisodeList from './EpisodeList'
+import ItemHero, { type HeroAction } from './ItemHero'
 import { NewListForm } from './ListsView'
 import Poster from './Poster'
 import { RatingInput } from './Rating'
@@ -42,6 +44,7 @@ const METADATA_KEYS = [
   'seasons',
   'episodeDuration',
   'poster',
+  'backdrop',
   'externalId',
   'countries',
   'publicRating',
@@ -74,37 +77,6 @@ interface Props {
   onGoToSettings?: () => void
   /** Ouvre une autre fiche (titre déjà dans la bibliothèque) */
   onOpenItem?: (item: MediaItem) => void
-}
-
-/** Choix de la saison : « S2 » = la saison 1 est vue, on commence la 2. */
-function SeasonPicker({ seasons, watched, season, onChange }: { seasons: number[]; watched: number; season?: number; onChange: (episodesWatched: number, season: number) => void }) {
-  const current = seasonPosition({ episodesWatched: watched, seasons, season })!
-  return (
-    <div>
-      <span className="label">{t('form.season')}</span>
-      <div className="no-scrollbar -mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1">
-        {seasons.map((size, k) => {
-          const n = k + 1
-          const start = episodesBeforeSeason(seasons, n)
-          const done = watched >= start + size
-          const on = n === current.season
-          return (
-            <button
-              key={n}
-              type="button"
-              onClick={() => !on && (n < current.season ? onChange(start + size, n) : onChange(start, n))}
-              className={cx('chip shrink-0', on && 'chip-on')}
-              aria-pressed={on}
-              title={t('form.seasonEpisodes', { count: size })}
-            >
-              {done && !on && <Check size={13} />}
-              S{n}
-            </button>
-          )
-        })}
-      </div>
-    </div>
-  )
 }
 
 /** « Moi vs le public » : ma note comparée à la moyenne TMDB / AniList. */
@@ -163,7 +135,7 @@ function Rewatches({ dates, onChange }: { dates: string[]; onChange: (d: string[
 }
 
 export default function MediaForm({ item, onClose, onGoToSettings, onOpenItem }: Props) {
-  const { add, update, remove, items, settings, lists } = useMedia()
+  const { add, update, remove, items, settings, lists, patchMany } = useMedia()
   const [form, setForm] = useState<MediaInput>(() => {
     if (!item) return EMPTY
     const { id: _id, createdAt: _c, updatedAt: _u, ...rest } = item
@@ -175,23 +147,30 @@ export default function MediaForm({ item, onClose, onGoToSettings, onOpenItem }:
   const [filledFrom, setFilledFrom] = useState<string>()
   const [posterError, setPosterError] = useState<string>()
   const fileRef = useRef<HTMLInputElement>(null)
-  const [showInfo, setShowInfo] = useState(false)
   const typeInfo = TYPE_BY_VALUE[form.type]
-  const pos = typeInfo.episodic ? seasonPosition(form) : undefined
 
   // Bloque le défilement de la page derrière la feuille
   useScrollLock()
 
-  // Série TMDB ajoutée avant le suivi par saison : on récupère le découpage en arrière-plan
+  // Fiche TMDB ajoutée avant ces nouveautés : grande image et saisons récupérées en arrière-plan (et gardées)
   const extId = form.externalId
   useEffect(() => {
     const key = settings.tmdbKey?.trim()
-    if (!extId?.startsWith('tmdb:tv:') || form.seasons || !key || !navigator.onLine) return
+    const isTv = extId?.startsWith('tmdb:tv:')
+    if (!extId?.startsWith('tmdb:') || !key || !navigator.onLine || (form.backdrop && (!isTv || form.seasons))) return
     let alive = true
-    getTmdbSeasons(extId, key)
-      .then(({ seasons, total }) => {
-        if (!alive || !seasons) return
-        setForm((f) => (f.externalId === extId && !f.seasons ? { ...f, seasons, episodesTotal: Math.max(f.episodesTotal ?? 0, total ?? 0) || f.episodesTotal } : f))
+    getTmdbExtras(extId, key)
+      .then(({ seasons, total, backdrop }) => {
+        if (!alive) return
+        const patch: Partial<MediaInput> = {}
+        if (backdrop && !form.backdrop) patch.backdrop = backdrop
+        if (seasons && !form.seasons) {
+          patch.seasons = seasons
+          if ((total ?? 0) > (form.episodesTotal ?? 0)) patch.episodesTotal = total
+        }
+        if (!Object.keys(patch).length) return
+        setForm((f) => (f.externalId === extId ? { ...f, ...patch } : f))
+        if (item && item.externalId === extId) void patchMany([{ id: item.id, patch }])
       })
       .catch(() => {})
     return () => {
@@ -200,14 +179,47 @@ export default function MediaForm({ item, onClose, onGoToSettings, onOpenItem }:
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [extId])
 
+  const [editInfo, setEditInfo] = useState(false)
+  /** En-tête façon plateforme : dès qu'un titre est lié à TMDB / AniList, ou pour une fiche existante */
+  const hasHero = !!form.title.trim() && (!!form.externalId || !!item)
+
+  /** Nouveaux épisodes vus : le statut et les dates suivent. */
+  const withEpisodes = (f: MediaInput, n: number, season?: number): MediaInput => {
+    const cap = episodeCap(f)
+    const watched = Math.max(0, cap ? Math.min(n, cap) : n)
+    const next: MediaInput = { ...f, episodesWatched: watched, season: f.seasons ? season ?? seasonPosition({ ...f, episodesWatched: watched, season: undefined })?.season : f.season }
+    if (watched > 0 && (f.status === 'a_voir' || f.status === 'pause')) {
+      next.status = 'en_cours'
+      next.startDate = f.startDate ?? todayISO()
+    }
+    if (cap && watched >= cap) {
+      next.status = 'termine'
+      next.endDate = f.endDate ?? todayISO()
+    } else if (f.status === 'termine' && watched < (f.episodesWatched ?? 0)) {
+      next.status = 'en_cours'
+      next.endDate = undefined
+    }
+    return next
+  }
+
+  /** Bouton principal de l'en-tête : épisode suivant (séries) ou « vu » (films). */
+  const primary: HeroAction = (() => {
+    if (typeInfo.episodic) {
+      const cap = episodeCap(form)
+      if (cap && form.episodesWatched >= cap) return { label: t('hero.allSeen'), done: true }
+      const nextPos = seasonPosition({ ...form, episodesWatched: form.episodesWatched + 1, season: undefined })
+      const ep = t('episodes.short', { n: nextPos ? nextPos.episode : form.episodesWatched + 1 })
+      const label = t('hero.seenEp', { ep: nextPos ? `S${nextPos.season} · ${ep}` : ep })
+      return { label, onClick: () => setForm((f) => withEpisodes(f, f.episodesWatched + 1)) }
+    }
+    if (form.status === 'termine') return { label: t('hero.seen'), done: true }
+    return { label: t('hero.markSeen'), onClick: () => setStatus('termine') }
+  })()
+
   const set = <K extends keyof MediaInput>(key: K, value: MediaInput[K]) => setForm((f) => ({ ...f, [key]: value }))
 
   // Suggestions = listes par défaut + ce que j'ai déjà utilisé
   const genreSuggestions = useMemo(() => [...new Set([...items.flatMap((i) => i.genres.map(genreLabel)), ...defaultGenres()])], [items])
-  const platformSuggestions = useMemo(
-    () => [...new Set([...items.map((i) => i.platform).filter(Boolean), ...defaultPlatforms()])] as string[],
-    [items],
-  )
 
   /** Applique les infos trouvées en ligne sans écraser mon suivi (statut, note, épisodes vus, avis…). */
   const applyMetadata = (data: Partial<MediaInput>) => {
@@ -218,10 +230,12 @@ export default function MediaForm({ item, onClose, onGoToSettings, onOpenItem }:
       }
       // Découpage par saison : celui de la nouvelle source (ou aucun)
       next.seasons = data.seasons
+      next.backdrop = data.backdrop
       if (data.type && data.type !== 'autre') next.subtype = undefined
       if (data.genres?.length) next.genres = [...new Set([...f.genres, ...data.genres])]
       if (data.platform && !f.platform) next.platform = data.platform
-      if (next.episodesTotal && next.episodesWatched > next.episodesTotal) next.episodesWatched = next.episodesTotal
+      const cap = episodeCap(next)
+      if (cap && next.episodesWatched > cap) next.episodesWatched = cap
       return next
     })
     setFilledFrom(data.externalId?.startsWith('anilist') ? 'AniList' : 'TMDB')
@@ -239,7 +253,8 @@ export default function MediaForm({ item, onClose, onGoToSettings, onOpenItem }:
       if (status === 'en_cours' && !f.startDate) next.startDate = todayISO()
       if (status === 'termine') {
         if (!f.endDate) next.endDate = todayISO()
-        if (f.episodesTotal && TYPE_BY_VALUE[f.type].episodic) next.episodesWatched = f.episodesTotal
+        const cap = episodeCap(f)
+        if (cap && TYPE_BY_VALUE[f.type].episodic) next.episodesWatched = cap
       }
       return next
     })
@@ -247,7 +262,8 @@ export default function MediaForm({ item, onClose, onGoToSettings, onOpenItem }:
   const changeEpisodes = (delta: number) =>
     setForm((f) => {
       let n = Math.max(0, f.episodesWatched + delta)
-      if (f.episodesTotal) n = Math.min(n, f.episodesTotal)
+      const cap = episodeCap(f)
+      if (cap) n = Math.min(n, cap)
       return { ...f, episodesWatched: n }
     })
 
@@ -335,9 +351,18 @@ export default function MediaForm({ item, onClose, onGoToSettings, onOpenItem }:
           void submit()
         }}
       >
+        {hasHero && (
+          <ItemHero
+            form={form}
+            typeLabel={form.type === 'autre' && form.subtype ? subtypeLabel(form.subtype) : typeInfo.label}
+            editing={editInfo}
+            onEdit={() => setEditInfo((v) => !v)}
+            primary={primary}
+          />
+        )}
         <div className="safe-bottom mx-auto max-w-2xl space-y-9 px-4 py-6 pb-16">
           {/* Recherche en ligne */}
-          {showSearch ? (
+          {(!hasHero || editInfo || showSearch) && (showSearch ? (
             <DatabaseSearch
               onPick={applyMetadata}
               initialQuery={item ? form.title : ''}
@@ -362,9 +387,11 @@ export default function MediaForm({ item, onClose, onGoToSettings, onOpenItem }:
               </span>
               <span className="text-accent">→</span>
             </button>
-          )}
+          ))}
 
-          {/* Affiche + titres */}
+          {/* Affiche + titres (modifiables) */}
+          {(!hasHero || editInfo) && (
+          <>
           <div className="flex gap-4">
             <div className="w-28 shrink-0">
               <button type="button" onClick={() => fileRef.current?.click()} className="relative block w-full" aria-label={t('form.pickPoster')}>
@@ -389,33 +416,42 @@ export default function MediaForm({ item, onClose, onGoToSettings, onOpenItem }:
               </Field>
             </div>
           </div>
-          {form.overview && (
+          {form.overview && !hasHero && (
             <details className="-mt-3 text-sm text-ink-2">
               <summary className="eyebrow cursor-pointer select-none">{t('form.synopsis')}</summary>
               <p className="mt-2 whitespace-pre-line leading-relaxed">{form.overview}</p>
             </details>
           )}
+          </>
+          )}
 
-          {/* Type */}
-          <Section title={t('form.type')}>
-            <div className="flex flex-wrap gap-2">
-              {MEDIA_TYPES.map((mt) => (
-                <button key={mt.value} type="button" onClick={() => set('type', mt.value)} className={cx('chip', form.type === mt.value && 'chip-on')}>
-                  {mt.label}
-                </button>
-              ))}
-            </div>
-            {form.type === 'autre' && (
-              <Field label={t('form.subtype')}>
-                <input className="field" list="subtypes" value={form.subtype ? subtypeLabel(form.subtype) : ''} onChange={(e) => set('subtype', e.target.value)} placeholder={t('form.subtypePh')} />
-                <datalist id="subtypes">
-                  {subtypeSuggestions().map((s) => (
-                    <option key={s} value={s} />
-                  ))}
-                </datalist>
+          {/* Année, dates de visionnage, genres */}
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <Field label={t('form.startShort')}>
+                <input className="field px-3" type="date" value={form.startDate ?? ''} onChange={(e) => set('startDate', e.target.value || undefined)} />
               </Field>
-            )}
-          </Section>
+              <Field label={t('form.endShort')}>
+                <input className="field px-3" type="date" value={form.endDate ?? ''} onChange={(e) => set('endDate', e.target.value || undefined)} />
+              </Field>
+            </div>
+            <div className="grid grid-cols-[5rem_minmax(0,1fr)] items-start gap-3">
+              <Field label={t('form.year')}>
+                <input className="field px-3" type="number" inputMode="numeric" value={form.year ?? ''} onChange={(e) => set('year', toNum(e.target.value))} placeholder="2024" />
+              </Field>
+              <div>
+              <span className="label">{t('form.genres')}</span>
+              <TagInput
+                value={form.genres}
+                onChange={(g) => set('genres', g)}
+                suggestions={genreSuggestions}
+                placeholder={t('form.genresPh')}
+                display={genreLabel}
+                normalize={canonicalGenre}
+              />
+              </div>
+            </div>
+          </div>
 
           {/* Statut */}
           <Section title={t('form.status')}>
@@ -428,6 +464,44 @@ export default function MediaForm({ item, onClose, onGoToSettings, onOpenItem }:
               ))}
             </div>
           </Section>
+
+          {/* Épisodes / durée */}
+          {typeInfo.episodic ? (
+            <Section title={t('form.episodes')}>
+              {form.seasons || form.episodesTotal ? (
+                <EpisodeList form={form} onChange={(n, season) => setForm((f) => withEpisodes(f, n, season))} />
+              ) : (
+                <div className="card space-y-5 p-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-ink-2">{t('home.episodesSeen')}</span>
+                    <div className="flex items-center gap-3">
+                      <button type="button" onClick={() => changeEpisodes(-1)} className="grid size-10 place-items-center rounded-full border border-line-strong text-ink-2" aria-label={t('form.minusEp')}>
+                        <Minus size={17} />
+                      </button>
+                      <span className="min-w-16 text-center text-2xl font-bold tabular-nums">{form.episodesWatched}</span>
+                      <button type="button" onClick={() => changeEpisodes(1)} className="grid size-10 place-items-center rounded-full bg-accent-fill text-on-accent" aria-label={t('form.plusEp')}>
+                        <Plus size={17} strokeWidth={2.5} />
+                      </button>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <Field label={t('form.total')}>
+                      <input className="field" type="number" inputMode="numeric" min={0} value={form.episodesTotal ?? ''} onChange={(e) => set('episodesTotal', toNum(e.target.value))} placeholder="?" />
+                    </Field>
+                    <Field label={t('form.season')}>
+                      <input className="field" type="number" inputMode="numeric" min={0} value={form.season ?? ''} onChange={(e) => set('season', toNum(e.target.value))} placeholder="1" />
+                    </Field>
+                  </div>
+                </div>
+              )}
+            </Section>
+          ) : (
+            <Section title={t('form.duration')}>
+              <Field label={t('form.durationMin')}>
+                <input className="field" type="number" inputMode="numeric" min={0} value={form.duration ?? ''} onChange={(e) => set('duration', toNum(e.target.value))} placeholder={String(DEFAULT_FILM_MINUTES)} />
+              </Field>
+            </Section>
+          )}
 
           {/* Note */}
           <Section title={t('form.myRating')}>
@@ -465,113 +539,32 @@ export default function MediaForm({ item, onClose, onGoToSettings, onOpenItem }:
             </div>
           </Section>
 
-          {/* Épisodes / durée */}
-          {typeInfo.episodic ? (
-            <Section title={t('form.episodes')}>
-              <div className="card space-y-5 p-4">
-                {pos && form.seasons ? (
-                  <SeasonPicker seasons={form.seasons} watched={form.episodesWatched} season={form.season} onChange={(n, season) => setForm((f) => ({ ...f, episodesWatched: n, season }))} />
-                ) : null}
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-ink-2">{pos ? t('form.episodesOfSeason', { season: pos.season }) : t('home.episodesSeen')}</span>
-                  <div className="flex items-center gap-3">
-                    <button type="button" onClick={() => changeEpisodes(-1)} className="grid size-10 place-items-center rounded-full border border-line-strong text-ink-2" aria-label={t('form.minusEp')}>
-                      <Minus size={17} />
-                    </button>
-                    <span className="min-w-16 text-center text-2xl font-bold tabular-nums">
-                      {pos ? pos.episode : form.episodesWatched}
-                      {pos ? <span className="text-base text-ink-3">/{pos.size}</span> : form.episodesTotal ? <span className="text-base text-ink-3">/{form.episodesTotal}</span> : null}
-                    </span>
-                    <button type="button" onClick={() => changeEpisodes(1)} className="grid size-10 place-items-center rounded-full bg-accent-fill text-on-accent" aria-label={t('form.plusEp')}>
-                      <Plus size={17} strokeWidth={2.5} />
-                    </button>
-                  </div>
-                </div>
-                {pos ? (
-                  <div className="flex items-end justify-between gap-3">
-                    <p className="pb-2 text-xs text-ink-3">{t('form.seasonsTotal', { seasons: form.seasons!.length, count: form.episodesTotal ?? 0 })}</p>
-                    <div className="w-28 shrink-0">
-                      <Field label={t('form.minPerEp')}>
-                        <input className="field" type="number" inputMode="numeric" min={0} value={form.episodeDuration ?? ''} onChange={(e) => set('episodeDuration', toNum(e.target.value))} placeholder={String(typeInfo.episodeMinutes)} />
-                      </Field>
-                    </div>
-                  </div>
-                ) : (
-                <div className="grid grid-cols-3 gap-3">
-                  <Field label={t('form.total')}>
-                    <input className="field" type="number" inputMode="numeric" min={0} value={form.episodesTotal ?? ''} onChange={(e) => set('episodesTotal', toNum(e.target.value))} placeholder="?" />
-                  </Field>
-                  <Field label={t('form.season')}>
-                    <input className="field" type="number" inputMode="numeric" min={0} value={form.season ?? ''} onChange={(e) => set('season', toNum(e.target.value))} placeholder="1" />
-                  </Field>
-                  <Field label={t('form.minPerEp')}>
-                    <input className="field" type="number" inputMode="numeric" min={0} value={form.episodeDuration ?? ''} onChange={(e) => set('episodeDuration', toNum(e.target.value))} placeholder={String(typeInfo.episodeMinutes)} />
-                  </Field>
-                </div>
-                )}
-              </div>
-            </Section>
-          ) : (
-            <Section title={t('form.duration')}>
-              <Field label={t('form.durationMin')}>
-                <input className="field" type="number" inputMode="numeric" min={0} value={form.duration ?? ''} onChange={(e) => set('duration', toNum(e.target.value))} placeholder={String(DEFAULT_FILM_MINUTES)} />
-              </Field>
-            </Section>
-          )}
-
-          {/* Infos : repliées par défaut (dates remplies selon le statut, année et genres par la recherche) */}
-          <button
-            type="button"
-            onClick={() => setShowInfo((v) => !v)}
-            aria-expanded={showInfo}
-            className="flex w-full items-center justify-between border-t border-line pt-5 text-left"
-          >
-            <span>
-              <span className="eyebrow block text-ink-2">{t('form.info')}</span>
-              <span className="mt-1 block text-xs text-ink-3">{t('form.infoHint')}</span>
-            </span>
-            <ChevronDown size={18} className={cx('shrink-0 text-ink-3 transition-transform', showInfo && 'rotate-180')} />
-          </button>
-          {showInfo && (
-          <Section title="">
-            <div className="grid grid-cols-2 gap-3">
-              <Field label={t('form.start')}>
-                <input className="field" type="date" value={form.startDate ?? ''} onChange={(e) => set('startDate', e.target.value || undefined)} />
-              </Field>
-              <Field label={t('form.end')}>
-                <input className="field" type="date" value={form.endDate ?? ''} onChange={(e) => set('endDate', e.target.value || undefined)} />
-              </Field>
-              <Field label={t('form.year')}>
-                <input className="field" type="number" inputMode="numeric" value={form.year ?? ''} onChange={(e) => set('year', toNum(e.target.value))} placeholder="2024" />
-              </Field>
-              <Field label={t('form.platform')}>
-                <input className="field" list="platforms" value={form.platform ?? ''} onChange={(e) => set('platform', e.target.value)} placeholder="Netflix…" />
-                <datalist id="platforms">
-                  {platformSuggestions.map((p) => (
-                    <option key={p} value={p} />
-                  ))}
-                </datalist>
-              </Field>
-            </div>
-            <div>
-              <span className="label">{t('form.genres')}</span>
-              <TagInput
-                value={form.genres}
-                onChange={(g) => set('genres', g)}
-                suggestions={genreSuggestions}
-                placeholder={t('form.genresPh')}
-                display={genreLabel}
-                normalize={canonicalGenre}
-              />
-            </div>
-          </Section>
-          )}
-
           {(form.status === 'termine' || (form.rewatchDates?.length ?? 0) > 0) && (
             <Section title={t('form.rewatches')}>
               <Rewatches dates={form.rewatchDates ?? []} onChange={(d) => set('rewatchDates', d.length ? d : undefined)} />
             </Section>
           )}
+
+          {/* Type */}
+          <Section title={t('form.type')}>
+            <div className="flex flex-wrap gap-2">
+              {MEDIA_TYPES.map((mt) => (
+                <button key={mt.value} type="button" onClick={() => set('type', mt.value)} className={cx('chip', form.type === mt.value && 'chip-on')}>
+                  {mt.label}
+                </button>
+              ))}
+            </div>
+            {form.type === 'autre' && (
+              <Field label={t('form.subtype')}>
+                <input className="field" list="subtypes" value={form.subtype ? subtypeLabel(form.subtype) : ''} onChange={(e) => set('subtype', e.target.value)} placeholder={t('form.subtypePh')} />
+                <datalist id="subtypes">
+                  {subtypeSuggestions().map((s) => (
+                    <option key={s} value={s} />
+                  ))}
+                </datalist>
+              </Field>
+            )}
+          </Section>
 
           <Section title={t('lists.myLists')}>
             {lists.length > 0 && (

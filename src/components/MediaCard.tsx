@@ -1,7 +1,7 @@
 import { t } from '../i18n'
 import { Heart, Plus } from 'lucide-react'
 import { TYPE_BY_VALUE } from '../lib/constants'
-import { seasonPosition } from '../lib/franchise'
+import { episodeCap, seasonPosition } from '../lib/franchise'
 import { useMedia } from '../store'
 import type { MediaItem } from '../types'
 import { StatusPill, TypeBadge } from './Badges'
@@ -39,7 +39,7 @@ export function MediaCard({ item, onOpen }: { item: MediaItem; onOpen: (item: Me
   const canIncrement =
     TYPE_BY_VALUE[item.type].episodic &&
     item.status === 'en_cours' &&
-    (!item.episodesTotal || item.episodesWatched < item.episodesTotal)
+    (!episodeCap(item) || item.episodesWatched < episodeCap(item)!)
 
   return (
     <article>
@@ -77,7 +77,7 @@ export function MediaCard({ item, onOpen }: { item: MediaItem; onOpen: (item: Me
 export function MediaRow({ item, onOpen }: { item: MediaItem; onOpen: (item: MediaItem) => void }) {
   const { settings, incrementEpisode } = useMedia()
   const episodic = TYPE_BY_VALUE[item.type].episodic
-  const done = !!item.episodesTotal && item.episodesWatched >= item.episodesTotal
+  const done = !!episodeCap(item) && item.episodesWatched >= episodeCap(item)!
 
   return (
     <article className="card flex items-center gap-3.5 p-3">

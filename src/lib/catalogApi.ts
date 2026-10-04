@@ -4,7 +4,7 @@ import { tmdbViaCloud } from './cloud/api'
 import { TYPE_BY_VALUE } from './constants'
 import { subtypeLabel, tmdbGenres } from './genres'
 import { franchiseKey } from './franchise'
-import { cleanText, isSafeExternalId, isSafeTmdbPath, LIMITS, safeCountries, safePosterUrl, safeSeasons, safeStringList } from './security'
+import { cleanText, isSafeExternalId, isSafeTmdbPath, LIMITS, remoteImage, safeCountries, safeDay, safePosterUrl, safeSeasons, safeStringList } from './security'
 
 /**
  * Recherche dans les bases publiques :
@@ -58,6 +58,7 @@ export function sanitizeMeta(d: Partial<MediaInput>): Partial<MediaInput> {
     externalId: isSafeExternalId(d.externalId) ? d.externalId : undefined,
     countries: safeCountries(d.countries),
     poster: safePosterUrl(d.poster),
+    backdrop: remoteImage(d.backdrop),
     publicRating:
       typeof d.publicRating === 'number' && d.publicRating > 0 && d.publicRating <= 10 ? Math.round(d.publicRating * 10) / 10 : undefined,
   }
@@ -212,6 +213,7 @@ interface TmdbDetails {
   release_date?: string
   first_air_date?: string
   poster_path?: string | null
+  backdrop_path?: string | null
   last_episode_to_air?: { runtime?: number } | null
   seasons?: { season_number?: number; episode_count?: number }[]
   vote_average?: number
@@ -287,6 +289,7 @@ export async function getTmdbDetails(result: SearchResult, key: string): Promise
     duration: kind === 'movie' ? d.runtime || undefined : undefined,
     episodesTotal: kind === 'tv' ? Math.max(d.number_of_episodes || 0, sumSeasons(tmdbSeasons(d))) || undefined : undefined,
     seasons: kind === 'tv' ? tmdbSeasons(d) : undefined,
+    backdrop: tmdbBackdrop(d.backdrop_path),
     episodeDuration: kind === 'tv' ? epRuntime : undefined,
     externalId: result.externalId,
     countries: d.origin_country?.length ? d.origin_country : d.production_countries?.map((c) => c.iso_3166_1).slice(0, 3),
@@ -304,12 +307,53 @@ function tmdbSeasons(d: TmdbDetails): number[] | undefined {
 }
 const sumSeasons = (s?: number[]) => (s ?? []).reduce((a, b) => a + b, 0)
 
-/** Saisons d'une série déjà dans la bibliothèque (pour les fiches ajoutées avant le suivi par saison). */
-export async function getTmdbSeasons(externalId: string, key: string): Promise<{ seasons?: number[]; total?: number }> {
-  if (!isSafeExternalId(externalId) || !externalId.startsWith('tmdb:tv:')) return {}
-  const d = await tmdbFetch<TmdbDetails>(`/tv/${externalId.split(':')[2]}`, key)
-  const seasons = tmdbSeasons(d)
-  return { seasons, total: Math.max(d.number_of_episodes || 0, sumSeasons(seasons)) || undefined }
+const tmdbBackdrop = (path?: string | null) => (isSafeTmdbPath(path) ? `${TMDB_IMG}/w780${path}` : undefined)
+
+/** Grande image et saisons d'un titre déjà dans la bibliothèque (fiches ajoutées avant ces nouveautés). */
+export async function getTmdbExtras(externalId: string, key: string): Promise<{ seasons?: number[]; total?: number; backdrop?: string }> {
+  if (!isSafeExternalId(externalId) || !externalId.startsWith('tmdb:')) return {}
+  const [, kind, id] = externalId.split(':') as ['tmdb', 'movie' | 'tv', string]
+  const d = await tmdbFetch<TmdbDetails>(`/${kind}/${id}`, key)
+  const seasons = kind === 'tv' ? tmdbSeasons(d) : undefined
+  return {
+    seasons,
+    total: kind === 'tv' ? Math.max(d.number_of_episodes || 0, sumSeasons(seasons)) || undefined : undefined,
+    backdrop: tmdbBackdrop(d.backdrop_path),
+  }
+}
+
+export interface EpisodeInfo {
+  number: number
+  name?: string
+  still?: string
+  date?: string
+  runtime?: number
+}
+
+const seasonCache = new Map<string, EpisodeInfo[]>()
+
+/** Épisodes d'une saison (titre, image, date de diffusion). Gardés en mémoire le temps de la session. */
+export async function getTmdbSeasonEpisodes(externalId: string, season: number, key: string): Promise<EpisodeInfo[]> {
+  if (!isSafeExternalId(externalId) || !externalId.startsWith('tmdb:tv:') || !Number.isInteger(season) || season < 1 || season > 999) return []
+  const cacheKey = `${externalId}:${season}:${tmdbLanguage()}`
+  const cached = seasonCache.get(cacheKey)
+  if (cached) return cached
+  const d = await tmdbFetch<{ episodes?: { episode_number?: number; name?: string; still_path?: string | null; air_date?: string; runtime?: number }[] }>(
+    `/tv/${externalId.split(':')[2]}/season/${season}`,
+    key,
+  )
+  const list = (Array.isArray(d.episodes) ? d.episodes : [])
+    .filter((e) => Number.isInteger(e.episode_number) && e.episode_number! > 0)
+    .slice(0, 1000)
+    .map((e) => ({
+      number: e.episode_number!,
+      name: cleanText(e.name, LIMITS.title),
+      still: isSafeTmdbPath(e.still_path) ? `${TMDB_IMG}/w300${e.still_path}` : undefined,
+      date: safeDay(e.air_date),
+      runtime: typeof e.runtime === 'number' && e.runtime > 0 && e.runtime < 1000 ? Math.round(e.runtime) : undefined,
+    }))
+  seasonCache.set(cacheKey, list)
+  return list
 }
 
 /** Vérifie qu'une clé TMDB fonctionne. */

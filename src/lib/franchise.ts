@@ -76,3 +76,9 @@ export function seasonPosition(item: Pick<MediaItem, 'episodesWatched' | 'season
 
 /** Nombre d'épisodes vus au début de la saison n (1 = première). */
 export const episodesBeforeSeason = (seasons: number[], n: number) => seasons.slice(0, Math.max(0, n - 1)).reduce((a, b) => a + b, 0)
+
+/** Nombre maximum d'épisodes : toutes les saisons connues, sinon le total enregistré. */
+export function episodeCap(item: Pick<MediaItem, 'episodesTotal' | 'seasons'>): number | undefined {
+  const sum = item.seasons?.reduce((a, b) => a + b, 0) ?? 0
+  return Math.max(sum, item.episodesTotal ?? 0) || undefined
+}

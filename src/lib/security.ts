@@ -132,3 +132,9 @@ export function safeSeasons(v: unknown): number[] | undefined {
   const out = v.slice(0, 100).map((n) => (typeof n === 'number' && Number.isInteger(n) && n > 0 && n <= 5000 ? n : 0))
   return out.length > 1 && out.every((n) => n > 0) ? out : undefined
 }
+
+/** Image distante autorisée (jamais d'image intégrée : la grande image n'est qu'un décor). */
+export function remoteImage(value: unknown): string | undefined {
+  const url = safePosterUrl(value)
+  return url && !url.startsWith('data:') && url.length <= 300 ? url : undefined
+}

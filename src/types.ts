@@ -40,6 +40,8 @@ export interface MediaItem {
   notesPublic?: boolean
   /** URL d'image ou image compressée en data URL (reste locale). */
   poster?: string
+  /** Grande image horizontale (TMDB), pour l'en-tête de la fiche et l'accueil. */
+  backdrop?: string
   /** Synopsis (rempli depuis TMDB / AniList). */
   overview?: string
   /** Référence dans une base externe, ex. « tmdb:tv:1396 » ou « anilist:154587 ». */

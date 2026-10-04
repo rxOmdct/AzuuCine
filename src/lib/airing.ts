@@ -3,7 +3,7 @@ import type { MediaItem } from '../types'
 import { CLOUD_TMDB, isPlausibleTmdbKey } from './catalogApi'
 import { tmdbViaCloud } from './cloud/api'
 import { TYPE_BY_VALUE } from './constants'
-import { isPlainObject, isSafeExternalId, isSafeId, readStorage, safeDay, safeIso, safeSeasons } from './security'
+import { isPlainObject, isSafeExternalId, isSafeId, isSafeTmdbPath, readStorage, remoteImage, safeDay, safeIso, safeSeasons } from './security'
 
 /**
  * Suivi des nouveaux épisodes.
@@ -21,6 +21,8 @@ export interface AiringInfo {
   seasons?: number
   /** Épisodes de chaque saison (TMDB) */
   seasonSizes?: number[]
+  /** Grande image (TMDB) */
+  backdrop?: string
   checkedAt: string
 }
 
@@ -30,7 +32,7 @@ const KEY = 'azuucine:airing'
 const RECHECK_MS = 12 * 3600 * 1000
 const RECHECK_ENDED_MS = 30 * 24 * 3600 * 1000
 /** Date d'arrivée du suivi par saison (les vérifications plus anciennes n'ont pas le découpage) */
-const SEASONS_SINCE = '2026-10-04T00:00:00.000Z'
+const SEASONS_SINCE = '2026-10-04T10:00:00.000Z'
 
 const n0 = (v: unknown, max = 100000) => (typeof v === 'number' && Number.isFinite(v) && v >= 0 ? Math.min(max, Math.round(v)) : 0)
 
@@ -44,7 +46,7 @@ export function loadAiring(): AiringCache {
     const checkedAt = safeIso(v.checkedAt)
     if (!checkedAt) continue
     const next = isPlainObject(v.next) && safeDay(v.next.date) ? { episode: n0(v.next.episode), season: n0(v.next.season) || undefined, date: v.next.date as string } : undefined
-    out[id] = { aired: n0(v.aired), ended: v.ended === true, seasons: n0(v.seasons) || undefined, seasonSizes: safeSeasons(v.seasonSizes), next, checkedAt }
+    out[id] = { aired: n0(v.aired), ended: v.ended === true, seasons: n0(v.seasons) || undefined, seasonSizes: safeSeasons(v.seasonSizes), backdrop: remoteImage(v.backdrop), next, checkedAt }
   }
   return out
 }
@@ -76,7 +78,7 @@ export function needsCheck(item: MediaItem, cache: AiringCache, force = false): 
   const info = cache[item.id]
   if (!info || force) return true
   // Fiche TMDB vérifiée avant le suivi par saison : on récupère le découpage une fois
-  if (item.externalId?.startsWith('tmdb:tv:') && !info.seasonSizes && (info.seasons ?? 0) > 1 && info.checkedAt < SEASONS_SINCE) return true
+  if (item.externalId?.startsWith('tmdb:tv:') && (!info.backdrop || (!info.seasonSizes && (info.seasons ?? 0) > 1)) && info.checkedAt < SEASONS_SINCE) return true
   const age = Date.now() - new Date(info.checkedAt).getTime()
   return age > (info.ended ? RECHECK_ENDED_MS : RECHECK_MS)
 }
@@ -90,6 +92,7 @@ interface TmdbTv {
   last_episode_to_air?: { season_number: number; episode_number: number } | null
   next_episode_to_air?: { season_number: number; episode_number: number; air_date?: string } | null
   seasons?: { season_number: number; episode_count: number }[]
+  backdrop_path?: string | null
 }
 
 async function checkTmdb(tvId: string, key: string): Promise<Omit<AiringInfo, 'checkedAt'>> {
@@ -128,6 +131,7 @@ async function checkTmdb(tvId: string, key: string): Promise<Omit<AiringInfo, 'c
         .sort((a, b) => a.season_number - b.season_number)
         .map((s) => n0(s.episode_count)),
     ),
+    backdrop: isSafeTmdbPath(d.backdrop_path) ? `https://image.tmdb.org/t/p/w780${d.backdrop_path}` : undefined,
     ended: d.status === 'Ended' || d.status === 'Canceled',
     next: nx && nextDate ? { episode: n0(nx.episode_number), season: n0(nx.season_number) || undefined, date: nextDate } : undefined,
   }
