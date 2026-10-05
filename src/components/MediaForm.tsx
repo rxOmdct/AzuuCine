@@ -1,5 +1,5 @@
 import { locale, t } from '../i18n'
-import { Check, Heart, ImagePlus, Loader2, Minus, Plus, Share2, Trash2, X } from 'lucide-react'
+import { Check, Heart, ImagePlus, Loader2, MessagesSquare, Minus, Plus, Share2, Trash2, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { CRITERIA, DEFAULT_FILM_MINUTES, MEDIA_TYPES, STATUSES, TYPE_BY_VALUE } from '../lib/constants'
 import { canonicalGenre, canonicalSubtype, genreLabel, genreSuggestions as defaultGenres, subtypeLabel, subtypeSuggestions } from '../lib/genres'
@@ -18,6 +18,7 @@ import SharePreview from './SharePreview'
 import DatabaseSearch from './DatabaseSearch'
 import EpisodeList from './EpisodeList'
 import ItemHero, { type HeroAction } from './ItemHero'
+import { useSocial } from './social/SocialProvider'
 import { NewListForm } from './ListsView'
 import Poster from './Poster'
 import { RatingInput } from './Rating'
@@ -136,6 +137,7 @@ function Rewatches({ dates, onChange }: { dates: string[]; onChange: (d: string[
 }
 
 export default function MediaForm({ item, onClose, onGoToSettings, onOpenItem }: Props) {
+  const social = useSocial()
   const { add, update, remove, items, settings, lists, patchMany } = useMedia()
   const [form, setForm] = useState<MediaInput>(() => {
     if (!item) return EMPTY
@@ -597,6 +599,11 @@ export default function MediaForm({ item, onClose, onGoToSettings, onOpenItem }:
 
           <Section title={t('form.review')}>
             <textarea className="field min-h-32 resize-y" value={form.notes ?? ''} onChange={(e) => set('notes', e.target.value)} placeholder={t('form.reviewPh')} />
+            {form.externalId && social.enabled && (
+              <button type="button" onClick={() => social.openReviews(form.externalId!, form.title)} className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-line py-2.5 text-sm font-medium text-ink-2 transition-colors active:bg-surface-2">
+                <MessagesSquare size={16} /> {t('reviews.seeAll')}
+              </button>
+            )}
           </Section>
 
           <div className="space-y-2 border-t border-line pt-6">

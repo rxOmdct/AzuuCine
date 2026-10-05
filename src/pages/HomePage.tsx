@@ -1,6 +1,6 @@
 import { useSocial } from '../components/social/SocialProvider'
 import { t } from '../i18n'
-import { CalendarDays, Dices, Plus } from 'lucide-react'
+import { Bell, CalendarDays, Dices, Plus } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { TYPE_BY_VALUE } from '../lib/constants'
 import Avatar from '../components/social/Avatar'
@@ -132,6 +132,18 @@ export default function HomePage({ onOpen, onAdd, onNavigate, onRoulette, onCale
               <span className="absolute -end-1 -top-1 grid min-w-5 place-items-center rounded-full bg-accent-fill px-1 text-[10px] font-bold text-on-accent">{soon}</span>
             )}
           </button>
+          {social.enabled && (
+            <button
+              onClick={social.openNotifications}
+              className="relative grid size-11 shrink-0 place-items-center rounded-full border border-line text-ink-2 transition-colors active:bg-surface-2"
+              aria-label={social.unread > 0 ? t('home.notificationsN', { count: social.unread }) : t('home.notifications')}
+            >
+              <Bell size={20} />
+              {social.unread > 0 && (
+                <span className="absolute -end-1 -top-1 grid min-w-5 place-items-center rounded-full bg-accent-fill px-1 text-[10px] font-bold text-on-accent">{social.unread}</span>
+              )}
+            </button>
+          )}
           {social.enabled && (
             <button onClick={() => (social.me ? social.openProfile(social.me.username) : social.openSearch())} className="relative shrink-0 rounded-full" aria-label={t('social.myProfile')}>
               <Avatar url={social.me?.avatarUrl} name={social.me?.displayName ?? '?'} size={44} />

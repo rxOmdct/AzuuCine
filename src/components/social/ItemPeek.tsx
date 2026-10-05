@@ -1,8 +1,9 @@
-import { Check, Loader2, Plus, Star } from 'lucide-react'
+import { Check, Loader2, MessagesSquare, Plus, Star } from 'lucide-react'
 import { useState } from 'react'
 import { t } from '../../i18n'
 import { genreLabel } from '../../lib/genres'
 import { useScrollLock } from '../../lib/scrollLock'
+import { useSocial } from './SocialProvider'
 import { cx, formatDate, formatRating, normalizeText } from '../../lib/utils'
 import { useMedia } from '../../store'
 import type { MediaInput, MediaItem } from '../../types'
@@ -20,6 +21,7 @@ export interface PeekOwner {
 /** Aperçu d'un titre de quelqu'un d'autre : sa note, son avis public, et ajout à ma liste « À voir ». */
 export default function ItemPeek({ item, owner, onClose }: { item: MediaItem; owner?: PeekOwner; onClose: () => void }) {
   const { items, add, settings } = useMedia()
+  const social = useSocial()
   const [busy, setBusy] = useState(false)
   const [added, setAdded] = useState(false)
   const owned = items.some(
@@ -105,6 +107,12 @@ export default function ItemPeek({ item, owner, onClose }: { item: MediaItem; ow
             </div>
             {item.notes && <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-ink-2">{item.notes}</p>}
           </div>
+        )}
+
+        {item.externalId && (
+          <button onClick={() => social.openReviews(item.externalId!, item.title)} className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-line py-2.5 text-sm font-medium text-ink-2 transition-colors active:bg-surface-2">
+            <MessagesSquare size={16} /> {t('reviews.seeAll')}
+          </button>
         )}
 
         {item.overview && <p className="mt-4 line-clamp-5 text-sm leading-relaxed text-ink-2">{item.overview}</p>}

@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { getFollowRequests, getMyProfile, type Profile, type ProfileCard } from '../../lib/cloud/social'
+import { markNotificationsRead, unreadCount } from '../../lib/cloud/notifications'
 import { useMedia } from '../../store'
 import type { MediaItem } from '../../types'
 import EditProfile from './EditProfile'
@@ -7,6 +8,8 @@ import FollowList from './FollowList'
 import ItemPeek, { type PeekOwner } from './ItemPeek'
 import PeopleSearch from './PeopleSearch'
 import ProfileView from './ProfileView'
+import TitleReviews from './TitleReviews'
+import Notifications from './Notifications'
 import { useOnResume } from '../../lib/onResume'
 import WelcomeProfile, { RANDOM_USERNAME } from './WelcomeProfile'
 
@@ -20,6 +23,12 @@ interface SocialApi {
   openSearch: () => void
   openEdit: () => void
   openFollowList: (profile: Profile, kind: 'followers' | 'following') => void
+  /** Tous les avis sur un titre (amis / autres) */
+  openReviews: (externalId: string, title: string) => void
+  /** Panneau des notifications */
+  openNotifications: () => void
+  /** Notifications non lues */
+  unread: number
   peek: (item: MediaItem, owner?: PeekOwner) => void
   /** Ouvre la fiche si elle est à moi, sinon l'aperçu */
   openItem: (item: MediaItem, owner?: PeekOwner) => void
@@ -34,6 +43,9 @@ const SocialContext = createContext<SocialApi>({
   openSearch: () => {},
   openEdit: () => {},
   openFollowList: () => {},
+  openReviews: () => {},
+  openNotifications: () => {},
+  unread: 0,
   peek: () => {},
   openItem: () => {},
 })
@@ -45,6 +57,8 @@ type Overlay =
   | { kind: 'search' }
   | { kind: 'edit' }
   | { kind: 'follows'; profile: Profile; list: 'followers' | 'following' }
+  | { kind: 'reviews'; externalId: string; title: string }
+  | { kind: 'notifications' }
 
 /** Profils, recherche et aperçus : affichés par-dessus l'app, empilés (le bouton fermer revient au précédent). */
 export function SocialProvider({ children, onOpenOwnItem }: { children: ReactNode; onOpenOwnItem: (item: MediaItem) => void }) {
@@ -52,6 +66,7 @@ export function SocialProvider({ children, onOpenOwnItem }: { children: ReactNod
   const enabled = !!account
   const [me, setMe] = useState<Profile | null>(null)
   const [requests, setRequests] = useState<ProfileCard[]>([])
+  const [unread, setUnread] = useState(0)
   const [stack, setStack] = useState<Overlay[]>([])
   const [peeked, setPeeked] = useState<{ item: MediaItem; owner?: PeekOwner }>()
   // « Plus tard » sur le choix du pseudo : redemandé au prochain lancement
@@ -74,9 +89,10 @@ export function SocialProvider({ children, onOpenOwnItem }: { children: ReactNod
   const refresh = useCallback(async () => {
     if (!enabled || !navigator.onLine) return
     try {
-      const [p, r] = await Promise.all([getMyProfile(), getFollowRequests()])
+      const [p, r, u] = await Promise.all([getMyProfile(), getFollowRequests(), unreadCount()])
       setMe(p)
       setRequests(r)
+      setUnread(u)
     } catch {
       /* hors-ligne / serveur pas encore à jour : le reste de l'app fonctionne */
     }
@@ -125,10 +141,17 @@ export function SocialProvider({ children, onOpenOwnItem }: { children: ReactNod
       openSearch: () => push({ kind: 'search' }),
       openEdit: () => push({ kind: 'edit' }),
       openFollowList: (profile, list) => push({ kind: 'follows', profile, list }),
+      openReviews: (externalId, title) => push({ kind: 'reviews', externalId, title }),
+      openNotifications: () => {
+        setUnread(0)
+        void markNotificationsRead().catch(() => {})
+        push({ kind: 'notifications' })
+      },
+      unread,
       peek: (item, owner) => setPeeked({ item, owner }),
       openItem,
     }),
-    [enabled, me, requests, refresh, push, openItem],
+    [enabled, me, requests, unread, refresh, push, openItem],
   )
 
   return (
@@ -142,8 +165,12 @@ export function SocialProvider({ children, onOpenOwnItem }: { children: ReactNod
             <PeopleSearch key={k} onClose={pop} />
           ) : o.kind === 'edit' ? (
             <EditProfile key={k} onClose={pop} />
-          ) : (
+          ) : o.kind === 'follows' ? (
             <FollowList key={k} profile={o.profile} initial={o.list} onClose={pop} />
+          ) : o.kind === 'reviews' ? (
+            <TitleReviews key={k} externalId={o.externalId} title={o.title} onClose={pop} onOpenProfile={(u) => push({ kind: 'profile', username: u })} />
+          ) : (
+            <Notifications key={k} onClose={pop} onOpenProfile={(u) => push({ kind: 'profile', username: u })} />
           ),
         )}
       {children}
