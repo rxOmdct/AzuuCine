@@ -1,6 +1,6 @@
 import { t } from '../i18n'
 import { LanguageSelect } from '../i18n/react'
-import { Check, Download, Eye, EyeOff, HardDrive, Smartphone, Trash2, Upload, UserX } from 'lucide-react'
+import { Check, Download, Eye, EyeOff, HardDrive, ShieldCheck, Smartphone, Trash2, Upload, UserX } from 'lucide-react'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import AccountSection from '../components/AccountSection'
 import ConfirmDialog from '../components/ConfirmDialog'
@@ -11,6 +11,7 @@ import { checkTmdbProxy, type ProxyState } from '../lib/cloud/api'
 import { ALL_TOP_CATEGORIES, TOP_CATEGORIES } from '../lib/constants'
 import { isHexColor, THEME_MODES, THEME_PRESETS } from '../lib/theme'
 import { detectPlatform, useInstallPrompt } from '../lib/pwa'
+import { isAdmin } from '../lib/cloud/admin'
 import { cx } from '../lib/utils'
 import { useMedia } from '../store'
 
@@ -29,9 +30,14 @@ function Row({ icon, title, hint, onClick, danger }: { icon: ReactNode; title: s
   )
 }
 
-export default function SettingsPage() {
+export default function SettingsPage({ onOpenAdmin }: { onOpenAdmin: () => void }) {
   const { items, settings, updateSettings, importItems, clearAll, lists, mergeLists, account } = useMedia()
   const { canInstall, installed, install } = useInstallPrompt()
+  const [admin, setAdmin] = useState(false)
+  useEffect(() => {
+    if (account) void isAdmin().then(setAdmin)
+    else setAdmin(false)
+  }, [account])
   const fileRef = useRef<HTMLInputElement>(null)
   const [pending, setPending] = useState<ParsedBackup>()
   const [message, setMessage] = useState<Message>()
@@ -159,6 +165,15 @@ export default function SettingsPage() {
       )}
 
       {account && <AccountSection account={account} onMessage={(kind, text) => setMessage({ kind, text })} />}
+
+      {admin && (
+        <>
+          <SectionTitle>{t('settings.admin')}</SectionTitle>
+          <div className="card overflow-hidden">
+            <Row icon={<ShieldCheck size={19} />} title={t('admin.title')} onClick={onOpenAdmin} />
+          </div>
+        </>
+      )}
 
       <SectionTitle>{t('settings.language')}</SectionTitle>
       <LanguageSelect />
