@@ -12,10 +12,18 @@ import { ALL_TOP_CATEGORIES, TOP_CATEGORIES } from '../lib/constants'
 import { isHexColor, THEME_MODES, THEME_PRESETS } from '../lib/theme'
 import { detectPlatform, useInstallPrompt } from '../lib/pwa'
 import { isAdmin } from '../lib/cloud/admin'
+import type { NotifPrefs } from '../types'
 import { cx } from '../lib/utils'
 import { useMedia } from '../store'
 
 type Message = { kind: 'ok' | 'error'; text: string }
+
+const NOTIF_PREFS: { key: keyof NotifPrefs; readonly label: () => string }[] = [
+  { key: 'episodes', label: () => t('settings.notifEpisodes') },
+  { key: 'follows', label: () => t('settings.notifFollows') },
+  { key: 'accepted', label: () => t('settings.notifAccepted') },
+  { key: 'reactions', label: () => t('settings.notifReactions') },
+]
 
 function Row({ icon, title, hint, onClick, danger }: { icon: ReactNode; title: string; hint?: string; onClick: () => void; danger?: boolean }) {
   return (
@@ -288,6 +296,33 @@ export default function SettingsPage({ onOpenAdmin }: { onOpenAdmin: () => void 
             </div>
           </div>
         </div>
+      )}
+
+      {account && (
+        <>
+          <SectionTitle>{t('settings.notifs')}</SectionTitle>
+          <p className="mb-3 text-xs text-ink-3">{t('settings.notifsHint')}</p>
+          <div className="card divide-y divide-line overflow-hidden">
+            {NOTIF_PREFS.map(({ key, label }) => {
+              const on = settings.notifPrefs?.[key] !== false
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  role="switch"
+                  aria-checked={on}
+                  onClick={() => updateSettings({ notifPrefs: { ...settings.notifPrefs, [key]: !on } })}
+                  className="flex w-full items-center gap-3.5 px-4 py-3.5 text-start"
+                >
+                  <span className="flex-1 text-sm font-medium">{label()}</span>
+                  <span className={cx('relative h-6 w-11 shrink-0 rounded-full transition-colors', on ? 'bg-accent-fill' : 'border border-line-strong bg-surface-2')}>
+                    <span className={cx('absolute top-0.5 size-5 rounded-full bg-ink transition-all', on ? 'start-[22px] bg-on-accent' : 'start-0.5')} />
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+        </>
       )}
 
       <SectionTitle>{t('settings.databases')}</SectionTitle>

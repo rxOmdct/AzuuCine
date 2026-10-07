@@ -170,7 +170,18 @@ export function SocialProvider({ children, onOpenOwnItem }: { children: ReactNod
           ) : o.kind === 'reviews' ? (
             <TitleReviews key={k} externalId={o.externalId} title={o.title} onClose={pop} onOpenProfile={(u) => push({ kind: 'profile', username: u })} />
           ) : (
-            <Notifications key={k} onClose={pop} onOpenProfile={(u) => push({ kind: 'profile', username: u })} />
+            <Notifications
+              key={k}
+              onClose={pop}
+              onOpenProfile={(u) => push({ kind: 'profile', username: u })}
+              onOpenItem={(id) => {
+                const it = items.find((i) => i.id === id)
+                if (it) {
+                  pop()
+                  onOpenOwnItem(it)
+                }
+              }}
+            />
           ),
         )}
       {children}

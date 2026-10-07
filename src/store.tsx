@@ -168,8 +168,8 @@ export function MediaProvider({ children, cloudUser }: { children: ReactNode; cl
       getLists: () => listsRef.current,
       applyLists: (next) => setLists(() => next, true),
       getSettings: () => {
-        const { ratingScale, topCategories, accentColor, themeMode } = settingsRef.current
-        return { ratingScale, topCategories, accentColor, themeMode }
+        const { ratingScale, topCategories, accentColor, themeMode, notifPrefs } = settingsRef.current
+        return { ratingScale, topCategories, accentColor, themeMode, notifPrefs }
       },
       applySettings: (patch) => updateSettingsRef.current(patch, true),
       itemsChanged: () => void reloadItems(),
@@ -210,7 +210,7 @@ export function MediaProvider({ children, cloudUser }: { children: ReactNode; cl
   }, [settings.themeMode])
 
   const updateSettings = useCallback((patch: Partial<Settings>, silent = false) => {
-    if (!silent && syncRef.current && ('ratingScale' in patch || 'topCategories' in patch || 'accentColor' in patch || 'themeMode' in patch)) syncRef.current.markSettings()
+    if (!silent && syncRef.current && ('ratingScale' in patch || 'topCategories' in patch || 'accentColor' in patch || 'themeMode' in patch || 'notifPrefs' in patch)) syncRef.current.markSettings()
     setSettings((prev) => {
       const next = { ...prev, ...patch }
       try {

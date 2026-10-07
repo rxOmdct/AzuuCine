@@ -1,4 +1,4 @@
-import { Loader2 } from 'lucide-react'
+import { Loader2, Tv } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { t } from '../../i18n'
 import { listNotifications, markNotificationsRead, type AppNotification, type NotificationKind } from '../../lib/cloud/notifications'
@@ -9,16 +9,19 @@ import Sheet from './Sheet'
 
 const PAGE = 30
 const FOLLOW_KINDS: NotificationKind[] = ['follow_request', 'follow_accepted', 'new_follower']
+const EPISODE_KINDS: NotificationKind[] = ['new_episode', 'new_season']
 
 const VERB: Record<NotificationKind, () => string> = {
   follow_request: () => t('notif.follow_request'),
   follow_accepted: () => t('notif.follow_accepted'),
   new_follower: () => t('notif.new_follower'),
   reaction: () => t('notif.reaction'),
+  new_episode: () => '',
+  new_season: () => '',
 }
 
-/** Liste des notifications (abonnements, demandes acceptées, réactions). Marque comme lues à l'ouverture. */
-export default function Notifications({ onClose, onOpenProfile }: { onClose: () => void; onOpenProfile: (username: string) => void }) {
+/** Liste des notifications (abonnements, réactions, nouveaux épisodes). Marque comme lues à l'ouverture. */
+export default function Notifications({ onClose, onOpenProfile, onOpenItem }: { onClose: () => void; onOpenProfile: (username: string) => void; onOpenItem: (itemId: string) => void }) {
   const [items, setItems] = useState<AppNotification[] | undefined>(undefined)
   const [done, setDone] = useState(false)
   const [loadingMore, setLoadingMore] = useState(false)
@@ -37,7 +40,6 @@ export default function Notifications({ onClose, onOpenProfile }: { onClose: () 
           setDone(true)
         }
       }
-      // Marque comme lu (feu et oubli) pour vider le badge
       markNotificationsRead().catch(() => {})
     })()
     return () => {
@@ -72,7 +74,7 @@ export default function Notifications({ onClose, onOpenProfile }: { onClose: () 
       ) : (
         <ul>
           {items.map((n) => (
-            <Row key={n.id} n={n} onOpenProfile={onOpenProfile} />
+            <Row key={n.id} n={n} onOpenProfile={onOpenProfile} onOpenItem={onOpenItem} />
           ))}
           {!done && (
             <li className="p-4">
@@ -87,10 +89,43 @@ export default function Notifications({ onClose, onOpenProfile }: { onClose: () 
   )
 }
 
-function Row({ n, onOpenProfile }: { n: AppNotification; onOpenProfile: (username: string) => void }) {
+function Row({ n, onOpenProfile, onOpenItem }: { n: AppNotification; onOpenProfile: (username: string) => void; onOpenItem: (itemId: string) => void }) {
+  const unread = n.read_at === null
+  const isEpisode = EPISODE_KINDS.includes(n.kind)
+  const base = cx('flex items-center gap-3 border-b border-line px-4 py-3 text-start', unread && 'bg-surface-2')
+
+  // ── Nouvel épisode / nouvelle saison ──
+  if (isEpisode) {
+    const title = n.title ?? '—'
+    const inner = (
+      <>
+        {unread && <span className="size-2 shrink-0 rounded-full bg-accent-fill" aria-hidden="true" />}
+        <span className="grid size-[38px] shrink-0 place-items-center rounded-full bg-surface-2 text-accent">
+          <Tv size={18} />
+        </span>
+        <span className="min-w-0 flex-1 text-sm leading-snug text-ink-2">
+          <b className="text-ink">{t(n.kind === 'new_season' ? 'notif.new_season' : 'notif.new_episode', { title })}</b>
+          {n.episode != null && <span className="text-ink-3"> · {t('episodes.short', { n: n.episode })}</span>}
+        </span>
+        <span className="shrink-0 text-xs text-ink-3">{formatDate(n.created_at)}</span>
+      </>
+    )
+    return (
+      <li>
+        {n.item_id ? (
+          <button onClick={() => onOpenItem(n.item_id!)} className={cx(base, 'w-full')}>
+            {inner}
+          </button>
+        ) : (
+          <div className={base}>{inner}</div>
+        )}
+      </li>
+    )
+  }
+
+  // ── Abonnements / réactions ──
   const actor = n.actor
   const actorName = actor?.display_name ?? t('notif.someone')
-  const unread = n.read_at === null
   const username = actor?.username
   const target = username != null && FOLLOW_KINDS.includes(n.kind) ? username : null
 
@@ -110,8 +145,6 @@ function Row({ n, onOpenProfile }: { n: AppNotification; onOpenProfile: (usernam
       <span className="shrink-0 text-xs text-ink-3">{formatDate(n.created_at)}</span>
     </>
   )
-
-  const base = cx('flex items-center gap-3 border-b border-line px-4 py-3 text-start', unread && 'bg-surface-2')
 
   return (
     <li>

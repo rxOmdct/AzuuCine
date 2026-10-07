@@ -11,7 +11,8 @@ import Recommendations from '../components/Recommendations'
 import HomeHero, { ContinueCard } from '../components/HomeHero'
 import type { Tab } from '../components/BottomNav'
 import { EmptyState, LinkArrow, PageHeader, SectionTitle, StatTile } from '../components/ui'
-import { CACHE_EVENT, isCaughtUp, loadAiring, needsCheck, refreshAiring, saveAiring, trackable } from '../lib/airing'
+import { CACHE_EVENT, isCaughtUp, loadAiring, needsCheck, novelties, refreshAiring, saveAiring, trackable } from '../lib/airing'
+import { addEpisodeNotifications } from '../lib/cloud/notifications'
 import { useOnResume } from '../lib/onResume'
 import { calendarEvents } from '../lib/releases'
 import { computeStats } from '../lib/stats'
@@ -71,13 +72,23 @@ export default function HomePage({ onOpen, onAdd, onNavigate, onRoulette, onCale
           if (info.backdrop && !i.backdrop) patch.backdrop = info.backdrop
           return Object.keys(patch).length ? [{ id: i.id, patch }] : []
         })
+        // Notifications : nouveaux épisodes / saisons des séries suivies (dédoublonné côté serveur)
+        if (social.enabled) {
+          const notices = novelties(items, next)
+            .filter((nv) => nv.kind !== 'upcoming')
+            .map((nv) => ({ item_id: nv.item.id, kind: nv.kind === 'new_season' ? ('new_season' as const) : ('new_episode' as const), episode: nv.info.aired, count: nv.unwatched }))
+          if (notices.length)
+            void addEpisodeNotifications(notices).then((n) => {
+              if (n > 0) void social.refresh()
+            })
+        }
         if (patches.length) return patchMany(patches)
       })
       .catch(() => {})
       .finally(() => {
         airingRunning.current = false
       })
-  }, [patchMany])
+  }, [patchMany, social])
   useEffect(() => {
     if (loading || airingStarted.current) return
     airingStarted.current = true

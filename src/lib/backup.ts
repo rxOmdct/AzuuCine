@@ -1,5 +1,5 @@
 import { t } from '../i18n'
-import type { BackupFile, Criteria, CustomList, MediaItem, MediaType, Settings, TopCategory, TopEntry, WatchStatus } from '../types'
+import type { BackupFile, Criteria, CustomList, MediaItem, MediaType, NotifPrefs, Settings, TopCategory, TopEntry, WatchStatus } from '../types'
 import { ALL_TOP_CATEGORIES, MEDIA_TYPES, STATUSES } from './constants'
 import { episodeCap } from './franchise'
 import { convertLegacyBackup, isLegacyBackup } from './legacyImport'
@@ -130,6 +130,11 @@ export function normalizeSettings(raw: unknown): Partial<Settings> | undefined {
   if (Array.isArray(raw.topCategories)) out.topCategories = ALL_TOP_CATEGORIES.filter((c) => (raw.topCategories as unknown[]).includes(c))
   if (isHexColor(raw.accentColor)) out.accentColor = raw.accentColor.toLowerCase()
   if (raw.themeMode === 'auto' || raw.themeMode === 'light' || raw.themeMode === 'dark' || raw.themeMode === 'night' || raw.themeMode === 'starfield') out.themeMode = raw.themeMode
+  if (isPlainObject(raw.notifPrefs)) {
+    const np: NotifPrefs = {}
+    for (const k of ['episodes', 'follows', 'accepted', 'reactions'] as const) if (typeof raw.notifPrefs[k] === 'boolean') np[k] = raw.notifPrefs[k] as boolean
+    out.notifPrefs = np
+  }
   return out
 }
 

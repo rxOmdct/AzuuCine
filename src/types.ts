@@ -86,6 +86,20 @@ export interface Settings {
   accentColor: string
   /** Apparence (clair, sombre, nuit, bleu nuit étoilé). « auto » suit le navigateur. */
   themeMode: ThemeMode
+  /** Notifications reçues (true par défaut si absent). Nécessite un compte. */
+  notifPrefs?: NotifPrefs
+}
+
+/** Types de notifications que l'on choisit de recevoir (true par défaut). */
+export interface NotifPrefs {
+  /** Nouveaux épisodes / saisons des séries suivies */
+  episodes?: boolean
+  /** Nouveaux abonnés et demandes d'abonnement */
+  follows?: boolean
+  /** Demandes d'abonnement acceptées */
+  accepted?: boolean
+  /** Réactions reçues sur mes avis */
+  reactions?: boolean
 }
 
 export interface CustomList {
