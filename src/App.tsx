@@ -64,8 +64,8 @@ export default function App() {
   return (
     <SocialProvider onOpenOwnItem={openItem}>
     <SideNav current={navTab} onChange={go} onAdd={openNew} />
-    <div className="mx-auto min-h-dvh max-w-2xl lg:max-w-5xl lg:ps-60">
-      <main className="safe-top px-4 pb-32 lg:pb-10">
+    <div className="mx-auto min-h-dvh max-w-2xl lg:max-w-none lg:ps-60">
+      <main className="safe-top px-4 pb-32 lg:px-10 lg:pb-10 2xl:px-14">
         {error && <p className="mt-4 rounded-xl border border-accent p-3 text-sm text-ink">{error}</p>}
         {route === 'home' && <HomePage onOpen={openItem} onAdd={openNew} onNavigate={go} onRoulette={() => setRoulette(true)} onCalendar={() => setCalendar(true)} />}
         {route === 'catalog' && <CatalogPage onOpen={openItem} onAdd={openNew} />}

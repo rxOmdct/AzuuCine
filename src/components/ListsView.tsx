@@ -155,7 +155,7 @@ function ListDetail({ list, onBack, onOpen }: { list: CustomList; onBack: () => 
           </ul>
         </div>
       ) : members.length ? (
-        <div className="grid grid-cols-2 gap-x-3.5 gap-y-6 sm:grid-cols-3">
+        <div className="grid grid-cols-2 gap-x-3.5 gap-y-6 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8">
           {members.map((item) => (
             <MediaCard key={item.id} item={item} onOpen={onOpen} />
           ))}
@@ -213,7 +213,7 @@ export default function ListsView({ onOpen }: { onOpen: (item: MediaItem) => voi
           text={t('lists.noneText')}
         />
       ) : (
-        <div className="grid grid-cols-2 gap-x-3.5 gap-y-6 sm:grid-cols-3">
+        <div className="grid grid-cols-2 gap-x-3.5 gap-y-6 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8">
           {lists.map((l) => {
             const members = items.filter((i) => i.listIds?.includes(l.id))
             return (

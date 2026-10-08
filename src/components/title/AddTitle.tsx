@@ -71,7 +71,7 @@ export default function AddTitle({
   return (
     <div className="sheet sheet-in" role="dialog" aria-modal="true" aria-label={t('title.addTitle')}>
       <header className="safe-top border-b border-line">
-        <div className="mx-auto max-w-2xl px-3 pb-3 pt-2.5">
+        <div className="mx-auto max-w-2xl px-3 pb-3 pt-2.5 lg:max-w-none lg:px-10">
           <div className="flex items-center gap-2">
             <button onClick={onClose} className="grid size-10 shrink-0 place-items-center rounded-full text-ink-2" aria-label={t('common.close')}>
               <X size={22} />
@@ -97,7 +97,7 @@ export default function AddTitle({
       </header>
 
       <div className="sheet-scroll">
-        <div className="mx-auto max-w-2xl px-4 pb-[calc(10rem+env(safe-area-inset-bottom))] pt-2">
+        <div className="mx-auto max-w-2xl px-4 pb-[calc(10rem+env(safe-area-inset-bottom))] pt-2 lg:max-w-none lg:px-10">
           {!hasKey && (
             <div className="mt-4 rounded-2xl border border-dashed border-line-strong p-4 text-sm text-ink-2">
               {t('search.animeOnly')}
@@ -112,12 +112,12 @@ export default function AddTitle({
           {error && <p className="mt-4 text-sm text-accent">{error}</p>}
 
           {results.length > 0 && (
-            <ul className="divide-y divide-line">
+            <ul className="divide-y divide-line lg:grid lg:grid-cols-2 lg:gap-x-10 lg:divide-y-0 xl:grid-cols-3">
               {results.map((r) => {
                 const mine = inLibrary(r)
                 return (
                 <li key={r.externalId}>
-                  <button onClick={() => (mine ? onOpenItem(mine) : onPick(r))} className="flex w-full items-center gap-3 py-3 text-start active:bg-surface">
+                  <button onClick={() => (mine ? onOpenItem(mine) : onPick(r))} className="flex w-full items-center gap-3 py-3 text-start active:bg-surface lg:border-b lg:border-line">
                     {r.thumb ? (
                       <img src={r.thumb} alt="" loading="lazy" className="h-[5.25rem] w-14 shrink-0 rounded-lg border border-line bg-surface-2 object-cover" />
                     ) : (

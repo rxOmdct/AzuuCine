@@ -261,7 +261,7 @@ export default function TitleSheet({ item: initial, seed, onClose, onGoToSetting
   return (
     <div className="sheet sheet-in" role="dialog" aria-modal="true" aria-label={title}>
       <header className="safe-top border-b border-line bg-bg">
-        <div className="mx-auto flex max-w-2xl items-center gap-2 px-3 py-2.5 lg:max-w-6xl">
+        <div className="mx-auto flex max-w-2xl items-center gap-2 px-3 py-2.5 lg:max-w-none lg:px-8">
           <button onClick={onClose} className="grid size-10 place-items-center rounded-full text-ink-2" aria-label={t('common.close')}>
             <X size={22} />
           </button>
@@ -278,10 +278,10 @@ export default function TitleSheet({ item: initial, seed, onClose, onGoToSetting
 
       <div className="sheet-scroll">
         {/* Grande marge en bas : rien ne reste caché sous une barre des tâches ou la barre d'accueil du téléphone */}
-        <div className="mx-auto max-w-2xl pb-[calc(10rem+env(safe-area-inset-bottom))] lg:max-w-6xl">
+        <div className="mx-auto max-w-2xl pb-[calc(10rem+env(safe-area-inset-bottom))] lg:max-w-none lg:px-6">
           {/* Image de scène + affiche */}
           {(backdrop ?? extras?.backdrop) ? (
-            <img src={backdrop ?? extras?.backdrop} alt="" className="aspect-[16/8] w-full border-b border-line object-cover opacity-80 lg:aspect-auto lg:h-[22rem] lg:rounded-b-2xl lg:border-x" />
+            <img src={backdrop ?? extras?.backdrop} alt="" className="aspect-[16/8] w-full border-b border-line object-cover opacity-80 lg:aspect-auto lg:h-[min(50vh,28rem)] lg:rounded-b-2xl lg:border-x" />
           ) : (
             <div className="h-6" />
           )}
@@ -309,7 +309,7 @@ export default function TitleSheet({ item: initial, seed, onClose, onGoToSetting
           {metaError && !item && <p className="mx-4 mt-4 text-sm text-accent">{metaError}</p>}
 
           {/* Téléphone : une colonne. Ordinateur : deux colonnes (infos à gauche, mes actions et épisodes à droite). */}
-          <div className="flex flex-col lg:mt-4 lg:grid lg:grid-cols-[minmax(0,1fr)_26rem] lg:items-start lg:gap-6">
+          <div className="flex flex-col lg:mt-4 lg:grid lg:grid-cols-[minmax(0,1fr)_28rem] xl:grid-cols-[minmax(0,1fr)_32rem] lg:items-start lg:gap-6">
           <div className="order-1 lg:col-start-2 lg:row-start-1">
           {/* Note moyenne du public */}
           {source && <PublicRating average={average} votes={extras?.votes} distribution={extras?.distribution} scale={settings.ratingScale} source={source} mine={item?.rating} />}

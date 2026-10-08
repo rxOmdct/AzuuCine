@@ -225,7 +225,7 @@ export default function CatalogPage({ onOpen, onAdd }: Props) {
           }
         />
       ) : (
-        <div className="mt-3 grid grid-cols-2 gap-x-3.5 gap-y-6 sm:grid-cols-3">
+        <div className="mt-3 grid grid-cols-2 gap-x-3.5 gap-y-6 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8">
           {results.map((item) => (
             <MediaCard key={item.id} item={item} onOpen={onOpen} />
           ))}
