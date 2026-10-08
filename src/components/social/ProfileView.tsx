@@ -145,6 +145,7 @@ export default function ProfileView({ username, onClose }: { username: string; o
 
   return (
     <Sheet
+      wide
       label={t('social.profile')}
       title={profile ? `@${profile.username}` : ''}
       onClose={onClose}
@@ -167,11 +168,11 @@ export default function ProfileView({ username, onClose }: { username: string; o
       ) : (
         <>
           {/* Bannière + photo */}
-          <div className="relative aspect-[3/1] w-full overflow-hidden bg-surface-2">
+          <div className={cx('relative aspect-[3/1] w-full overflow-hidden bg-surface-2 lg:aspect-auto', profile.bannerUrl ? 'lg:h-[min(40vh,22rem)]' : 'lg:h-40')}>
             {profile.bannerUrl && <img src={profile.bannerUrl} alt="" className="size-full object-cover" />}
           </div>
-          <div className="px-4">
-            <div className="relative -mt-11 flex items-end justify-between gap-3">
+          <div className="px-4 lg:px-10">
+            <div className="relative -mt-11 flex items-end justify-between gap-3 lg:-mt-14">
               <Avatar url={profile.avatarUrl} name={profile.displayName} size={88} className="border-4 border-bg" />
               {profile.isMe ? (
                 <button onClick={social.openEdit} className="btn btn-ghost mb-1 px-4 py-2 text-sm">
@@ -211,9 +212,9 @@ export default function ProfileView({ username, onClose }: { username: string; o
                 </span>
               )}
             </p>
-            {profile.bio && <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-ink-2">{profile.bio}</p>}
+            {profile.bio && <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-ink-2 lg:max-w-3xl lg:text-base">{profile.bio}</p>}
 
-            <div className="mt-5 flex divide-x divide-line rounded-2xl border border-line py-3">
+            <div className="mt-5 flex divide-x divide-line rounded-2xl border border-line py-3 lg:max-w-2xl">
               <Stat value={profile.visible ? (profile.stats?.finished ?? 0) : undefined} label={t('social.seen')} />
               <Stat value={profile.followers} label={t('social.followers', { count: profile.followers })} onClick={profile.visible ? () => social.openFollowList(profile, 'followers') : undefined} />
               <Stat value={profile.following} label={t('social.followingCount', { count: profile.following })} onClick={profile.visible ? () => social.openFollowList(profile, 'following') : undefined} />
@@ -234,7 +235,7 @@ export default function ProfileView({ username, onClose }: { username: string; o
               </div>
             ) : (
               <>
-                <div className="mt-6 grid grid-cols-2 gap-1 rounded-full border border-line p-1">
+                <div className="mt-6 grid grid-cols-2 gap-1 rounded-full border border-line p-1 lg:max-w-md">
                   {(['profile', 'library'] as const).map((v) => (
                     <button
                       key={v}
@@ -282,7 +283,7 @@ function ProfileTab({ profile, topByCategory, onOpen }: { profile: Profile; topB
           <SectionTitle>
             {t('social.top5')} · {c.label}
           </SectionTitle>
-          <div className="grid grid-cols-5 gap-2">
+          <div className="grid grid-cols-5 gap-2 lg:grid-cols-8 lg:gap-3 xl:grid-cols-10">
             {c.items.map((item) => (
               <div key={item.id} className="relative">
                 <PosterTile item={item} onOpen={() => onOpen(item)} />
@@ -296,7 +297,7 @@ function ProfileTab({ profile, topByCategory, onOpen }: { profile: Profile; topB
       {profile.watching.length > 0 && (
         <>
           <SectionTitle>{t('social.watching')}</SectionTitle>
-          <div className="grid grid-cols-4 gap-2.5">
+          <div className="grid grid-cols-4 gap-2.5 sm:grid-cols-5 lg:grid-cols-8 lg:gap-3 xl:grid-cols-10">
             {profile.watching.map((item) => (
               <PosterTile key={item.id} item={item} onOpen={() => onOpen(item)} />
             ))}
@@ -306,7 +307,7 @@ function ProfileTab({ profile, topByCategory, onOpen }: { profile: Profile; topB
 
       <SectionTitle>{t('social.recent')}</SectionTitle>
       {profile.recent.length ? (
-        <div className="grid grid-cols-4 gap-2.5">
+        <div className="grid grid-cols-4 gap-2.5 sm:grid-cols-5 lg:grid-cols-8 lg:gap-3 xl:grid-cols-10">
           {profile.recent.map((item) => (
             <PosterTile key={item.id} item={item} onOpen={() => onOpen(item)} />
           ))}
@@ -318,7 +319,7 @@ function ProfileTab({ profile, topByCategory, onOpen }: { profile: Profile; topB
       {profile.watchlist.length > 0 && (
         <>
           <SectionTitle>{t('social.watchlist')}</SectionTitle>
-          <div className="grid grid-cols-4 gap-2.5">
+          <div className="grid grid-cols-4 gap-2.5 sm:grid-cols-5 lg:grid-cols-8 lg:gap-3 xl:grid-cols-10">
             {profile.watchlist.map((item) => (
               <PosterTile key={item.id} item={item} onOpen={() => onOpen(item)} />
             ))}
@@ -329,7 +330,7 @@ function ProfileTab({ profile, topByCategory, onOpen }: { profile: Profile; topB
       {s && (
         <>
           <SectionTitle>{t('nav.stats')}</SectionTitle>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             {[
               [s.finishedYear, t('social.statYear')],
               [s.films, t('social.statFilms')],
@@ -395,7 +396,7 @@ function LibraryTab({ profile, onOpen }: { profile: Profile; onOpen: (i: MediaIt
         ))}
       </div>
       {list.length ? (
-        <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
+        <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10">
           {list.map((item) => (
             <PosterTile key={item.id} item={item} onOpen={() => onOpen(item)} />
           ))}
