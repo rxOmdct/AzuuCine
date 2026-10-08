@@ -5,6 +5,7 @@ import { TYPE_BY_VALUE } from '../lib/constants'
 import { canWatchMore, nextAirDate } from '../lib/airing'
 import { episodeCap, seasonPosition } from '../lib/franchise'
 import { genreLabel } from '../lib/genres'
+import { backdropSrcSet, tmdbSized } from '../lib/tmdbImage'
 import { cx, formatDate } from '../lib/utils'
 import { useMedia } from '../store'
 import type { MediaItem } from '../types'
@@ -81,7 +82,9 @@ export default function HomeHero({ items, onOpen }: { items: MediaItem[]; onOpen
           return image ? (
             <img
               key={it.id}
-              src={image}
+              src={it.backdrop ? tmdbSized(image, 'w1280') : image}
+              srcSet={it.backdrop ? backdropSrcSet(image) : undefined}
+              sizes="100vw"
               alt=""
               loading={k === 0 ? 'eager' : 'lazy'}
               className={cx(

@@ -11,6 +11,7 @@ import { useEscape } from '../../lib/escape'
 import { episodeCap, seasonPosition } from '../../lib/franchise'
 import { episodesPatch } from '../../lib/progress'
 import { useScrollLock } from '../../lib/scrollLock'
+import { backdropSrcSet, tmdbSized } from '../../lib/tmdbImage'
 import { renderItemCard, slug } from '../../lib/shareCard'
 import { cx, formatDate, formatDuration, formatRating, todayISO } from '../../lib/utils'
 import { useMedia } from '../../store'
@@ -247,6 +248,7 @@ export default function TitleSheet({ item: initial, seed, onClose, onGoToSetting
     onClose()
   }
 
+  const heroImage = backdrop ?? extras?.backdrop
   const average = extras?.average ?? data.publicRating
   const source = externalId?.startsWith('anilist:') ? 'AniList' : externalId ? 'TMDB' : undefined
   const runtime = type === 'film' ? (data.duration ?? extras?.runtime) : undefined
@@ -278,24 +280,30 @@ export default function TitleSheet({ item: initial, seed, onClose, onGoToSetting
 
       <div className="sheet-scroll">
         {/* Grande marge en bas : rien ne reste caché sous une barre des tâches ou la barre d'accueil du téléphone */}
-        <div className="mx-auto max-w-2xl pb-[calc(10rem+env(safe-area-inset-bottom))] lg:max-w-none lg:px-6">
-          {/* Image de scène + affiche */}
-          {(backdrop ?? extras?.backdrop) ? (
-            <img src={backdrop ?? extras?.backdrop} alt="" className="aspect-[16/8] w-full border-b border-line object-cover opacity-80 lg:aspect-auto lg:h-[min(50vh,28rem)] lg:rounded-b-2xl lg:border-x" />
+        <div className="mx-auto max-w-2xl pb-[calc(10rem+env(safe-area-inset-bottom))] lg:max-w-none">
+          {/* Image de scène en grand (nette sur tous les écrans), qui se fond dans le fond, avec l'affiche et le titre posés dessus */}
+          {heroImage ? (
+            <img
+              src={tmdbSized(heroImage, 'w1280')}
+              srcSet={backdropSrcSet(heroImage)}
+              sizes="100vw"
+              alt=""
+              className="hero-fade h-[42vh] min-h-56 w-full object-cover object-[center_25%] lg:h-[72vh] lg:max-h-[48rem]"
+            />
           ) : (
             <div className="h-6" />
           )}
-          <div className="flex gap-4 px-4">
-            <div className={cx('relative w-28 shrink-0 lg:w-44', (backdrop ?? extras?.backdrop) && '-mt-14 lg:-mt-28')}>
-              <Poster src={poster} title={title} className="shadow-none" />
+          <div className={cx('relative flex items-end gap-4 px-4 lg:gap-8 lg:px-10', heroImage && '-mt-28 lg:-mt-64')}>
+            <div className="w-28 shrink-0 lg:w-52">
+              <Poster src={poster} title={title} />
             </div>
-            <div className="min-w-0 flex-1 pt-3">
-              <h1 className="text-2xl leading-tight lg:text-4xl">{title}</h1>
-              {data.originalTitle && <p className="mt-1 truncate text-sm text-ink-3">{data.originalTitle}</p>}
-              {metaLine.length > 0 && <p className="mt-2 text-xs uppercase tracking-wide text-ink-3">{metaLine.join(' · ')}</p>}
+            <div className="min-w-0 flex-1 pb-1">
+              <h1 className="text-2xl leading-tight lg:text-5xl lg:leading-[1.05]">{title}</h1>
+              {data.originalTitle && <p className="mt-1 truncate text-sm text-ink-2 lg:text-base">{data.originalTitle}</p>}
+              {metaLine.length > 0 && <p className="mt-2 text-xs uppercase tracking-wide text-ink-2 lg:text-sm">{metaLine.join(' · ')}</p>}
               {extras && extras.directors.length > 0 && (
-                <p className="mt-2 text-sm text-ink-2">
-                  {extras.directorKind === 'director' ? t('title.directedBy') : t('title.createdBy')} <span className="text-ink">{extras.directors.join(', ')}</span>
+                <p className="mt-2 text-sm text-ink-2 lg:text-base">
+                  {extras.directorKind === 'director' ? t('title.directedBy') : t('title.createdBy')} <span className="font-medium text-ink">{extras.directors.join(', ')}</span>
                 </p>
               )}
               {status && (
@@ -309,7 +317,7 @@ export default function TitleSheet({ item: initial, seed, onClose, onGoToSetting
           {metaError && !item && <p className="mx-4 mt-4 text-sm text-accent">{metaError}</p>}
 
           {/* Téléphone : une colonne. Ordinateur : deux colonnes (infos à gauche, mes actions et épisodes à droite). */}
-          <div className="flex flex-col lg:mt-4 lg:grid lg:grid-cols-[minmax(0,1fr)_28rem] xl:grid-cols-[minmax(0,1fr)_32rem] lg:items-start lg:gap-6">
+          <div className="flex flex-col lg:mt-8 lg:px-6 lg:grid lg:grid-cols-[minmax(0,1fr)_28rem] xl:grid-cols-[minmax(0,1fr)_32rem] lg:items-start lg:gap-6">
           <div className="order-1 lg:col-start-2 lg:row-start-1">
           {/* Note moyenne du public */}
           {source && <PublicRating average={average} votes={extras?.votes} distribution={extras?.distribution} scale={settings.ratingScale} source={source} mine={item?.rating} />}

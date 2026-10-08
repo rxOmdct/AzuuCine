@@ -277,3 +277,21 @@
     animation: none;
   }
 }
+
+/*
+ * Grande image de fond d'une fiche (façon Letterboxd / TV Time) : elle se fond dans le fond du thème
+ * en bas (et sur les côtés sur ordinateur) grâce à un masque de transparence, sans couleur ajoutée.
+ */
+.hero-fade {
+  -webkit-mask-image: linear-gradient(to bottom, #000 45%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 45%, transparent 100%);
+}
+@media (min-width: 64rem) {
+  .hero-fade {
+    -webkit-mask-image: linear-gradient(to bottom, #000 40%, transparent 100%), linear-gradient(to right, transparent 0%, #000 14%, #000 86%, transparent 100%);
+    -webkit-mask-composite: source-in;
+    mask-image: linear-gradient(to bottom, #000 40%, transparent 100%), linear-gradient(to right, transparent 0%, #000 14%, #000 86%, transparent 100%);
+    mask-composite: intersect;
+  }
+}
+
