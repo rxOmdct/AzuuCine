@@ -9,6 +9,7 @@ import { remotePosterToLocal } from '../lib/image'
 import { calendarEvents, loadReleases, refreshReleases } from '../lib/releases'
 import { readStorage } from '../lib/security'
 import { useBackToClose } from '../lib/backNav'
+import { useEscape } from '../lib/escape'
 import { useScrollLock } from '../lib/scrollLock'
 import { cx, normalizeText, todayISO } from '../lib/utils'
 import { useMedia } from '../store'
@@ -111,6 +112,7 @@ export default function CalendarView({ onClose, onOpen }: { onClose: () => void;
   const request = useRef(0)
 
   useScrollLock()
+  useEscape(onClose)
   useBackToClose(onClose)
 
   useEffect(() => {

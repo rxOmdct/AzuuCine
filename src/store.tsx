@@ -277,8 +277,17 @@ export function MediaProvider({ children, cloudUser }: { children: ReactNode; cl
   )
 
   const importItems = useCallback(async (incoming: MediaItem[], mode: 'merge' | 'replace') => {
-    if (mode === 'replace') await mediaDB.clear()
-    await mediaDB.putMany(incoming)
+    if (mode === 'replace') {
+      await mediaDB.clear()
+      // Remplacement voulu : les fiches importées deviennent la version la plus récente
+      // (sinon le serveur garderait ses versions plus récentes et les appareils divergeraient)
+      const now = new Date().toISOString()
+      await mediaDB.putMany(incoming.map((i) => ({ ...i, updatedAt: now })))
+    } else {
+      // Fusion : une sauvegarde plus ancienne n'écrase pas une fiche modifiée depuis
+      const current = new Map((await mediaDB.getAll()).map((i) => [i.id, i]))
+      await mediaDB.putMany(incoming.filter((i) => !current.has(i.id) || current.get(i.id)!.updatedAt < i.updatedAt))
+    }
     const all = await mediaDB.getAll()
     setItems(all.sort(byUpdatedDesc))
   }, [])

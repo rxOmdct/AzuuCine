@@ -1,6 +1,6 @@
 import { locale, t } from '../../i18n'
 import { Bookmark, Check, ChevronDown, Eye, Heart, Loader2, MessagesSquare, Minus, MoreHorizontal, Pencil, Play, Plus, Share2, Trash2, X } from 'lucide-react'
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { getTitleExtras, getTmdbCredits, getTmdbDetails, getTmdbExtras, type SearchResult, type TitleExtras } from '../../lib/catalogApi'
 import { CRITERIA, STATUS_BY_VALUE, TYPE_BY_VALUE } from '../../lib/constants'
 import { genreLabel } from '../../lib/genres'
@@ -43,7 +43,7 @@ interface Props {
  * Vu / En cours / À voir, note, coup de cœur, avis, épisodes, casting et note moyenne du public.
  */
 export default function TitleSheet({ item: initial, seed, onClose, onGoToSettings }: Props) {
-  const { items, settings, add, update, remove, lists } = useMedia()
+  const { items, settings, add, update, remove, lists, patchMany } = useMedia()
   const social = useSocial()
   useScrollLock()
   useEscape(onClose)
@@ -104,7 +104,8 @@ export default function TitleSheet({ item: initial, seed, onClose, onGoToSetting
           patch.seasons = seasons
           if ((total ?? 0) > (item.episodesTotal ?? 0)) patch.episodesTotal = total
         }
-        if (Object.keys(patch).length) void update(item.id, patch)
+        // Mise à jour d'arrière-plan : ne change pas la date de modification de la fiche (ni l'ordre « récent »)
+        if (Object.keys(patch).length) void patchMany([{ id: item.id, patch }])
       })
       .catch(() => {})
     return () => {
@@ -115,11 +116,13 @@ export default function TitleSheet({ item: initial, seed, onClose, onGoToSetting
 
   // Garde la note du public de la fiche à jour (utilisée par les stats « Moi vs le public »)
   useEffect(() => {
-    if (item && extras?.average != null && Math.abs((item.publicRating ?? 0) - extras.average) >= 0.1) void update(item.id, { publicRating: extras.average })
+    if (item && extras?.average != null && Math.abs((item.publicRating ?? 0) - extras.average) >= 0.1) void patchMany([{ id: item.id, patch: { publicRating: extras.average } }])
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [extras?.average, item?.id])
 
   const [busy, setBusy] = useState(false)
+  const addingRef = useRef(false)
+  const pendingRef = useRef<Partial<MediaInput>>({})
   const [toast, setToast] = useState<string>()
   useEffect(() => {
     if (!toast) return
@@ -130,7 +133,13 @@ export default function TitleSheet({ item: initial, seed, onClose, onGoToSetting
   /** Applique un changement ; ajoute d'abord le titre à la bibliothèque s'il n'y est pas encore. */
   const save = async (patch: Partial<MediaInput>) => {
     if (item) return update(item.id, patch)
-    if (busy || !seed) return
+    if (!seed) return
+    // Ajout déjà en cours (affiche qui se télécharge…) : le geste est gardé et appliqué juste après
+    if (addingRef.current) {
+      Object.assign(pendingRef.current, patch)
+      return
+    }
+    addingRef.current = true
     setBusy(true)
     try {
       const base: Partial<MediaInput> = { ...(seed.source === 'tmdb' ? meta : seed.prefill) }
@@ -149,9 +158,13 @@ export default function TitleSheet({ item: initial, seed, onClose, onGoToSetting
       } as MediaInput)
       setItemId(created.id)
       setToast(t('title.added'))
+      const pending = pendingRef.current
+      pendingRef.current = {}
+      if (Object.keys(pending).length) await update(created.id, pending)
     } catch (e) {
       setToast((e as Error).message)
     } finally {
+      addingRef.current = false
       setBusy(false)
     }
   }
@@ -492,19 +505,17 @@ export default function TitleSheet({ item: initial, seed, onClose, onGoToSetting
       )}
 
       {moreOpen && item && (
-        <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/70 sm:items-center" onClick={() => setMoreOpen(false)}>
-          <div className="safe-bottom w-full max-w-md rounded-t-3xl border border-line-strong bg-surface p-3 sm:rounded-3xl" onClick={(e) => e.stopPropagation()}>
-            <MenuButton icon={<Pencil size={18} />} onClick={() => (setMoreOpen(false), setEditing(true))}>
-              {t('hero.edit')}
-            </MenuButton>
-            <MenuButton icon={sharing ? <Loader2 size={18} className="animate-spin" /> : <Share2 size={18} />} onClick={() => (setMoreOpen(false), void shareCard())}>
-              {t('form.shareImage')}
-            </MenuButton>
-            <MenuButton icon={<Trash2 size={18} />} onClick={() => (setMoreOpen(false), setConfirmDelete(true))} danger>
-              {t('form.delete')}
-            </MenuButton>
-          </div>
-        </div>
+        <MoreMenu onClose={() => setMoreOpen(false)}>
+          <MenuButton icon={<Pencil size={18} />} onClick={() => (setMoreOpen(false), setEditing(true))}>
+            {t('hero.edit')}
+          </MenuButton>
+          <MenuButton icon={sharing ? <Loader2 size={18} className="animate-spin" /> : <Share2 size={18} />} onClick={() => (setMoreOpen(false), void shareCard())}>
+            {t('form.shareImage')}
+          </MenuButton>
+          <MenuButton icon={<Trash2 size={18} />} onClick={() => (setMoreOpen(false), setConfirmDelete(true))} danger>
+            {t('form.delete')}
+          </MenuButton>
+        </MoreMenu>
       )}
 
       {reviewing && (
@@ -547,6 +558,19 @@ function StatusButton({ icon, label, on, onClick, disabled }: { icon: ReactNode;
       {icon}
       {label}
     </button>
+  )
+}
+
+/** Menu « ⋯ » : se ferme avec Échap ou le geste retour, sans fermer la fiche derrière. */
+function MoreMenu({ onClose, children }: { onClose: () => void; children: ReactNode }) {
+  useEscape(onClose)
+  useBackToClose(onClose)
+  return (
+    <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/70 sm:items-center" onClick={onClose}>
+      <div role="menu" className="safe-bottom w-full max-w-md rounded-t-3xl border border-line-strong bg-surface p-3 sm:rounded-3xl" onClick={(e) => e.stopPropagation()}>
+        {children}
+      </div>
+    </div>
   )
 }
 
@@ -663,7 +687,8 @@ function Synopsis({ text }: { text: string }) {
 /** Dates, plateforme, listes et revisionnages : enregistrés dès qu'on les change. */
 function Tracking({ item, lists, onChange }: { item: MediaItem; lists: { id: string; name: string }[]; onChange: (p: Partial<MediaInput>) => void }) {
   const [open, setOpen] = useState(false)
-  const rewatches = item.rewatchDates ?? []
+  // Plus récent en premier (la sauvegarde les range dans l'autre sens)
+  const rewatches = [...(item.rewatchDates ?? [])].sort().reverse()
   const summary = [
     item.startDate && `${t('form.startShort')} ${formatDate(item.startDate)}`,
     item.endDate && `${t('form.endShort')} ${formatDate(item.endDate)}`,

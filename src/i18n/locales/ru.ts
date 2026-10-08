@@ -969,6 +969,16 @@ const dict: Translations = {
   'title.seasons_many': "{count} сезонов",
   'title.rewatchCount_few': "Пересмотрено {count} раза",
   'title.rewatchCount_many': "Пересмотрено {count} раз",
+  'sync.syncing': "Синхронизация…",
+  'sync.offline': "Нет сети",
+  'sync.error': "Ошибка синхронизации",
+  'sync.synced': "Синхронизировано · {when}",
+  'sync.never': "Ещё не синхронизировано",
+  'sync.pending_one': "{count} изменение ожидает",
+  'sync.pending_other': "{count} изменения ожидают",
+  'sync.now': "Синхронизировать",
+  'sync.pending_few': "{count} изменения ожидают",
+  'sync.pending_many': "{count} изменений ожидают",
 }
 
 export default dict

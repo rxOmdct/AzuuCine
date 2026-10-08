@@ -879,6 +879,14 @@ const dict: Translations = {
   'title.rewatchCount_one': "{count}번 다시 봄",
   'title.rewatchCount_other': "{count}번 다시 봄",
   'title.rewatchedToday': "오늘 다시 봄",
+  'sync.syncing': "동기화 중…",
+  'sync.offline': "오프라인",
+  'sync.error': "동기화 실패",
+  'sync.synced': "동기화됨 · {when}",
+  'sync.never': "아직 동기화되지 않음",
+  'sync.pending_one': "변경 {count}개 대기 중",
+  'sync.pending_other': "변경 {count}개 대기 중",
+  'sync.now': "지금 동기화",
 }
 
 export default dict

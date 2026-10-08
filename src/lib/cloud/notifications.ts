@@ -1,5 +1,7 @@
 import { t } from '../../i18n'
+import { cleanText, isPlainObject, safeIso } from '../security'
 import { cloudFetch } from './api'
+import { safeMediaUrl } from './social'
 
 /** Notifications (cloche) : abonnements, demandes acceptées, réactions reçues. */
 
@@ -52,7 +54,34 @@ async function rpc<T>(name: string, args: Record<string, unknown> = {}): Promise
   return res.json() as Promise<T>
 }
 
-export const listNotifications = (offset = 0) => rpc<AppNotification[]>('get_notifications', { p_offset: offset })
+const KINDS: NotificationKind[] = ['follow_request', 'follow_accepted', 'new_follower', 'reaction', 'new_episode', 'new_season']
+const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : null)
+
+/** Réponse du serveur relue champ par champ (adresses d'images comprises), comme pour les profils. */
+function toNotification(v: unknown): AppNotification | null {
+  if (!isPlainObject(v) || typeof v.id !== 'number' || !KINDS.includes(v.kind as NotificationKind)) return null
+  const created = safeIso(v.created_at)
+  if (!created) return null
+  const a = isPlainObject(v.actor) ? v.actor : null
+  const username = a && typeof a.username === 'string' && /^[a-z0-9_]{3,20}$/.test(a.username) ? a.username : null
+  return {
+    id: v.id,
+    kind: v.kind as NotificationKind,
+    created_at: created,
+    read_at: safeIso(v.read_at) ?? null,
+    emoji: cleanText(v.emoji, 8) ?? null,
+    item_id: cleanText(v.item_id, 64) ?? null,
+    episode: num(v.episode),
+    ep_count: num(v.ep_count),
+    actor: username ? { username, display_name: cleanText(a!.display_name, 40) ?? username, avatar_url: safeMediaUrl(a!.avatar_url) ?? null } : null,
+    title: cleanText(v.title, 300) ?? null,
+  }
+}
+
+export const listNotifications = async (offset = 0): Promise<AppNotification[]> => {
+  const raw = await rpc<unknown>('get_notifications', { p_offset: offset })
+  return (Array.isArray(raw) ? raw : []).map(toNotification).filter((n): n is AppNotification => n !== null)
+}
 
 export async function unreadCount(): Promise<number> {
   try {

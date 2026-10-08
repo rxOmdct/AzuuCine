@@ -8,6 +8,7 @@ import type { TopCategory } from '../types'
 import { TypeBadge } from './Badges'
 import Poster from './Poster'
 import { useBackToClose } from '../lib/backNav'
+import { useEscape } from '../lib/escape'
 import { useScrollLock } from '../lib/scrollLock'
 
 interface Props {
@@ -32,6 +33,7 @@ export default function TopFiveEditor({ category: initialCategory, onClose }: Pr
   const byId = useMemo(() => new Map(items.map((i) => [i.id, i])), [items])
 
   useScrollLock()
+  useEscape(onClose)
   useBackToClose(onClose)
 
   /** Changer de catégorie enregistre d'abord celle en cours. */

@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { getFollowRequests, getMyProfile, type Profile, type ProfileCard } from '../../lib/cloud/social'
-import { markNotificationsRead, unreadCount } from '../../lib/cloud/notifications'
+import { unreadCount } from '../../lib/cloud/notifications'
 import { useMedia } from '../../store'
 import type { MediaItem } from '../../types'
 import EditProfile from './EditProfile'
@@ -143,8 +143,8 @@ export function SocialProvider({ children, onOpenOwnItem }: { children: ReactNod
       openFollowList: (profile, list) => push({ kind: 'follows', profile, list }),
       openReviews: (externalId, title) => push({ kind: 'reviews', externalId, title }),
       openNotifications: () => {
+        // La liste se marque lue elle-même, après chargement (sinon les « non lu » n'étaient jamais visibles)
         setUnread(0)
-        void markNotificationsRead().catch(() => {})
         push({ kind: 'notifications' })
       },
       unread,

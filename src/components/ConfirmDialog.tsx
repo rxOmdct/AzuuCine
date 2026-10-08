@@ -1,4 +1,5 @@
 import { t } from '../i18n'
+import { useBackToClose } from '../lib/backNav'
 import { useEscape } from '../lib/escape'
 
 interface Props {
@@ -13,6 +14,7 @@ interface Props {
 /** Fenêtre « Êtes-vous sûr ? » intégrée à l'app (plus fiable que window.confirm sur mobile). */
 export default function ConfirmDialog({ open, title, message, confirmLabel = t('common.confirm'), onConfirm, onCancel }: Props) {
   useEscape(onCancel, open)
+  useBackToClose(onCancel, open)
 
   if (!open) return null
   return (

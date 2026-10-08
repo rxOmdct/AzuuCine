@@ -879,6 +879,14 @@ const dict: Translations = {
   'title.rewatchCount_one': "{count} kez tekrar izlendi",
   'title.rewatchCount_other': "{count} kez tekrar izlendi",
   'title.rewatchedToday': "Bugün tekrar izlendi",
+  'sync.syncing': "Eşitleniyor…",
+  'sync.offline': "Çevrimdışı",
+  'sync.error': "Eşitleme başarısız",
+  'sync.synced': "Eşitlendi · {when}",
+  'sync.never': "Henüz eşitlenmedi",
+  'sync.pending_one': "{count} değişiklik bekliyor",
+  'sync.pending_other': "{count} değişiklik bekliyor",
+  'sync.now': "Şimdi eşitle",
 }
 
 export default dict

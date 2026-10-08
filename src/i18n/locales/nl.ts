@@ -879,6 +879,14 @@ const dict: Translations = {
   'title.rewatchCount_one': "Eén keer opnieuw bekeken",
   'title.rewatchCount_other': "{count} keer opnieuw bekeken",
   'title.rewatchedToday': "Vandaag opnieuw bekeken",
+  'sync.syncing': "Synchroniseren…",
+  'sync.offline': "Offline",
+  'sync.error': "Synchronisatie mislukt",
+  'sync.synced': "Gesynchroniseerd · {when}",
+  'sync.never': "Nog niet gesynchroniseerd",
+  'sync.pending_one': "{count} wijziging in wachtrij",
+  'sync.pending_other': "{count} wijzigingen in wachtrij",
+  'sync.now': "Nu synchroniseren",
 }
 
 export default dict

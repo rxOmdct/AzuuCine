@@ -879,6 +879,14 @@ const dict: Translations = {
   'title.rewatchCount_one': "Revisto uma vez",
   'title.rewatchCount_other': "Revisto {count} vezes",
   'title.rewatchedToday': "Revisto hoje",
+  'sync.syncing': "Sincronizando…",
+  'sync.offline': "Offline",
+  'sync.error': "A sincronização falhou",
+  'sync.synced': "Sincronizado · {when}",
+  'sync.never': "Ainda não sincronizado",
+  'sync.pending_one': "{count} alteração pendente",
+  'sync.pending_other': "{count} alterações pendentes",
+  'sync.now': "Sincronizar",
 }
 
 export default dict

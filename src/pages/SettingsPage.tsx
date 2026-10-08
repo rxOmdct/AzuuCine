@@ -14,6 +14,8 @@ import { detectPlatform, useInstallPrompt } from '../lib/pwa'
 import { isAdmin } from '../lib/cloud/admin'
 import type { NotifPrefs } from '../types'
 import { cx } from '../lib/utils'
+import { useEscape } from '../lib/escape'
+import { useBackToClose } from '../lib/backNav'
 import { useMedia } from '../store'
 
 type Message = { kind: 'ok' | 'error'; text: string }
@@ -42,10 +44,12 @@ export default function SettingsPage({ onOpenAdmin }: { onOpenAdmin: () => void 
   const { items, settings, updateSettings, importItems, clearAll, lists, mergeLists, account } = useMedia()
   const { canInstall, installed, install } = useInstallPrompt()
   const [admin, setAdmin] = useState(false)
+  // Une seule vérification par connexion (et pas à chaque changement d'état de la synchro)
+  const signedIn = !!account
   useEffect(() => {
-    if (account) void isAdmin().then(setAdmin)
+    if (signedIn) void isAdmin().then(setAdmin)
     else setAdmin(false)
-  }, [account])
+  }, [signedIn])
   const fileRef = useRef<HTMLInputElement>(null)
   const [pending, setPending] = useState<ParsedBackup>()
   const [message, setMessage] = useState<Message>()
@@ -148,6 +152,8 @@ export default function SettingsPage({ onOpenAdmin }: { onOpenAdmin: () => void 
   }
 
   const [showInstall, setShowInstall] = useState(false)
+  useEscape(() => setShowInstall(false), showInstall)
+  useBackToClose(() => setShowInstall(false), showInstall)
   const platform = detectPlatform()
 
   const doNativeInstall = async () => {

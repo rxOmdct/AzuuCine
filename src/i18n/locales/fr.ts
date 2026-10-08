@@ -881,6 +881,14 @@ const dict = {
   'title.rewatchCount_one': "Revu {count} fois",
   'title.rewatchCount_other': "Revu {count} fois",
   'title.rewatchedToday': "Revu aujourd’hui",
+  'sync.syncing': "Synchronisation…",
+  'sync.offline': "Hors ligne",
+  'sync.error': "La synchronisation a échoué",
+  'sync.synced': "Synchronisé · {when}",
+  'sync.never': "Pas encore synchronisé",
+  'sync.pending_one': "{count} modification en attente",
+  'sync.pending_other': "{count} modifications en attente",
+  'sync.now': "Synchroniser",
 }
 
 export default dict

@@ -1014,6 +1014,17 @@ const dict: Translations = {
   'title.rewatchCount_two': "أُعيدت مشاهدته مرتين",
   'title.rewatchCount_few': "أُعيدت مشاهدته {count} مرات",
   'title.rewatchCount_many': "أُعيدت مشاهدته {count} مرة",
+  'sync.syncing': "جارٍ المزامنة…",
+  'sync.offline': "غير متصل",
+  'sync.error': "فشلت المزامنة",
+  'sync.synced': "تمت المزامنة · {when}",
+  'sync.never': "لم تتم المزامنة بعد",
+  'sync.pending_one': "تعديل واحد في الانتظار",
+  'sync.pending_other': "{count} تعديل في الانتظار",
+  'sync.now': "مزامنة الآن",
+  'sync.pending_two': "تعديلان في الانتظار",
+  'sync.pending_few': "{count} تعديلات في الانتظار",
+  'sync.pending_many': "{count} تعديلًا في الانتظار",
 }
 
 export default dict

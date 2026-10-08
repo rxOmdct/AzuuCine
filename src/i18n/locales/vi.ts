@@ -879,6 +879,14 @@ const dict: Translations = {
   'title.rewatchCount_one': "Đã xem lại {count} lần",
   'title.rewatchCount_other': "Đã xem lại {count} lần",
   'title.rewatchedToday': "Đã xem lại hôm nay",
+  'sync.syncing': "Đang đồng bộ…",
+  'sync.offline': "Ngoại tuyến",
+  'sync.error': "Đồng bộ thất bại",
+  'sync.synced': "Đã đồng bộ · {when}",
+  'sync.never': "Chưa đồng bộ",
+  'sync.pending_one': "{count} thay đổi đang chờ",
+  'sync.pending_other': "{count} thay đổi đang chờ",
+  'sync.now': "Đồng bộ ngay",
 }
 
 export default dict

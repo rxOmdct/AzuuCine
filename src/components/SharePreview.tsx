@@ -2,6 +2,7 @@ import { t } from '../i18n'
 import { Download, Share2, X } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { shareImage } from '../lib/shareCard'
+import { useBackToClose } from '../lib/backNav'
 import { useEscape } from '../lib/escape'
 
 interface Props {
@@ -30,6 +31,7 @@ export default function SharePreview({ blob, filename, title, onClose }: Props) 
     return () => URL.revokeObjectURL(u)
   }, [blob])
   useEscape(onClose)
+  useBackToClose(onClose)
 
   const go = async () => {
     setBusy(true)

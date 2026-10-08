@@ -61,6 +61,7 @@ export default function EditDetails({
     overview: item?.overview,
   }))
   const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string>()
   const [posterError, setPosterError] = useState<string>()
   const fileRef = useRef<HTMLInputElement>(null)
   const set = <K extends keyof Draft>(k: K, v: Draft[K]) => setDraft((d) => ({ ...d, [k]: v }))
@@ -80,6 +81,7 @@ export default function EditDetails({
   const submit = async () => {
     if (!draft.title.trim() || saving) return
     setSaving(true)
+    setSaveError(undefined)
     const clean: Draft = {
       ...draft,
       title: draft.title.trim(),
@@ -98,6 +100,8 @@ export default function EditDetails({
         const created = await add({ ...clean, status: 'a_voir', criteria: {}, episodesWatched: 0 })
         onCreated?.(created)
       }
+    } catch (e) {
+      setSaveError((e as Error).message)
     } finally {
       setSaving(false)
     }
@@ -124,6 +128,7 @@ export default function EditDetails({
           void submit()
         }}
       >
+        {saveError && <p role="alert" className="mx-auto mt-4 max-w-2xl rounded-xl border border-accent px-3 py-2.5 text-sm">{saveError}</p>}
         <div className="mx-auto max-w-2xl space-y-7 px-4 pt-6 pb-[calc(10rem+env(safe-area-inset-bottom))]">
           <div className="flex gap-4">
             <div className="w-28 shrink-0">

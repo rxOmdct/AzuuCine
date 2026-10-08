@@ -879,6 +879,14 @@ const dict: Translations = {
   'title.rewatchCount_one': "ดูซ้ำ {count} ครั้ง",
   'title.rewatchCount_other': "ดูซ้ำ {count} ครั้ง",
   'title.rewatchedToday': "ดูซ้ำวันนี้",
+  'sync.syncing': "กำลังซิงค์…",
+  'sync.offline': "ออฟไลน์",
+  'sync.error': "ซิงค์ไม่สำเร็จ",
+  'sync.synced': "ซิงค์แล้ว · {when}",
+  'sync.never': "ยังไม่ได้ซิงค์",
+  'sync.pending_one': "รอซิงค์ {count} รายการ",
+  'sync.pending_other': "รอซิงค์ {count} รายการ",
+  'sync.now': "ซิงค์ตอนนี้",
 }
 
 export default dict

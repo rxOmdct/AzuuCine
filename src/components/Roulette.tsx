@@ -22,6 +22,7 @@ import { TypeBadge } from './Badges'
 import Poster from './Poster'
 import { RatingBadge } from './Rating'
 import { useBackToClose } from '../lib/backNav'
+import { useEscape } from '../lib/escape'
 import { useScrollLock } from '../lib/scrollLock'
 
 const CARD = 112 // largeur d'une affiche dans le rouleau (w-28)
@@ -74,6 +75,7 @@ export default function Roulette({ onClose, onOpen }: Props) {
 
   // Bloque le défilement derrière + mémorise les filtres
   useScrollLock()
+  useEscape(onClose)
   useBackToClose(onClose)
   useEffect(() => saveFilters(filters), [filters])
 

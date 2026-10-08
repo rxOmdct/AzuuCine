@@ -1,12 +1,14 @@
 import Avatar from './social/Avatar'
 import { useSocial } from './social/SocialProvider'
 import { t } from '../i18n'
-import { KeyRound, Loader2, LogOut, UserRound } from 'lucide-react'
+import { AlertTriangle, Check, CloudOff, KeyRound, Loader2, LogOut, RefreshCw, UserRound } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { PASSWORD_MIN, updatePassword } from '../lib/cloud/auth'
+import { timeAgo } from '../lib/timeAgo'
 import type { AccountApi } from '../store'
 import ConfirmDialog from './ConfirmDialog'
 import { SectionTitle } from './ui'
+import { cx } from '../lib/utils'
 
 /** Réglages → Mon compte : mot de passe, déconnexion. La synchro tourne en arrière-plan. */
 export default function AccountSection({ account, onMessage }: { account: AccountApi; onMessage: (kind: 'ok' | 'error', text: string) => void }) {
@@ -65,6 +67,46 @@ export default function AccountSection({ account, onMessage }: { account: Accoun
           <span className="min-w-0 flex-1">
             <span className="block truncate font-medium">{account.email}</span>
           </span>
+        </div>
+
+        {/* État de la synchronisation : visible, surtout quand quelque chose bloque */}
+        <div className="flex items-center gap-3.5 px-4 py-3.5" role="status">
+          <span className={cx('grid size-10 shrink-0 place-items-center rounded-full bg-surface-2', sync.state === 'error' ? 'text-accent' : 'text-ink-2')}>
+            {sync.state === 'syncing' ? (
+              <RefreshCw size={18} className="animate-spin" />
+            ) : sync.state === 'offline' ? (
+              <CloudOff size={18} />
+            ) : sync.state === 'error' ? (
+              <AlertTriangle size={18} />
+            ) : (
+              <Check size={18} />
+            )}
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className={cx('block text-sm font-medium', sync.state === 'error' && 'text-accent')}>
+              {sync.state === 'syncing'
+                ? t('sync.syncing')
+                : sync.state === 'offline'
+                  ? t('sync.offline')
+                  : sync.state === 'error'
+                    ? t('sync.error')
+                    : sync.lastSyncAt
+                      ? t('sync.synced', { when: timeAgo(sync.lastSyncAt) })
+                      : t('sync.never')}
+            </span>
+            {(sync.pending > 0 || (sync.state === 'error' && sync.error)) && (
+              <span className="mt-0.5 block truncate text-xs text-ink-3">
+                {[sync.pending > 0 ? t('sync.pending', { count: sync.pending }) : '', sync.state === 'error' ? sync.error : ''].filter(Boolean).join(' · ')}
+              </span>
+            )}
+          </span>
+          <button
+            onClick={() => void account.syncNow().catch(() => {})}
+            disabled={sync.state === 'syncing' || sync.state === 'offline'}
+            className="btn btn-ghost shrink-0 px-3 py-1.5 text-xs"
+          >
+            {t('sync.now')}
+          </button>
         </div>
 
         <button

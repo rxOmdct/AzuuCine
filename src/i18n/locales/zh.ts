@@ -879,6 +879,14 @@ const dict: Translations = {
   'title.rewatchCount_one': "重看 {count} 次",
   'title.rewatchCount_other': "重看 {count} 次",
   'title.rewatchedToday': "今天重看了",
+  'sync.syncing': "正在同步…",
+  'sync.offline': "离线",
+  'sync.error': "同步失败",
+  'sync.synced': "已同步 · {when}",
+  'sync.never': "尚未同步",
+  'sync.pending_one': "{count} 项更改待上传",
+  'sync.pending_other': "{count} 项更改待上传",
+  'sync.now': "立即同步",
 }
 
 export default dict

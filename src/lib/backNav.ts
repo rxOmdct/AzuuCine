@@ -16,6 +16,12 @@ let ignorePops = 0
 let syncTimer = 0
 let listening = false
 
+// Page rechargée avec une fenêtre ouverte : l'entrée d'historique n'a plus de fenêtre derrière elle
+if (typeof history !== 'undefined' && history.state && typeof history.state === 'object' && 'azuuDepth' in history.state) {
+  const { azuuDepth: _old, ...rest } = history.state as Record<string, unknown>
+  history.replaceState(rest, '')
+}
+
 const depthOf = (state: unknown) => {
   const d = (state as { azuuDepth?: unknown } | null)?.azuuDepth
   return typeof d === 'number' ? d : 0
@@ -47,13 +53,14 @@ function onPop(e: PopStateEvent) {
 }
 
 /** Ferme la fenêtre avec le geste / bouton retour du téléphone. */
-export function useBackToClose(onClose: CloseFn) {
+export function useBackToClose(onClose: CloseFn, active = true) {
   const closeRef = useRef(onClose)
   useEffect(() => {
     closeRef.current = onClose
   })
 
   useEffect(() => {
+    if (!active) return
     if (!listening) {
       window.addEventListener('popstate', onPop)
       listening = true
@@ -70,5 +77,5 @@ export function useBackToClose(onClose: CloseFn) {
       if (i >= 0) stack.splice(i, 1)
       scheduleSync()
     }
-  }, [])
+  }, [active])
 }

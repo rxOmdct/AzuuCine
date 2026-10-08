@@ -879,6 +879,14 @@ const dict: Translations = {
   'title.rewatchCount_one': "Ditonton ulang {count} kali",
   'title.rewatchCount_other': "Ditonton ulang {count} kali",
   'title.rewatchedToday': "Ditonton ulang hari ini",
+  'sync.syncing': "Menyinkronkan…",
+  'sync.offline': "Offline",
+  'sync.error': "Sinkronisasi gagal",
+  'sync.synced': "Tersinkron · {when}",
+  'sync.never': "Belum disinkronkan",
+  'sync.pending_one': "{count} perubahan menunggu",
+  'sync.pending_other': "{count} perubahan menunggu",
+  'sync.now': "Sinkronkan",
 }
 
 export default dict

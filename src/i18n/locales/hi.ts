@@ -879,6 +879,14 @@ const dict: Translations = {
   'title.rewatchCount_one': "{count} बार दोबारा देखा",
   'title.rewatchCount_other': "{count} बार दोबारा देखा",
   'title.rewatchedToday': "आज दोबारा देखा",
+  'sync.syncing': "सिंक हो रहा है…",
+  'sync.offline': "ऑफ़लाइन",
+  'sync.error': "सिंक विफल रहा",
+  'sync.synced': "सिंक हुआ · {when}",
+  'sync.never': "अभी तक सिंक नहीं हुआ",
+  'sync.pending_one': "{count} बदलाव बाकी",
+  'sync.pending_other': "{count} बदलाव बाकी",
+  'sync.now': "अभी सिंक करें",
 }
 
 export default dict

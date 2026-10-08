@@ -879,6 +879,14 @@ const dict: Translations = {
   'title.rewatchCount_one': "{count} 回再視聴",
   'title.rewatchCount_other': "{count} 回再視聴",
   'title.rewatchedToday': "今日再視聴",
+  'sync.syncing': "同期中…",
+  'sync.offline': "オフライン",
+  'sync.error': "同期に失敗しました",
+  'sync.synced': "同期済み · {when}",
+  'sync.never': "まだ同期されていません",
+  'sync.pending_one': "{count} 件の変更が保留中",
+  'sync.pending_other': "{count} 件の変更が保留中",
+  'sync.now': "今すぐ同期",
 }
 
 export default dict

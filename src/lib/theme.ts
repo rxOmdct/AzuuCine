@@ -113,9 +113,13 @@ export function applyTheme(accentColor: string, mode: ThemeMode) {
   root.setProperty('--color-on-accent', c.onAccent)
   // Couleur de la barre du navigateur / de l'app installée
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', CANVAS[resolved])
+  // Contrôles natifs (dates, listes, barres de défilement) clairs ou sombres comme le thème
+  document.querySelector('meta[name="color-scheme"]')?.setAttribute('content', resolved === 'light' ? 'light' : 'dark')
   // Retenu pour le prochain lancement : appliqué avant même le premier affichage (voir applySavedTheme)
   try {
     localStorage.setItem(BOOT_KEY, JSON.stringify({ color: accentColor, mode }))
+    // Couleurs déjà calculées, lues par public/theme-boot.js avant même que l'app ne charge
+    localStorage.setItem('azuucine:theme-css', JSON.stringify({ theme: resolved, accent: c.accent, fill: c.accentFill, on: c.onAccent, canvas: CANVAS[resolved] }))
   } catch {
     /* stockage indisponible : on garde le thème par défaut au lancement */
   }
