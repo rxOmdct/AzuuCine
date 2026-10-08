@@ -51,14 +51,20 @@ export default function HomePage({ onOpen, onAdd, onNavigate, onRoulette, onCale
   // Revérifié aussi au retour dans l'app : un épisode sorti entre-temps fait réapparaître la série dans « Continuer »
   const airingStarted = useRef(false)
   const airingRunning = useRef(false)
+  // Vérification des sorties en cours (au lancement) : sert à ne pas afficher une série dont on ignore encore si je suis à jour
+  const [checkingAiring, setCheckingAiring] = useState(() => navigator.onLine)
   const latest = useRef({ items, tmdbKey: settings.tmdbKey })
   latest.current = { items, tmdbKey: settings.tmdbKey }
   const checkAiring = useCallback(() => {
     const { items, tmdbKey } = latest.current
-    if (airingRunning.current || !navigator.onLine) return
+    if (airingRunning.current) return
     const cache = loadAiring()
-    if (!trackable(items).some((i) => needsCheck(i, cache))) return
+    if (!navigator.onLine || !trackable(items).some((i) => needsCheck(i, cache))) {
+      setCheckingAiring(false)
+      return
+    }
     airingRunning.current = true
+    setCheckingAiring(true)
     void refreshAiring(items, cache, tmdbKey)
       .then((next) => {
         saveAiring(next)
@@ -92,6 +98,7 @@ export default function HomePage({ onOpen, onAdd, onNavigate, onRoulette, onCale
       .catch(() => {})
       .finally(() => {
         airingRunning.current = false
+        setCheckingAiring(false)
       })
   }, [patchMany, social])
   useEffect(() => {
@@ -100,6 +107,16 @@ export default function HomePage({ onOpen, onAdd, onNavigate, onRoulette, onCale
     checkAiring()
   }, [loading, checkAiring])
   useOnResume(checkAiring, !loading)
+  // Séries arrivées après le lancement (synchro du compte) : on vérifie aussi leurs sorties
+  const unknownCount = useMemo(() => {
+    const cache = loadAiring()
+    return trackable(items).filter((i) => !cache[i.id]).length
+  }, [items])
+  useEffect(() => {
+    if (loading || !airingStarted.current || !unknownCount) return
+    const id = setTimeout(checkAiring, 800)
+    return () => clearTimeout(id)
+  }, [loading, unknownCount, checkAiring])
 
   const [cacheVersion, setCacheVersion] = useState(0)
   useEffect(() => {
@@ -117,7 +134,10 @@ export default function HomePage({ onOpen, onAdd, onNavigate, onRoulette, onCale
 
   // En cours, sans les séries où j'ai tout vu en attendant le prochain épisode
   const airing = useMemo(() => loadAiring(), [cacheVersion]) // eslint-disable-line react-hooks/exhaustive-deps
-  const inProgress = items.filter((i) => i.status === 'en_cours' && !isCaughtUp(i, airing))
+  // Pendant la vérification, une série suivie dont on ne connaît pas encore les sorties reste masquée :
+  // sinon elle s'affichait puis disparaissait quelques secondes après (une fois vue « à jour »).
+  const unknownWhileChecking = (i: MediaItem) => (checkingAiring || loading) && !airing[i.id] && trackable([i]).length > 0
+  const inProgress = items.filter((i) => i.status === 'en_cours' && !isCaughtUp(i, airing) && !unknownWhileChecking(i))
   // Bannière : ce que je regarde en ce moment (le plus récemment touché), sinon le prochain « à voir »
   const byRecent = [...inProgress].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
   const firstToWatch = items.find((i) => i.status === 'a_voir')

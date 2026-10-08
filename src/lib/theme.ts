@@ -111,6 +111,31 @@ export function applyTheme(accentColor: string, mode: ThemeMode) {
   root.setProperty('--color-accent', c.accent)
   root.setProperty('--color-accent-fill', c.accentFill)
   root.setProperty('--color-on-accent', c.onAccent)
+  // Couleur de la barre du navigateur / de l'app installée
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', CANVAS[resolved])
+  // Retenu pour le prochain lancement : appliqué avant même le premier affichage (voir applySavedTheme)
+  try {
+    localStorage.setItem(BOOT_KEY, JSON.stringify({ color: accentColor, mode }))
+  } catch {
+    /* stockage indisponible : on garde le thème par défaut au lancement */
+  }
+}
+
+const BOOT_KEY = 'azuucine:theme'
+const MODES: ThemeMode[] = ['auto', 'light', 'dark', 'night', 'starfield']
+
+/**
+ * Au lancement, avant tout affichage (chargement de la langue, de la session, de la bibliothèque) :
+ * on remet tout de suite la couleur et le mode choisis la dernière fois, au lieu du thème par défaut.
+ */
+export function applySavedTheme() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(BOOT_KEY) ?? 'null') as { color?: unknown; mode?: unknown } | null
+    if (!saved || !isHexColor(saved.color) || !MODES.includes(saved.mode as ThemeMode)) return
+    applyTheme(saved.color, saved.mode as ThemeMode)
+  } catch {
+    /* valeur illisible : thème par défaut */
+  }
 }
 
 export const THEME_MODES: { value: ThemeMode; readonly label: string }[] = [
