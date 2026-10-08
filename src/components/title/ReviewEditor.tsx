@@ -25,7 +25,7 @@ export default function ReviewEditor({ title, initial, onSave, onClose }: { titl
         </div>
       </header>
       <div className="sheet-scroll">
-        <div className="safe-bottom mx-auto max-w-2xl px-4 py-5">
+        <div className="mx-auto max-w-2xl px-4 pt-5 pb-[calc(10rem+env(safe-area-inset-bottom))]">
           <span className="eyebrow">{t('form.review')}</span>
           <textarea
             className="field mt-2 min-h-[45dvh] resize-none leading-relaxed"

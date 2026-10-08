@@ -9,6 +9,7 @@ import { airedCount, nextAirDate, useAiringCache } from '../../lib/airing'
 import { useBackToClose } from '../../lib/backNav'
 import { useEscape } from '../../lib/escape'
 import { episodeCap, seasonPosition } from '../../lib/franchise'
+import { episodesPatch } from '../../lib/progress'
 import { useScrollLock } from '../../lib/scrollLock'
 import { renderItemCard, slug } from '../../lib/shareCard'
 import { cx, formatDate, formatDuration, formatRating, todayISO } from '../../lib/utils'
@@ -160,24 +161,34 @@ export default function TitleSheet({ item: initial, seed, onClose, onGoToSetting
     const patch: Partial<MediaInput> = { status: s }
     const today = todayISO()
     if (s === 'a_voir') Object.assign(patch, { startDate: undefined, endDate: undefined })
-    if (s === 'en_cours') Object.assign(patch, { startDate: item?.startDate ?? today, endDate: undefined })
+    // Série : la date de début est celle du premier épisode coché
+    if (s === 'en_cours') Object.assign(patch, { startDate: episodic && !item?.episodesWatched ? item?.startDate : (item?.startDate ?? today), endDate: undefined })
     if (s === 'termine') {
-      patch.endDate = item?.endDate ?? today
-      if (!item?.startDate && !episodic) patch.startDate = patch.endDate
+      patch.endDate = item?.status === 'termine' && item.endDate ? item.endDate : today
+      if (!item?.startDate) patch.startDate = episodic && item?.episodesWatched ? today : patch.endDate
       const cap = episodeCap(item ?? { episodesTotal: data.episodesTotal, seasons: data.seasons })
       if (episodic && cap) patch.episodesWatched = cap
     }
     void save(patch)
   }
 
-  /** Noter un titre pas encore vu le marque comme vu (comme sur Letterboxd). */
+  /**
+   * Noter un titre pas encore vu le marque comme vu (comme sur Letterboxd),
+   * et la date de visionnage devient le jour où l'on note (si elle n'est pas déjà connue).
+   */
   const rate = (rating: number | undefined) => {
     const patch: Partial<MediaInput> = { rating }
-    if (rating != null && (!item || item.status === 'a_voir')) {
-      patch.status = 'termine'
-      patch.endDate = todayISO()
-      const cap = episodeCap(item ?? { episodesTotal: data.episodesTotal, seasons: data.seasons })
-      if (episodic && cap) patch.episodesWatched = cap
+    if (rating != null) {
+      const today = todayISO()
+      if (!item || item.status === 'a_voir') {
+        patch.status = 'termine'
+        const cap = episodeCap(item ?? { episodesTotal: data.episodesTotal, seasons: data.seasons })
+        if (episodic && cap) patch.episodesWatched = cap
+      }
+      // Date de fin seulement pour un titre terminé (noter une série en cours ne la termine pas)
+      const finished = (patch.status ?? item?.status) === 'termine'
+      if (finished && !item?.endDate) patch.endDate = today
+      if (finished && !item?.startDate) patch.startDate = today
     }
     void save(patch)
   }
@@ -185,16 +196,7 @@ export default function TitleSheet({ item: initial, seed, onClose, onGoToSetting
   /** Nouveaux épisodes vus : le statut et les dates suivent (comme la liste d'épisodes). */
   const setEpisodes = (n: number, season?: number) => {
     if (!item) return
-    const cap = episodeCap(item)
-    const watched = Math.max(0, cap ? Math.min(n, cap) : n)
-    const patch: Partial<MediaInput> = {
-      episodesWatched: watched,
-      season: item.seasons ? (season ?? seasonPosition({ ...item, episodesWatched: watched, season: undefined })?.season) : item.season,
-    }
-    if (watched > 0 && (item.status === 'a_voir' || item.status === 'pause')) Object.assign(patch, { status: 'en_cours', startDate: item.startDate ?? todayISO() })
-    if (cap && watched >= cap) Object.assign(patch, { status: 'termine', endDate: item.endDate ?? todayISO() })
-    else if (item.status === 'termine' && watched < item.episodesWatched) Object.assign(patch, { status: 'en_cours', endDate: undefined })
-    void update(item.id, patch)
+    void update(item.id, episodesPatch(item, n, season))
   }
 
   // Épisodes déjà sortis (fiche suivie) : on ne coche pas un épisode à venir
@@ -259,7 +261,7 @@ export default function TitleSheet({ item: initial, seed, onClose, onGoToSetting
   return (
     <div className="sheet sheet-in" role="dialog" aria-modal="true" aria-label={title}>
       <header className="safe-top border-b border-line bg-bg">
-        <div className="mx-auto flex max-w-2xl items-center gap-2 px-3 py-2.5">
+        <div className="mx-auto flex max-w-2xl items-center gap-2 px-3 py-2.5 lg:max-w-6xl">
           <button onClick={onClose} className="grid size-10 place-items-center rounded-full text-ink-2" aria-label={t('common.close')}>
             <X size={22} />
           </button>
@@ -275,19 +277,20 @@ export default function TitleSheet({ item: initial, seed, onClose, onGoToSetting
       </header>
 
       <div className="sheet-scroll">
-        <div className="safe-bottom mx-auto max-w-2xl pb-20">
+        {/* Grande marge en bas : rien ne reste caché sous une barre des tâches ou la barre d'accueil du téléphone */}
+        <div className="mx-auto max-w-2xl pb-[calc(10rem+env(safe-area-inset-bottom))] lg:max-w-6xl">
           {/* Image de scène + affiche */}
           {(backdrop ?? extras?.backdrop) ? (
-            <img src={backdrop ?? extras?.backdrop} alt="" className="aspect-[16/8] w-full border-b border-line object-cover opacity-80" />
+            <img src={backdrop ?? extras?.backdrop} alt="" className="aspect-[16/8] w-full border-b border-line object-cover opacity-80 lg:aspect-auto lg:h-[22rem] lg:rounded-b-2xl lg:border-x" />
           ) : (
             <div className="h-6" />
           )}
           <div className="flex gap-4 px-4">
-            <div className={cx('relative w-28 shrink-0', (backdrop ?? extras?.backdrop) && '-mt-14')}>
+            <div className={cx('relative w-28 shrink-0 lg:w-44', (backdrop ?? extras?.backdrop) && '-mt-14 lg:-mt-28')}>
               <Poster src={poster} title={title} className="shadow-none" />
             </div>
             <div className="min-w-0 flex-1 pt-3">
-              <h1 className="text-2xl leading-tight">{title}</h1>
+              <h1 className="text-2xl leading-tight lg:text-4xl">{title}</h1>
               {data.originalTitle && <p className="mt-1 truncate text-sm text-ink-3">{data.originalTitle}</p>}
               {metaLine.length > 0 && <p className="mt-2 text-xs uppercase tracking-wide text-ink-3">{metaLine.join(' · ')}</p>}
               {extras && extras.directors.length > 0 && (
@@ -305,6 +308,9 @@ export default function TitleSheet({ item: initial, seed, onClose, onGoToSetting
 
           {metaError && !item && <p className="mx-4 mt-4 text-sm text-accent">{metaError}</p>}
 
+          {/* Téléphone : une colonne. Ordinateur : deux colonnes (infos à gauche, mes actions et épisodes à droite). */}
+          <div className="flex flex-col lg:mt-4 lg:grid lg:grid-cols-[minmax(0,1fr)_26rem] lg:items-start lg:gap-6">
+          <div className="order-1 lg:col-start-2 lg:row-start-1">
           {/* Note moyenne du public */}
           {source && <PublicRating average={average} votes={extras?.votes} distribution={extras?.distribution} scale={settings.ratingScale} source={source} mine={item?.rating} />}
 
@@ -402,6 +408,9 @@ export default function TitleSheet({ item: initial, seed, onClose, onGoToSetting
             </section>
           )}
 
+          </div>
+
+          <div className="order-2 min-w-0 lg:col-start-1 lg:row-start-1">
           {/* Mon avis */}
           <section className="mx-4 mt-4">
             {item?.notes ? (
@@ -463,6 +472,8 @@ export default function TitleSheet({ item: initial, seed, onClose, onGoToSetting
 
           {/* Mon suivi : dates, plateforme, listes, revisionnages */}
           {item && <Tracking item={item} lists={lists} onChange={(patch) => void update(item.id, patch)} />}
+          </div>
+          </div>
         </div>
       </div>
 

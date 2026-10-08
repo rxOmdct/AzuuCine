@@ -124,7 +124,7 @@ export default function EditDetails({
           void submit()
         }}
       >
-        <div className="safe-bottom mx-auto max-w-2xl space-y-7 px-4 py-6 pb-16">
+        <div className="mx-auto max-w-2xl space-y-7 px-4 pt-6 pb-[calc(10rem+env(safe-area-inset-bottom))]">
           <div className="flex gap-4">
             <div className="w-28 shrink-0">
               <button type="button" onClick={() => fileRef.current?.click()} className="relative block w-full" aria-label={t('form.pickPoster')}>

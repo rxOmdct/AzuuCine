@@ -220,8 +220,12 @@
 .safe-top {
   padding-top: env(safe-area-inset-top);
 }
-.safe-bottom {
-  padding-bottom: env(safe-area-inset-bottom);
+/* Couche « base » : une marge du bas explicite (pb-16, pb-40…) passe devant, sinon elle était annulée
+   et le bas des fenêtres restait collé au bord (caché sous la barre des tâches ou la barre d'accueil). */
+@layer base {
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
 }
 
 /*

@@ -12,8 +12,9 @@ import { signOut } from './lib/cloud/auth'
 import { dbNameFor, scopedKey } from './lib/scope'
 import { isPlainObject, LIMITS, readStorage, storageGet, storageSet } from './lib/security'
 import { mediaDB, requestPersistentStorage } from './lib/db'
-import { todayISO, uid } from './lib/utils'
-import { episodeCap, seasonPosition } from './lib/franchise'
+import { episodesPatch } from './lib/progress'
+import { uid } from './lib/utils'
+import { episodeCap } from './lib/franchise'
 import { airedCount } from './lib/airing'
 
 // Clés propres à l'espace actif (compte connecté, ou appareil sans compte)
@@ -268,18 +269,8 @@ export function MediaProvider({ children, cloudUser }: { children: ReactNode; cl
       const aired = airedCount(item)
       if (delta > 0 && aired != null) next = Math.min(next, Math.max(aired, item.episodesWatched))
       if (next === item.episodesWatched) return
-      const patch: Partial<MediaInput> = { episodesWatched: next }
-      // Série en plusieurs saisons : la saison suit les épisodes vus
-      const pos = seasonPosition({ episodesWatched: next, seasons: item.seasons })
-      if (pos && pos.season !== item.season) patch.season = pos.season
-      if (delta > 0 && (item.status === 'a_voir' || item.status === 'pause')) {
-        patch.status = 'en_cours'
-        if (!item.startDate) patch.startDate = todayISO()
-      }
-      if (cap && next === cap && delta > 0) {
-        patch.status = 'termine'
-        if (!item.endDate) patch.endDate = todayISO()
-      }
+      // Statut, saison et dates (début au premier épisode, fin au dernier) suivent
+      const patch = episodesPatch(item, next)
       await update(id, patch)
     },
     [update],

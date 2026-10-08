@@ -104,7 +104,7 @@ export default function EpisodeList({ form, aired, onChange }: Props) {
         </span>
       </div>
 
-      <div ref={listRef} className="max-h-[26rem] space-y-1 overflow-y-auto overscroll-contain pe-1">
+      <div ref={listRef} className="max-h-[26rem] space-y-1 overflow-y-auto lg:max-h-[60vh] overscroll-contain pe-1">
         {rows.map((e) => {
           const seen = e.number <= watchedHere
           // Pas encore sorti : date à venir (TMDB), ou au-delà des épisodes diffusés

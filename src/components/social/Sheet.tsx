@@ -23,7 +23,7 @@ export default function Sheet({ title, onClose, right, children, label, elevated
         </div>
       </header>
       <div className="sheet-scroll">
-        <div className="safe-bottom mx-auto max-w-2xl pb-16">{children}</div>
+        <div className="mx-auto max-w-2xl pb-[calc(6rem+env(safe-area-inset-bottom))]">{children}</div>
       </div>
     </div>
   )

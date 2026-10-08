@@ -97,7 +97,7 @@ export default function AddTitle({
       </header>
 
       <div className="sheet-scroll">
-        <div className="safe-bottom mx-auto max-w-2xl px-4 pb-16 pt-2">
+        <div className="mx-auto max-w-2xl px-4 pb-[calc(10rem+env(safe-area-inset-bottom))] pt-2">
           {!hasKey && (
             <div className="mt-4 rounded-2xl border border-dashed border-line-strong p-4 text-sm text-ink-2">
               {t('search.animeOnly')}
