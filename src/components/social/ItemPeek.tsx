@@ -1,8 +1,9 @@
 import { Check, Loader2, MessagesSquare, Plus, Star } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { t } from '../../i18n'
 import { genreLabel } from '../../lib/genres'
 import { useScrollLock } from '../../lib/scrollLock'
+import { titleReviews, type TitleReview } from '../../lib/cloud/reviews'
 import { useSocial } from './SocialProvider'
 import { cx, formatDate, formatRating, normalizeText } from '../../lib/utils'
 import { useMedia } from '../../store'
@@ -10,6 +11,7 @@ import type { MediaInput, MediaItem } from '../../types'
 import { StatusPill, TypeBadge } from '../Badges'
 import Poster from '../Poster'
 import Avatar from './Avatar'
+import Reactions from './Reactions'
 import { useEscape } from '../../lib/escape'
 
 export interface PeekOwner {
@@ -24,6 +26,23 @@ export default function ItemPeek({ item, owner, onClose }: { item: MediaItem; ow
   const social = useSocial()
   const [busy, setBusy] = useState(false)
   const [added, setAdded] = useState(false)
+  // Avis d'un autre membre : on récupère les réactions pour pouvoir réagir ici même
+  const [review, setReview] = useState<TitleReview>()
+  const canReact = !!owner && owner.username !== social.me?.username && !!item.notes && !!item.externalId
+  useEffect(() => {
+    if (!canReact) return
+    let alive = true
+    titleReviews(item.externalId!)
+      .then((d) => {
+        if (!alive) return
+        const all = [...d.friends, ...d.others]
+        setReview(all.find((r) => r.user.username === owner!.username))
+      })
+      .catch(() => {})
+    return () => {
+      alive = false
+    }
+  }, [canReact, item.externalId, owner])
   const owned = items.some(
     (i) => (item.externalId && i.externalId === item.externalId) || normalizeText(i.title) === normalizeText(item.title),
   )
@@ -106,11 +125,16 @@ export default function ItemPeek({ item, owner, onClose }: { item: MediaItem; ow
               {item.favorite && <span className="text-accent">♥ {t('form.favorite')}</span>}
             </div>
             {item.notes && <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-ink-2">{item.notes}</p>}
+            {canReact && review && (
+              <div className="mt-3 border-t border-line pt-3">
+                <Reactions authorId={review.user_id} itemId={review.item_id} reactions={review.reactions} mine={review.mine} />
+              </div>
+            )}
           </div>
         )}
 
         {item.externalId && (
-          <button onClick={() => social.openReviews(item.externalId!, item.title)} className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-line py-2.5 text-sm font-medium text-ink-2 transition-colors active:bg-surface-2">
+          <button onClick={() => { onClose(); social.openReviews(item.externalId!, item.title) }} className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-line py-2.5 text-sm font-medium text-ink-2 transition-colors active:bg-surface-2">
             <MessagesSquare size={16} /> {t('reviews.seeAll')}
           </button>
         )}

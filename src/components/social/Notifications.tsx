@@ -62,7 +62,7 @@ export default function Notifications({ onClose, onOpenProfile, onOpenItem }: { 
   }
 
   return (
-    <Sheet title={t('notif.title')} label={t('notif.title')} onClose={onClose}>
+    <Sheet title={t('notif.title')} label={t('notif.title')} onClose={onClose} elevated>
       {items === undefined ? (
         <p className="flex items-center justify-center py-16 text-ink-3">
           <Loader2 size={20} className="animate-spin" />
