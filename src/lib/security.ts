@@ -124,6 +124,25 @@ export function readStorage<T>(key: string, fallback: T): unknown | T {
   }
 }
 
+/** Lecture brute du localStorage (null si absent ou inaccessible, ex. navigation privée). */
+export function storageGet(key: string): string | null {
+  try {
+    return localStorage.getItem(key)
+  } catch {
+    return null
+  }
+}
+
+/** Écriture dans le localStorage (null = suppression) ; ne lève jamais d'erreur. */
+export function storageSet(key: string, value: string | null) {
+  try {
+    if (value === null) localStorage.removeItem(key)
+    else localStorage.setItem(key, value)
+  } catch {
+    /* ignore */
+  }
+}
+
 /** Objet « simple » (pas un tableau, pas null). */
 export const isPlainObject = (v: unknown): v is Record<string, unknown> =>
   typeof v === 'object' && v !== null && !Array.isArray(v) && Object.getPrototypeOf(v) === Object.prototype

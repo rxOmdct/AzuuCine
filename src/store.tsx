@@ -10,7 +10,7 @@ import { deleteDatabase, readOtherDatabase } from './lib/db'
 import { cloudFetch } from './lib/cloud/api'
 import { signOut } from './lib/cloud/auth'
 import { dbNameFor, scopedKey } from './lib/scope'
-import { isPlainObject, LIMITS, readStorage } from './lib/security'
+import { isPlainObject, LIMITS, readStorage, storageGet, storageSet } from './lib/security'
 import { mediaDB, requestPersistentStorage } from './lib/db'
 import { todayISO, uid } from './lib/utils'
 import { episodeCap, seasonPosition } from './lib/franchise'
@@ -181,7 +181,7 @@ export function MediaProvider({ children, cloudUser }: { children: ReactNode; cl
 
     // Données créées sur cet appareil avant les comptes : proposer de les rapatrier
     let alive = true
-    if (localStorage.getItem(scopedKey('device-import', cloudUser.id)) !== 'done') {
+    if (storageGet(scopedKey('device-import', cloudUser.id)) !== 'done') {
       readOtherDatabase(dbNameFor(null))
         .then((old) => {
           const oldLists = normalizeLists(readStorage(scopedKey('lists', null), [])) ?? []
@@ -424,13 +424,13 @@ export function MediaProvider({ children, cloudUser }: { children: ReactNode; cl
         await reloadItems()
         // Les données sont maintenant dans le compte : on retire la copie « sans compte » de l'appareil
         await deleteDatabase(dbNameFor(null))
-        for (const name of ['settings', 'lists']) localStorage.removeItem(scopedKey(name, null))
-        localStorage.setItem(scopedKey('device-import', userId), 'done')
+        for (const name of ['settings', 'lists']) storageSet(scopedKey(name, null), null)
+        storageSet(scopedKey('device-import', userId), 'done')
         setDeviceData(null)
         return incoming.length
       },
       dismissDeviceData() {
-        localStorage.setItem(scopedKey('device-import', userId), 'done')
+        storageSet(scopedKey('device-import', userId), 'done')
         setDeviceData(null)
       },
     }
