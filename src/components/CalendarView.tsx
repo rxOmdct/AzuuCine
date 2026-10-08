@@ -8,6 +8,7 @@ import { cachedMonth, isBrowsableMonth, loadMonth, RELEASE_CATEGORIES } from '..
 import { remotePosterToLocal } from '../lib/image'
 import { calendarEvents, loadReleases, refreshReleases } from '../lib/releases'
 import { readStorage } from '../lib/security'
+import { useBackToClose } from '../lib/backNav'
 import { useScrollLock } from '../lib/scrollLock'
 import { cx, normalizeText, todayISO } from '../lib/utils'
 import { useMedia } from '../store'
@@ -110,6 +111,7 @@ export default function CalendarView({ onClose, onOpen }: { onClose: () => void;
   const request = useRef(0)
 
   useScrollLock()
+  useBackToClose(onClose)
 
   useEffect(() => {
     try {
@@ -325,7 +327,7 @@ export default function CalendarView({ onClose, onOpen }: { onClose: () => void;
   const browsable = isBrowsableMonth(mid)
 
   return (
-    <div className="sheet-in fixed inset-0 z-50 flex flex-col bg-bg" role="dialog" aria-modal="true" aria-label={t('calendar.title')}>
+    <div className="sheet sheet-in" role="dialog" aria-modal="true" aria-label={t('calendar.title')}>
       <header className="safe-top border-b border-line">
         <div className="mx-auto flex max-w-2xl items-center gap-2 px-3 py-2.5">
           <button onClick={onClose} className="grid size-10 place-items-center rounded-full text-ink-2" aria-label={t('common.close')}>
@@ -348,7 +350,7 @@ export default function CalendarView({ onClose, onOpen }: { onClose: () => void;
         </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto overscroll-contain">
+      <div className="sheet-scroll">
         <div className="safe-bottom mx-auto max-w-2xl px-4 pb-16 pt-4">
           {/* Toutes les sorties / mes titres */}
           <div className="mb-3 grid grid-cols-2 gap-1 rounded-full border border-line p-1">

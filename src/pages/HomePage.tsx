@@ -11,7 +11,7 @@ import Recommendations from '../components/Recommendations'
 import HomeHero, { ContinueCard } from '../components/HomeHero'
 import type { Tab } from '../components/BottomNav'
 import { EmptyState, LinkArrow, PageHeader, SectionTitle, StatTile } from '../components/ui'
-import { CACHE_EVENT, isCaughtUp, loadAiring, needsCheck, novelties, refreshAiring, saveAiring, trackable } from '../lib/airing'
+import { CACHE_EVENT, isCaughtUp, loadAiring, needsCheck, refreshAiring, saveAiring, trackable } from '../lib/airing'
 import { addEpisodeNotifications } from '../lib/cloud/notifications'
 import { useOnResume } from '../lib/onResume'
 import { calendarEvents } from '../lib/releases'
@@ -72,15 +72,20 @@ export default function HomePage({ onOpen, onAdd, onNavigate, onRoulette, onCale
           if (info.backdrop && !i.backdrop) patch.backdrop = info.backdrop
           return Object.keys(patch).length ? [{ id: i.id, patch }] : []
         })
-        // Notifications : nouveaux épisodes / saisons des séries suivies (dédoublonné côté serveur)
+        // Notifications : on envoie le dernier épisode sorti de chaque série encore en diffusion ;
+        // le serveur retient le précédent et ne signale que ce qui est sorti depuis (le passé n'est pas « nouveau »).
         if (social.enabled) {
-          const notices = novelties(items, next)
-            .filter((nv) => nv.kind !== 'upcoming')
-            .map((nv) => ({ item_id: nv.item.id, kind: nv.kind === 'new_season' ? ('new_season' as const) : ('new_episode' as const), episode: nv.info.aired, count: nv.unwatched }))
-          if (notices.length)
-            void addEpisodeNotifications(notices).then((n) => {
-              if (n > 0) void social.refresh()
-            })
+          const notices = trackable(items).flatMap((i) => {
+            const info = next[i.id]
+            if (!info || info.ended || info.aired < 1 || i.status === 'abandonne') return []
+            const kind = i.status === 'termine' ? ('new_season' as const) : ('new_episode' as const)
+            return [{ item_id: i.id, kind, episode: info.aired, count: Math.max(1, info.aired - i.episodesWatched) }]
+          })
+          void (async () => {
+            let created = 0
+            for (let k = 0; k < notices.length; k += 50) created += await addEpisodeNotifications(notices.slice(k, k + 50))
+            if (created > 0) void social.refresh()
+          })()
         }
         if (patches.length) return patchMany(patches)
       })

@@ -2,6 +2,7 @@ import { Check, Loader2, MessagesSquare, Plus, Star } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { t } from '../../i18n'
 import { genreLabel } from '../../lib/genres'
+import { useBackToClose } from '../../lib/backNav'
 import { useScrollLock } from '../../lib/scrollLock'
 import { titleReviews, type TitleReview } from '../../lib/cloud/reviews'
 import { useSocial } from './SocialProvider'
@@ -48,6 +49,7 @@ export default function ItemPeek({ item, owner, onClose }: { item: MediaItem; ow
   )
 
   useScrollLock()
+  useBackToClose(onClose)
 
   useEscape(onClose)
 

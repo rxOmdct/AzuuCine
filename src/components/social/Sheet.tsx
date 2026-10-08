@@ -1,6 +1,7 @@
 import { X } from 'lucide-react'
 import { type ReactNode } from 'react'
 import { t } from '../../i18n'
+import { useBackToClose } from '../../lib/backNav'
 import { useScrollLock } from '../../lib/scrollLock'
 import { useEscape } from '../../lib/escape'
 import { cx } from '../../lib/utils'
@@ -9,8 +10,9 @@ import { cx } from '../../lib/utils'
 export default function Sheet({ title, onClose, right, children, label, elevated }: { title: ReactNode; onClose: () => void; right?: ReactNode; children: ReactNode; label: string; elevated?: boolean }) {
   useScrollLock()
   useEscape(onClose)
+  useBackToClose(onClose)
   return (
-    <div className={cx('sheet-in fixed inset-0 flex flex-col bg-bg', elevated ? 'z-[70]' : 'z-50')} role="dialog" aria-modal="true" aria-label={label}>
+    <div className={cx('sheet sheet-in', elevated && 'z-[70]')} role="dialog" aria-modal="true" aria-label={label}>
       <header className="safe-top border-b border-line">
         <div className="mx-auto flex max-w-2xl items-center gap-2 px-3 py-2.5">
           <button onClick={onClose} className="grid size-10 place-items-center rounded-full text-ink-2" aria-label={t('common.close')}>
@@ -20,7 +22,7 @@ export default function Sheet({ title, onClose, right, children, label, elevated
           <span className="flex size-10 items-center justify-end">{right}</span>
         </div>
       </header>
-      <div className="flex-1 overflow-y-auto overscroll-contain">
+      <div className="sheet-scroll">
         <div className="safe-bottom mx-auto max-w-2xl pb-16">{children}</div>
       </div>
     </div>

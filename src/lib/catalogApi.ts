@@ -1014,3 +1014,157 @@ export function releaseToResult(r: GlobalRelease): SearchResult | null {
     typeGuess: type,
   })
 }
+
+// ─────────────────────────── Fiche détaillée (note moyenne, casting) ───────────────────────────
+
+export interface CastMember {
+  name: string
+  /** Personnage joué */
+  role?: string
+  photo?: string
+  /** Doubleur·se (animes) */
+  voice?: string
+}
+
+export interface TitleExtras {
+  /** Image de scène (paysage) */
+  backdrop?: string
+  /** Note moyenne du public, sur 10 */
+  average?: number
+  votes?: number
+  /** Répartition des notes du public (AniList) : note sur 10 → nombre de votes */
+  distribution?: { score: number; amount: number }[]
+  cast: CastMember[]
+  /** Réalisation (films) ou création (séries) */
+  directors: string[]
+  directorKind: 'director' | 'creator'
+  tagline?: string
+  runtime?: number
+  seasons?: number
+}
+
+interface TmdbExtras {
+  vote_average?: number
+  vote_count?: number
+  backdrop_path?: string | null
+  tagline?: string
+  runtime?: number
+  episode_run_time?: number[]
+  number_of_seasons?: number
+  created_by?: { name?: string }[]
+  credits?: {
+    cast?: { name?: string; character?: string; profile_path?: string | null; order?: number }[]
+    crew?: { name?: string; job?: string }[]
+  }
+}
+
+const extrasCache = new Map<string, Promise<TitleExtras>>()
+
+async function tmdbExtras(externalId: string, key: string): Promise<TitleExtras> {
+  const [, kind, id] = externalId.split(':') as ['tmdb', 'movie' | 'tv', string]
+  const d = await tmdbFetch<TmdbExtras>(`/${kind}/${id}`, key, { append_to_response: 'credits' })
+  const cast = (Array.isArray(d.credits?.cast) ? d.credits!.cast! : [])
+    .slice()
+    .sort((a, b) => (a.order ?? 99) - (b.order ?? 99))
+    .slice(0, 20)
+    .map((c): Partial<CastMember> => ({
+      name: cleanText(c.name, 60),
+      role: cleanText(c.character, 80),
+      photo: isSafeTmdbPath(c.profile_path) ? `${TMDB_IMG}/w185${c.profile_path}` : undefined,
+    }))
+    .filter((c): c is CastMember => !!c.name)
+  const crew = Array.isArray(d.credits?.crew) ? d.credits!.crew! : []
+  const votes = count(d.vote_count, 100_000_000)
+  return {
+    backdrop: isSafeTmdbPath(d.backdrop_path) ? `${TMDB_IMG}/w780${d.backdrop_path}` : undefined,
+    average: tmdbPublicRating(d.vote_average, d.vote_count),
+    votes,
+    cast,
+    directors:
+      kind === 'movie'
+        ? names(crew.filter((c) => c.job === 'Director').map((c) => c.name), 3)
+        : names((Array.isArray(d.created_by) ? d.created_by : []).map((c) => c.name), 3),
+    directorKind: kind === 'movie' ? 'director' : 'creator',
+    tagline: cleanText(d.tagline, 200),
+    runtime: count(kind === 'movie' ? d.runtime : d.episode_run_time?.[0], 6000),
+    seasons: kind === 'tv' ? count(d.number_of_seasons, 500) : undefined,
+  }
+}
+
+const ANILIST_EXTRAS = `
+query ($id: Int) {
+  Media(id: $id, type: ANIME) {
+    averageScore
+    bannerImage
+    duration
+    stats { scoreDistribution { score amount } }
+    characters(sort: [ROLE, RELEVANCE], perPage: 16) {
+      edges {
+        node { name { full } image { medium } }
+        voiceActors(language: JAPANESE, sort: [RELEVANCE]) { name { full } }
+      }
+    }
+    staff(sort: [RELEVANCE], perPage: 12) { edges { role node { name { full } } } }
+  }
+}`
+
+interface AniExtras {
+  averageScore?: number | null
+  bannerImage?: string | null
+  duration?: number | null
+  stats?: { scoreDistribution?: { score?: number; amount?: number }[] | null } | null
+  characters?: { edges?: { node?: { name?: { full?: string }; image?: { medium?: string } }; voiceActors?: { name?: { full?: string } }[] }[] } | null
+  staff?: { edges?: { role?: string; node?: { name?: { full?: string } } }[] } | null
+}
+
+async function aniListExtras(externalId: string): Promise<TitleExtras> {
+  const id = Number(externalId.split(':')[1])
+  const res = await fetch(ANILIST, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify({ query: ANILIST_EXTRAS, variables: { id } }),
+    referrerPolicy: 'no-referrer',
+    credentials: 'omit',
+  })
+  if (res.status === 429) throw new Error(t('err.anilistRate'))
+  if (!res.ok) throw new Error(t('err.anilistStatus', { status: res.status }))
+  const json = (await res.json()) as { data?: { Media?: AniExtras } }
+  const m = json.data?.Media ?? {}
+  const distribution = (Array.isArray(m.stats?.scoreDistribution) ? m.stats!.scoreDistribution! : [])
+    .map((s) => ({ score: count(s.score, 100), amount: count(s.amount, 100_000_000) ?? 0 }))
+    .filter((s): s is { score: number; amount: number } => s.score != null && s.score % 10 === 0)
+    .map((s) => ({ score: s.score / 10, amount: s.amount }))
+    .sort((a, b) => a.score - b.score)
+  const votes = distribution.reduce((n, s) => n + s.amount, 0)
+  const cast = (Array.isArray(m.characters?.edges) ? m.characters!.edges! : [])
+    .map((e): Partial<CastMember> => ({
+      name: cleanText(e.node?.name?.full, 60),
+      photo: safePosterUrl(e.node?.image?.medium),
+      voice: cleanText(e.voiceActors?.[0]?.name?.full, 60),
+    }))
+    .filter((c): c is CastMember => !!c.name)
+  const staff = Array.isArray(m.staff?.edges) ? m.staff!.edges! : []
+  return {
+    backdrop: safePosterUrl(m.bannerImage),
+    average: typeof m.averageScore === 'number' && m.averageScore > 0 ? Math.round(m.averageScore) / 10 : undefined,
+    votes: votes || undefined,
+    distribution: votes ? distribution : undefined,
+    cast,
+    directors: names(staff.filter((s) => /^Director$/i.test(s.role ?? '')).map((s) => s.node?.name?.full), 3),
+    directorKind: 'director',
+    runtime: count(m.duration, 6000),
+  }
+}
+
+/** Infos de la fiche (note moyenne, votes, casting…), gardées en mémoire le temps de la session. */
+export function getTitleExtras(externalId: string, tmdbKey?: string): Promise<TitleExtras> {
+  if (!isSafeExternalId(externalId)) return Promise.reject(new Error(t('err.tmdbRef')))
+  const isTmdb = externalId.startsWith('tmdb:')
+  if (isTmdb && !tmdbKey?.trim()) return Promise.reject(new Error(t('search.animeOnly')))
+  const cached = extrasCache.get(externalId)
+  if (cached) return cached
+  const p = isTmdb ? tmdbExtras(externalId, tmdbKey!) : aniListExtras(externalId)
+  extrasCache.set(externalId, p)
+  p.catch(() => extrasCache.delete(externalId))
+  return p
+}

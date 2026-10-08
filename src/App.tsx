@@ -2,7 +2,9 @@ import { SocialProvider } from './components/social/SocialProvider'
 import { useEffect, useState } from 'react'
 import BottomNav, { type Tab } from './components/BottomNav'
 import SideNav from './components/SideNav'
-import MediaForm from './components/MediaForm'
+import AddTitle from './components/title/AddTitle'
+import EditDetails from './components/title/EditDetails'
+import TitleSheet from './components/title/TitleSheet'
 import Roulette from './components/Roulette'
 import CalendarView from './components/CalendarView'
 import HomePage from './pages/HomePage'
@@ -11,6 +13,7 @@ import StatsPage from './pages/StatsPage'
 import SettingsPage from './pages/SettingsPage'
 import AdminPage from './pages/AdminPage'
 import { useMedia } from './store'
+import type { SearchResult } from './lib/catalogApi'
 import type { MediaItem } from './types'
 
 const TABS: Tab[] = ['home', 'catalog', 'stats', 'settings']
@@ -23,13 +26,15 @@ function routeFromHash(): Route {
   return (TABS as string[]).includes(h) ? (h as Tab) : 'home'
 }
 
-/** Formulaire ouvert : null = fermé, 'new' = ajout, sinon la fiche à éditer. */
-export type EditorState = null | 'new' | MediaItem
+/** Fiche ouverte : un titre de ma bibliothèque, ou un résultat de recherche pas encore ajouté. */
+type Opened = { item: MediaItem; seed?: undefined } | { seed: SearchResult; item?: undefined }
 
 export default function App() {
   const { error } = useMedia()
   const [route, setRoute] = useState<Route>(routeFromHash)
-  const [editor, setEditor] = useState<EditorState>(null)
+  const [opened, setOpened] = useState<Opened | null>(null)
+  const [adding, setAdding] = useState(false)
+  const [manual, setManual] = useState<string | null>(null)
   const [roulette, setRoulette] = useState(false)
   const [calendar, setCalendar] = useState(false)
 
@@ -46,8 +51,15 @@ export default function App() {
   // Dans la barre de navigation, l'administration reste rattachée à « Réglages »
   const navTab: Tab = route === 'admin' ? 'settings' : route
 
-  const openItem = (item: MediaItem) => setEditor(item)
-  const openNew = () => setEditor('new')
+  const openItem = (item: MediaItem) => setOpened({ item })
+  const openNew = () => setAdding(true)
+  const toSettings = () => {
+    setOpened(null)
+    setAdding(false)
+    setManual(null)
+    // Laisse les fenêtres retirer leur entrée d'historique avant de changer d'onglet
+    setTimeout(() => go('settings'), 50)
+  }
 
   return (
     <SocialProvider onOpenOwnItem={openItem}>
@@ -67,15 +79,32 @@ export default function App() {
       {roulette && <Roulette onClose={() => setRoulette(false)} onOpen={openItem} />}
       {calendar && <CalendarView onClose={() => setCalendar(false)} onOpen={openItem} />}
 
-      {editor && (
-        <MediaForm
-          key={editor === 'new' ? 'new' : editor.id}
-          item={editor === 'new' ? undefined : editor}
-          onClose={() => setEditor(null)}
-          onOpenItem={(i) => setEditor(i)}
-          onGoToSettings={() => {
-            setEditor(null)
-            go('settings')
+      {adding && (
+        <AddTitle
+          onClose={() => setAdding(false)}
+          onPick={(seed) => setOpened({ seed })}
+          onOpenItem={openItem}
+          onManual={(title) => setManual(title)}
+          onGoToSettings={toSettings}
+        />
+      )}
+      {opened && (
+        <TitleSheet
+          key={opened.item ? opened.item.id : opened.seed.externalId}
+          item={opened.item}
+          seed={opened.seed}
+          onClose={() => setOpened(null)}
+          onGoToSettings={toSettings}
+        />
+      )}
+      {manual !== null && (
+        <EditDetails
+          initialTitle={manual}
+          onClose={() => setManual(null)}
+          onCreated={(item) => {
+            setManual(null)
+            setAdding(false)
+            setOpened({ item })
           }}
         />
       )}

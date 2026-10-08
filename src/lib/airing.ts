@@ -297,6 +297,9 @@ export function novelties(items: MediaItem[], cache: AiringCache): Novelty[] {
     const info = cache[item.id]
     if (!info) continue
     const unwatched = Math.max(0, info.aired - item.episodesWatched)
+    // Série terminée depuis (ex. Friends) : les épisodes non vus ne sont pas des nouveautés,
+    // et une « nouvelle saison » n'y est qu'un décalage de numérotation entre TMDB et AniList.
+    if (info.ended) continue
     if (item.status === 'termine') {
       // Terminé de mon côté, mais de nouveaux épisodes sont sortis depuis → nouvelle saison
       if (unwatched > 0 && episodeCap(item) && info.aired > episodeCap(item)!) out.push({ item, info, unwatched, kind: 'new_season' })
