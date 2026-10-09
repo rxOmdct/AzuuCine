@@ -14,50 +14,86 @@
   h2 { font-size: 1.1rem; margin: 36px 0 8px; }
   p, li { color: #bdbdbd; }
   a { color: #e5383b; }
+  a:focus-visible { outline: 2px solid #e5383b; outline-offset: 2px; }
   .muted { color: #8a8a8a; font-size: .875rem; }
   hr { border: 0; border-top: 1px solid #222; margin: 48px 0; }
+  nav a { margin-right: 16px; }
+  table { border-collapse: collapse; width: 100%; font-size: .9rem; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid #222; vertical-align: top; color: #bdbdbd; }
+  th { color: #e8e8e8; }
 </style>
 </head>
 <body>
 <main>
   <h1>Azuu<span>Cine</span></h1>
-  <p class="muted">Politique de confidentialité — mise à jour le 2 octobre 2026</p>
+  <p class="muted">Politique de confidentialité — mise à jour le 9 octobre 2026</p>
+  <nav class="muted"><a href="/legal.html#mentions">Mentions légales</a><a href="/legal.html#conditions">Conditions d'utilisation</a><a href="/legal.html#credits">Crédits</a></nav>
 
-  <p>AzuuCine est une application gratuite et sans publicité pour tenir le journal des films, séries, animes et dramas que tu regardes. Elle est développée par Romain Dacet, à titre personnel.</p>
+  <p>AzuuCine est une application gratuite et sans publicité pour tenir le journal des films, séries, animes et dramas que tu regardes. Elle est éditée par Romain Dacet, à titre personnel et non commercial, qui est le <strong>responsable du traitement</strong> de tes données (contact : <a href="https://rdacet.fr">rdacet.fr</a>).</p>
 
-  <h2>Ce qui est enregistré</h2>
-  <ul>
-    <li><strong>Ton compte</strong> : ton adresse e-mail (et ton nom si tu te connectes avec Google), pour t'identifier. Le mot de passe est chiffré par le service d'authentification, AzuuCine ne le voit jamais.</li>
-    <li><strong>Ta bibliothèque</strong> : les titres que tu ajoutes, tes notes, tes avis, tes listes et tes réglages.</li>
-    <li><strong>Ton profil</strong> : pseudo, nom affiché, bio, photo et bannière si tu en ajoutes, et tes abonnements.</li>
-  </ul>
+  <p>Tu peux utiliser AzuuCine <strong>sans compte</strong> : tout reste alors uniquement sur ton appareil. Un compte n'est utile que pour synchroniser plusieurs appareils et pour la partie sociale.</p>
+
+  <h2>Ce qui est enregistré (et pourquoi)</h2>
+  <table>
+    <tr><th>Donnée</th><th>Pourquoi</th><th>Base légale</th></tr>
+    <tr><td>Adresse e-mail, mot de passe (chiffré, jamais visible par l'éditeur), nom si tu te connectes avec Google</td><td>Te connecter et sécuriser ton compte</td><td>Exécution du service (contrat)</td></tr>
+    <tr><td>Bibliothèque : titres, statuts, épisodes vus, dates, notes, avis, listes, réglages</td><td>Faire fonctionner ton journal et le synchroniser</td><td>Contrat</td></tr>
+    <tr><td>Profil : pseudo, nom affiché, bio, photo, bannière, top 5</td><td>Te présenter aux autres membres</td><td>Contrat</td></tr>
+    <tr><td>Abonnements, demandes de suivi, réactions emoji aux avis</td><td>Fonctions sociales</td><td>Contrat</td></tr>
+    <tr><td>Notifications (nouveaux abonnés, réactions, nouveaux épisodes des séries suivies) et leurs préférences</td><td>Te prévenir de ce qui te concerne ; chaque type se désactive dans les réglages</td><td>Contrat</td></tr>
+  </table>
+  <p>Rien d'autre n'est collecté : pas de date de naissance, pas de numéro de téléphone, pas de localisation, pas de contacts.</p>
 
   <h2>Qui peut voir quoi</h2>
   <ul>
     <li>Ton adresse e-mail n'est jamais visible par les autres utilisateurs.</li>
-    <li>Ton profil (pseudo, nom, photo, bannière, bio, titres vus, notes, avis et statistiques) est visible par les utilisateurs connectés. Si tu passes ton compte en <strong>privé</strong>, seules les personnes que tu acceptes peuvent le voir.</li>
-    <li>Tes avis écrits font partie de ton profil, comme tes notes. Tes listes personnelles et tes réglages restent privés.</li>
+    <li>Ton profil (pseudo, nom, photo, bannière, bio, titres vus, notes, avis) est visible par les utilisateurs connectés. Si tu passes ton compte en <strong>privé</strong> (Modifier le profil → Compte privé), seules les personnes que tu acceptes peuvent le voir.</li>
+    <li>Tes listes personnelles, tes réglages et tes notifications restent privés.</li>
+    <li>L'éditeur, en tant qu'administrateur, peut retirer un contenu ou suspendre un compte qui ne respecte pas les <a href="/legal.html#conditions">conditions d'utilisation</a>.</li>
   </ul>
 
   <h2>Connexion avec Google</h2>
   <p>Si tu choisis « Continuer avec Google », AzuuCine reçoit uniquement ton adresse e-mail, ton nom et l'identifiant de ton compte Google. Aucun accès à tes e-mails, ton Drive, tes contacts ou toute autre donnée Google n'est demandé.</p>
 
-  <h2>Où sont les données</h2>
-  <p>Les données sont stockées chez <a href="https://supabase.com" rel="noopener">Supabase</a> (base de données et authentification) et une copie reste sur ton appareil pour que l'app fonctionne hors-ligne. Le site est hébergé sur un serveur privé (VPS) administré par l'éditeur ; ce serveur ne sert que des fichiers statiques et ne reçoit aucune de tes données. Les fiches des films et séries viennent de TMDB et d'AniList : seuls tes termes de recherche leur sont transmis, jamais tes données personnelles.</p>
+  <h2>Où sont les données et qui les traite</h2>
+  <ul>
+    <li><strong>Supabase Inc.</strong> (base de données, authentification, stockage des photos) — sous-traitant, données hébergées dans l'<strong>Union européenne (Irlande)</strong>.</li>
+    <li><strong>OVH SAS</strong> (Roubaix, France) — héberge les fichiers du site. Ce serveur ne reçoit aucune de tes données de compte ; comme tout serveur web, il voit ton adresse IP le temps de te servir les pages.</li>
+    <li><strong>TMDB et AniList</strong> — fournissent les fiches et les images des œuvres. Tes recherches leur sont transmises (pour TMDB via notre serveur, sans ton identité — ou directement si tu as renseigné ta propre clé TMDB dans les réglages), et ton navigateur télécharge les affiches directement chez eux, ce qui leur révèle ton adresse IP, comme n'importe quel site qui affiche leurs images. Aucune donnée de compte ne leur est envoyée.</li>
+  </ul>
+
+  <h2>Sur ton appareil</h2>
+  <p>AzuuCine garde une copie de ta bibliothèque sur ton appareil (IndexedDB) et quelques préférences (thème, langue, session de connexion) dans le stockage local du navigateur, pour fonctionner hors-ligne. <strong>Aucun cookie</strong>, aucun traceur, aucun outil de mesure d'audience : ces stockages sont strictement nécessaires au service et ne demandent donc pas de bandeau de consentement. Se déconnecter efface la session.</p>
+
+  <h2>Durée de conservation</h2>
+  <p>Tes données sont gardées tant que ton compte existe. Quand tu supprimes ton compte, tout est effacé définitivement et immédiatement : bibliothèque, profil, photos, avis, réactions, abonnements et notifications. Seules tes 300 notifications les plus récentes sont gardées, les plus anciennes sont effacées automatiquement.</p>
 
   <h2>Ce qui n'est jamais fait</h2>
   <ul>
-    <li>Aucune publicité, aucun traceur, aucun outil de mesure d'audience.</li>
+    <li>Aucune publicité, aucun traceur, aucun profilage.</li>
     <li>Aucune donnée n'est vendue, louée ou partagée à des fins commerciales.</li>
+    <li>Aucun e-mail marketing ni newsletter : les seuls e-mails envoyés sont ceux liés à ton compte (confirmation, mot de passe oublié).</li>
   </ul>
 
+  <h2>Âge minimum</h2>
+  <p>Il faut avoir au moins <strong>15 ans</strong> pour créer un compte, ou l'accord d'un parent en dessous (article 7-1 de la loi Informatique et Libertés).</p>
+
   <h2>Tes droits</h2>
-  <p>Tu peux à tout moment exporter tes données ou <strong>supprimer ton compte</strong> depuis <em>Réglages → Compte</em> dans l'app : la suppression efface définitivement ta bibliothèque, ton profil, tes photos et tes abonnements. Pour toute autre question, tu peux contacter le développeur via <a href="https://rdacet.fr">rdacet.fr</a>.</p>
+  <p>Conformément au RGPD, tu as un droit d'<strong>accès</strong>, de <strong>rectification</strong>, d'<strong>effacement</strong>, de <strong>portabilité</strong>, d'<strong>opposition</strong> et de <strong>limitation</strong>. La plupart s'exercent directement dans l'app :</p>
+  <ul>
+    <li>modifier ton profil et ta bibliothèque à tout moment ;</li>
+    <li><strong>exporter</strong> toutes tes données (fichier JSON) depuis Réglages → Sauvegarde → Exporter mes données ;</li>
+    <li><strong>supprimer ton compte</strong> depuis Réglages → Zone sensible → Supprimer mon compte, sans justification.</li>
+  </ul>
+  <p>Pour toute autre demande, contacte l'éditeur via <a href="https://rdacet.fr">rdacet.fr</a> (réponse sous un mois). Si tu estimes que tes droits ne sont pas respectés, tu peux adresser une réclamation à la <a href="https://www.cnil.fr/fr/plaintes" rel="noopener">CNIL</a>.</p>
+
+  <h2>Sécurité</h2>
+  <p>Les échanges sont chiffrés (HTTPS). Chaque compte ne peut lire et modifier que ses propres données (règles d'accès appliquées par la base de données elle-même). Les mots de passe ne sont jamais stockés en clair.</p>
 
   <hr />
 
   <h1 style="font-size:1.4rem">Privacy policy (English summary)</h1>
-  <p>AzuuCine is a free, ad-free personal watch journal. It stores your email (and your name if you sign in with Google), your library, ratings, reviews and profile. Your email is never shown to other users; your profile (including ratings and written reviews) is visible to signed-in users unless you make your account private; personal lists and settings stay private. Google sign-in only shares your email, name and account ID. Data is stored with Supabase; the site itself is served as static files from a private server run by the publisher, which receives none of your data; no ads, no trackers, nothing is sold. You can export your data or delete your account at any time from Settings → Account.</p>
+  <p>AzuuCine is a free, ad-free personal watch journal published by Romain Dacet (data controller, contact: <a href="https://rdacet.fr">rdacet.fr</a>). It works without an account (everything stays on your device). With an account, it stores your email (and your name if you sign in with Google), your library, ratings, reviews, profile, follows, emoji reactions and notifications, to provide the service (contract). Your email is never shown to other users; your profile is visible to signed-in users unless you make your account private. Data is hosted by Supabase in the EU (Ireland); the site files are served by OVH (France). Title data and posters come from TMDB and AniList, which see your IP address when your browser loads their images, but never your account data. No cookies, no trackers, no ads, no marketing emails, nothing sold; on-device storage is strictly necessary. Data is kept while your account exists and deleted immediately and completely when you delete it. You must be 15 or older (or have a parent's consent). You can access, correct, export or delete your data from Settings, contact the publisher for any other request, and complain to the CNIL.</p>
 
   <p class="muted"><a href="/">← Retour à AzuuCine</a></p>
 </main>

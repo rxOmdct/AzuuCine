@@ -9,7 +9,7 @@ export default function Poster({ src, title, className }: { src?: string; title:
     return (
       <img
         src={src}
-        alt=""
+        alt={title}
         loading="lazy"
         onError={() => setBroken(src)}
         className={cx('aspect-[2/3] w-full rounded-xl border border-line bg-surface-2 object-cover', className)}
@@ -18,8 +18,8 @@ export default function Poster({ src, title, className }: { src?: string; title:
   }
   const initial = title.trim().charAt(0).toUpperCase() || '?'
   return (
-    <div className={cx('relative grid aspect-[2/3] w-full place-items-center overflow-hidden rounded-xl border border-line bg-surface-2', className)}>
-      <span className="text-3xl font-bold text-ink-3">{initial}</span>
+    <div role="img" aria-label={title} className={cx('relative grid aspect-[2/3] w-full place-items-center overflow-hidden rounded-xl border border-line bg-surface-2', className)}>
+      <span aria-hidden="true" className="text-3xl font-bold text-ink-3">{initial}</span>
       <span className="absolute bottom-0 start-0 h-[3px] w-1/3 bg-accent-fill" />
     </div>
   )

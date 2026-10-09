@@ -1,6 +1,6 @@
 import { t } from '../i18n'
 import { LanguageSelect } from '../i18n/react'
-import { Check, Download, Eye, EyeOff, HardDrive, ShieldCheck, Smartphone, Trash2, Upload, UserX } from 'lucide-react'
+import { Check, Download, ExternalLink, Eye, EyeOff, HardDrive, ShieldCheck, Smartphone, Trash2, Upload, UserX } from 'lucide-react'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import AccountSection from '../components/AccountSection'
 import ConfirmDialog from '../components/ConfirmDialog'
@@ -495,6 +495,24 @@ export default function SettingsPage({ onOpenAdmin }: { onOpenAdmin: () => void 
           </div>
         )}
       </div>
+
+      <SectionTitle>{t('settings.about')}</SectionTitle>
+      <div className="card divide-y divide-line overflow-hidden">
+        {(
+          [
+            ['/privacy.html', t('legal.privacy')],
+            ['/legal.html#conditions', t('legal.terms')],
+            ['/legal.html#mentions', t('legal.notice')],
+            ['/legal.html#credits', t('legal.credits')],
+          ] as const
+        ).map(([href, label]) => (
+          <a key={href} href={href} target="_blank" rel="noopener" className="flex items-center gap-3.5 px-4 py-4 font-medium transition-colors active:bg-surface-2">
+            <span className="flex-1">{label}</span>
+            <ExternalLink size={16} className="text-ink-3" />
+          </a>
+        ))}
+      </div>
+      <p className="mt-3 px-1 text-[11px] leading-relaxed text-ink-3">{t('legal.tmdb')}</p>
 
       <p className="mt-10 text-center text-xs text-ink-3">AzuuCine v2.2 · {account ? t('settings.footerCloud') : t('settings.footerLocal')}</p>
 

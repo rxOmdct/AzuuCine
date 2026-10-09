@@ -198,6 +198,7 @@ export default function AuthScreen({ notice }: { notice?: string }) {
           {busy && <Loader2 size={17} className="animate-spin" />}
           {mode === 'login' ? t('auth.login') : mode === 'signup' ? t('auth.signup') : t('auth.sendLink')}
         </button>
+        {mode === 'signup' && <p className="text-center text-xs leading-relaxed text-ink-3">{t('auth.consent')}</p>}
       </form>
 
       <div className="mt-5 text-center text-sm">
@@ -216,6 +217,7 @@ export default function AuthScreen({ notice }: { notice?: string }) {
       <p className="mt-10 text-center text-[11px] leading-relaxed text-ink-3">
         {t('auth.privacy')}
       </p>
+      <LegalLinks />
     </Shell>
   )
 }
@@ -259,5 +261,16 @@ export function NewPasswordScreen({ onDone }: { onDone: () => void }) {
         </button>
       </form>
     </Shell>
+  )
+}
+
+/** Liens vers les pages légales (statiques, hors de l'app). */
+export function LegalLinks() {
+  return (
+    <nav className="mt-4 flex flex-wrap justify-center gap-x-4 gap-y-1 text-[11px] text-ink-3">
+      <a href="/legal.html#conditions" target="_blank" rel="noopener" className="underline underline-offset-2">{t('legal.terms')}</a>
+      <a href="/privacy.html" target="_blank" rel="noopener" className="underline underline-offset-2">{t('legal.privacy')}</a>
+      <a href="/legal.html#mentions" target="_blank" rel="noopener" className="underline underline-offset-2">{t('legal.notice')}</a>
+    </nav>
   )
 }
