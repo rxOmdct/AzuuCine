@@ -5,7 +5,15 @@ import { safeMediaUrl } from './social'
 
 /** Notifications (cloche) : abonnements, demandes acceptées, réactions reçues. */
 
-export type NotificationKind = 'follow_request' | 'follow_accepted' | 'new_follower' | 'reaction' | 'new_episode' | 'new_season'
+export type NotificationKind =
+  | 'follow_request'
+  | 'follow_accepted'
+  | 'new_follower'
+  | 'reaction'
+  | 'new_episode'
+  | 'new_season'
+  | 'review_comment'
+  | 'shared_list_invite'
 
 export interface AppNotification {
   id: number
@@ -19,8 +27,10 @@ export interface AppNotification {
   /** Nombre de nouveaux épisodes (épisodes) */
   ep_count: number | null
   actor: { username: string; display_name: string; avatar_url: string | null } | null
-  /** Titre de la fiche concernée (réactions, épisodes) */
+  /** Titre de la fiche concernée (réactions, commentaires, épisodes) ou nom de la liste partagée */
   title: string | null
+  /** Invitation à une liste partagée : en attente, acceptée, ou plus valable (null) */
+  invite_status: 'pending' | 'accepted' | null
 }
 
 /** Épisode/saison à signaler (envoyé après la vérification des sorties). */
@@ -54,7 +64,7 @@ async function rpc<T>(name: string, args: Record<string, unknown> = {}): Promise
   return res.json() as Promise<T>
 }
 
-const KINDS: NotificationKind[] = ['follow_request', 'follow_accepted', 'new_follower', 'reaction', 'new_episode', 'new_season']
+const KINDS: NotificationKind[] = ['follow_request', 'follow_accepted', 'new_follower', 'reaction', 'new_episode', 'new_season', 'review_comment', 'shared_list_invite']
 const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : null)
 
 /** Réponse du serveur relue champ par champ (adresses d'images comprises), comme pour les profils. */
@@ -75,6 +85,7 @@ function toNotification(v: unknown): AppNotification | null {
     ep_count: num(v.ep_count),
     actor: username ? { username, display_name: cleanText(a!.display_name, 40) ?? username, avatar_url: safeMediaUrl(a!.avatar_url) ?? null } : null,
     title: cleanText(v.title, 300) ?? null,
+    invite_status: v.invite_status === 'pending' || v.invite_status === 'accepted' ? v.invite_status : null,
   }
 }
 

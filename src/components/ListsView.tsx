@@ -9,6 +9,7 @@ import ConfirmDialog from './ConfirmDialog'
 import { MediaCard } from './MediaCard'
 import Poster from './Poster'
 import { EmptyState } from './ui'
+import { SharedListsSection } from './social/SharedLists'
 
 /** Mosaïque 2×2 des premières affiches d'une liste. */
 function Mosaic({ items }: { items: MediaItem[] }) {
@@ -228,6 +229,9 @@ export default function ListsView({ onOpen }: { onOpen: (item: MediaItem) => voi
           })}
         </div>
       )}
+
+      {/* Listes partagées avec d'autres membres (compte requis ; masqué sinon) */}
+      <SharedListsSection />
     </div>
   )
 }

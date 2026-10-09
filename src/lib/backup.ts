@@ -105,6 +105,7 @@ export function normalizeItem(raw: unknown): MediaItem | null {
     genres: safeStringList(r.genres, LIMITS.genres),
     platform: cleanText(r.platform, LIMITS.shortText),
     notes: cleanText(r.notes, LIMITS.notes),
+    notesSpoiler: (r.notesSpoiler === true && !!cleanText(r.notes, LIMITS.notes)) || undefined,
     poster: safePosterUrl(r.poster),
     backdrop: remoteImage(r.backdrop),
     overview: cleanText(r.overview, LIMITS.overview),
@@ -132,7 +133,7 @@ export function normalizeSettings(raw: unknown): Partial<Settings> | undefined {
   if (raw.themeMode === 'auto' || raw.themeMode === 'light' || raw.themeMode === 'dark' || raw.themeMode === 'night' || raw.themeMode === 'starfield') out.themeMode = raw.themeMode
   if (isPlainObject(raw.notifPrefs)) {
     const np: NotifPrefs = {}
-    for (const k of ['episodes', 'follows', 'accepted', 'reactions'] as const) if (typeof raw.notifPrefs[k] === 'boolean') np[k] = raw.notifPrefs[k] as boolean
+    for (const k of ['episodes', 'follows', 'accepted', 'reactions', 'comments', 'lists'] as const) if (typeof raw.notifPrefs[k] === 'boolean') np[k] = raw.notifPrefs[k] as boolean
     out.notifPrefs = np
   }
   return out

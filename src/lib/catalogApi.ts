@@ -1168,3 +1168,11 @@ export function getTitleExtras(externalId: string, tmdbKey?: string): Promise<Ti
   p.catch(() => extrasCache.delete(externalId))
   return p
 }
+
+/** Adresse de l'affiche TMDB d'un titre (listes partagées : la copie locale de l'affiche ne se partage pas). */
+export async function getTmdbPosterUrl(externalId: string, key: string): Promise<string | undefined> {
+  if (!isSafeExternalId(externalId) || !externalId.startsWith('tmdb:')) return undefined
+  const [, kind, id] = externalId.split(':') as ['tmdb', 'movie' | 'tv', string]
+  const d = await tmdbFetch<{ poster_path?: string | null }>(`/${kind}/${id}`, key)
+  return isSafeTmdbPath(d.poster_path) ? `${TMDB_IMG}/w342${d.poster_path}` : undefined
+}

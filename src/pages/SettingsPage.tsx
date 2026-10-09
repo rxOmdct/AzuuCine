@@ -25,6 +25,8 @@ const NOTIF_PREFS: { key: keyof NotifPrefs; readonly label: () => string }[] = [
   { key: 'follows', label: () => t('settings.notifFollows') },
   { key: 'accepted', label: () => t('settings.notifAccepted') },
   { key: 'reactions', label: () => t('settings.notifReactions') },
+  { key: 'comments', label: () => t('settings.notifComments') },
+  { key: 'lists', label: () => t('settings.notifLists') },
 ]
 
 function Row({ icon, title, hint, onClick, danger }: { icon: ReactNode; title: string; hint?: string; onClick: () => void; danger?: boolean }) {
