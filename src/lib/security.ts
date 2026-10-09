@@ -26,6 +26,8 @@ export const LIMITS = {
   notes: 20000,
   overview: 10000,
   genres: 40,
+  tags: 30,
+  tagLength: 40,
   posterDataUrl: 3 * 1024 * 1024, // ~3 Mo par affiche en data URL
   searchQuery: 200,
 }

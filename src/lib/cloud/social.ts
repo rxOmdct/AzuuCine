@@ -86,8 +86,18 @@ function toCard(raw: unknown): ProfileCard | null {
   }
 }
 
+/** Fiche de quelqu'un d'autre : ses tags et listes perso restent privés (même si un ancien serveur les renvoyait). */
+function othersItem(v: unknown): MediaItem | null {
+  const item = normalizeItem(v)
+  if (item) {
+    delete item.tags
+    delete item.listIds
+  }
+  return item
+}
+
 const toItems = (v: unknown): MediaItem[] =>
-  Array.isArray(v) ? v.slice(0, 200).map(normalizeItem).filter((i): i is MediaItem => i !== null) : []
+  Array.isArray(v) ? v.slice(0, 200).map(othersItem).filter((i): i is MediaItem => i !== null) : []
 
 function toProfile(raw: unknown): Profile | null {
   const card = toCard(raw)
@@ -163,7 +173,7 @@ export async function getFeed(before?: string): Promise<FeedEntry[]> {
   const out: FeedEntry[] = []
   for (const r of raw.slice(0, 50)) {
     if (!isPlainObject(r) || !isPlainObject(r.user)) continue
-    const item = normalizeItem(r.item)
+    const item = othersItem(r.item)
     const name = username(r.user.username)
     const createdAt = safeIso(r.created_at)
     const kind = r.kind

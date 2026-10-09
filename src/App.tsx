@@ -1,4 +1,5 @@
 import { SocialProvider } from './components/social/SocialProvider'
+import { ToastProvider } from './components/Toast'
 import { useEffect, useState } from 'react'
 import BottomNav, { type Tab } from './components/BottomNav'
 import SideNav from './components/SideNav'
@@ -67,6 +68,7 @@ export default function App() {
   }
 
   return (
+    <ToastProvider>
     <SocialProvider onOpenOwnItem={openItem}>
     <SideNav current={navTab} onChange={go} onAdd={openNew} />
     <div className="mx-auto min-h-dvh max-w-2xl lg:max-w-none lg:ps-60">
@@ -116,5 +118,6 @@ export default function App() {
       )}
     </div>
     </SocialProvider>
+    </ToastProvider>
   )
 }

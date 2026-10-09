@@ -49,6 +49,8 @@ export interface MediaItem {
   top?: TopEntry
   /** Listes perso auxquelles appartient la fiche. */
   listIds?: string[]
+  /** Tags personnels libres (« comfort », « halloween »…). Privés : jamais affichés sur le profil public. */
+  tags?: string[]
   /** Pays d'origine (codes ISO, ex. ['KR']). */
   countries?: string[]
   /** Dates de revisionnage (AAAA-MM-JJ), en plus du premier visionnage. */

@@ -1,7 +1,7 @@
 import { genreLabel, subtypeLabel } from '../lib/genres'
 import { locale, t } from '../i18n'
-import { Heart, Search, SlidersHorizontal, X } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { CheckSquare, Hash, Heart, Search, SlidersHorizontal, X } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
 import { StatusDot } from '../components/Badges'
 import JournalView from '../components/JournalView'
 import ListsView from '../components/ListsView'
@@ -10,6 +10,11 @@ import { EmptyState, PageHeader } from '../components/ui'
 import { MEDIA_TYPES, STATUSES } from '../lib/constants'
 import { cx, normalizeText } from '../lib/utils'
 import { useMedia } from '../store'
+import SelectableCard from '../components/library/SelectableCard'
+import SelectionBar from '../components/library/SelectionBar'
+import { allTags, hasTag } from '../lib/bulk'
+import { useBackToClose } from '../lib/backNav'
+import { useEscape } from '../lib/escape'
 import type { MediaItem, MediaType, WatchStatus } from '../types'
 
 type SortKey = 'recent' | 'rating' | 'title' | 'watched'
@@ -37,6 +42,27 @@ export default function CatalogPage({ onOpen, onAdd }: Props) {
   const [favOnly, setFavOnly] = useState(false)
   const [sort, setSort] = useState<SortKey>('recent')
   const [showFilters, setShowFilters] = useState(false)
+  const [tag, setTag] = useState('')
+  // Sélection multiple (actions groupées) : null = mode normal
+  const [selection, setSelection] = useState<Set<string> | null>(null)
+  const selecting = selection !== null
+  const exitSelection = () => setSelection(null)
+  useEscape(exitSelection, selecting)
+  useBackToClose(exitSelection, selecting)
+  const toggleSelected = (id: string) =>
+    setSelection((prev) => {
+      const next = new Set(prev ?? [])
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  const startSelection = (id: string) => setSelection((prev) => new Set([...(prev ?? []), id]))
+  // On quitte la sélection en changeant d'onglet (journal, listes)
+  useEffect(() => {
+    if (view !== 'titles') setSelection(null)
+  }, [view])
+
+  const tags = useMemo(() => allTags(items), [items])
 
   const allGenres = useMemo(
     () => [...new Set(items.flatMap((i) => i.genres))].sort((a, b) => a.localeCompare(b, locale())),
@@ -59,8 +85,9 @@ export default function CatalogPage({ onOpen, onAdd }: Props) {
       if (genre && !i.genres.includes(genre)) return false
       if (minRating && (i.rating ?? 0) < minRating) return false
       if (favOnly && !i.favorite) return false
+      if (tag && !hasTag(i, tag)) return false
       if (q) {
-        const haystack = normalizeText([i.title, i.originalTitle, i.subtype, i.subtype && subtypeLabel(i.subtype), i.platform, ...i.genres, ...i.genres.map(genreLabel)].filter(Boolean).join(' '))
+        const haystack = normalizeText([i.title, i.originalTitle, i.subtype, i.subtype && subtypeLabel(i.subtype), i.platform, ...i.genres, ...i.genres.map(genreLabel), ...(i.tags ?? [])].filter(Boolean).join(' '))
         if (!haystack.includes(q)) return false
       }
       return true
@@ -71,9 +98,9 @@ export default function CatalogPage({ onOpen, onAdd }: Props) {
     else if (sort === 'watched')
       sorted.sort((a, b) => (b.endDate ?? b.startDate ?? '').localeCompare(a.endDate ?? a.startDate ?? ''))
     return sorted
-  }, [items, query, types, status, genre, minRating, favOnly, sort])
+  }, [items, query, types, status, genre, minRating, favOnly, tag, sort])
 
-  const activeAdvanced = (genre ? 1 : 0) + (minRating ? 1 : 0) + (favOnly ? 1 : 0)
+  const activeAdvanced = (genre ? 1 : 0) + (minRating ? 1 : 0) + (favOnly ? 1 : 0) + (tag ? 1 : 0)
   const anyFilter = query || types.size || status || activeAdvanced
   const resetAll = () => {
     setQuery('')
@@ -82,7 +109,12 @@ export default function CatalogPage({ onOpen, onAdd }: Props) {
     setGenre('')
     setMinRating(0)
     setFavOnly(false)
+    setTag('')
   }
+
+  // Fiches sélectionnées encore présentes (une fiche a pu être supprimée entre-temps)
+  const selected = useMemo(() => (selection ? items.filter((i) => selection.has(i.id)) : []), [items, selection])
+  const allShownSelected = selecting && results.length > 0 && results.every((i) => selection.has(i.id))
 
   // Options de note minimale selon l'échelle affichée (valeurs internes sur 10)
   const ratingOptions = settings.ratingScale === '5' ? [2, 4, 6, 8, 9, 10] : [5, 6, 7, 8, 9, 10]
@@ -123,6 +155,23 @@ export default function CatalogPage({ onOpen, onAdd }: Props) {
 
       {/* Recherche + filtres (collants en haut) */}
       <div className="sticky top-0 z-20 -mx-4 space-y-3 bg-bg/90 px-4 pb-3 pt-[max(0.5rem,env(safe-area-inset-top))] backdrop-blur-xl">
+        {selecting && (
+          <div className="flex items-center gap-2 rounded-xl border border-accent bg-surface py-1.5 ps-1.5 pe-2">
+            <button onClick={exitSelection} className="grid size-9 place-items-center rounded-full text-ink-2" aria-label={t('select.exit')}>
+              <X size={19} />
+            </button>
+            <p className="min-w-0 flex-1 truncate text-sm font-semibold" aria-live="polite">
+              {t('select.count', { count: selected.length })}
+            </p>
+            <button
+              onClick={() => setSelection(allShownSelected ? new Set() : new Set([...selection, ...results.map((i) => i.id)]))}
+              className="chip py-1 text-xs"
+              disabled={!results.length}
+            >
+              {allShownSelected ? t('select.none') : t('select.all')}
+            </button>
+          </div>
+        )}
         <div className="flex gap-2">
           <div className="relative flex-1">
             <Search size={18} className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-ink-3" />
@@ -146,6 +195,17 @@ export default function CatalogPage({ onOpen, onAdd }: Props) {
               <span className="absolute -end-1.5 -top-1.5 grid size-5 place-items-center rounded-full bg-accent-fill text-[10px] text-on-accent">{activeAdvanced}</span>
             )}
           </button>
+          {results.length > 0 && (
+            <button
+              onClick={() => (selecting ? exitSelection() : setSelection(new Set()))}
+              className={cx('grid w-12 place-items-center rounded-xl border border-line bg-surface transition-colors', selecting && 'border-ink text-ink')}
+              aria-label={selecting ? t('select.exit') : t('select.start')}
+              aria-pressed={selecting}
+              title={t('select.start')}
+            >
+              <CheckSquare size={18} />
+            </button>
+          )}
         </div>
 
         <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4">
@@ -202,6 +262,19 @@ export default function CatalogPage({ onOpen, onAdd }: Props) {
                 ))}
               </select>
             </label>
+            {tags.length > 0 && (
+              <div className="col-span-2">
+                <span className="label">{t('tags.filter')}</span>
+                <div className="no-scrollbar -mx-3 flex gap-1.5 overflow-x-auto px-3">
+                  {tags.map((tg) => (
+                    <button key={tg} onClick={() => setTag(tag === tg ? '' : tg)} className={cx('chip py-1 text-xs', tag === tg && 'chip-on')} aria-pressed={tag === tg}>
+                      <Hash size={12} />
+                      {tg}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
             <button onClick={() => setFavOnly((v) => !v)} className={cx('chip justify-center', favOnly && 'chip-on')}>
               <Heart size={14} className={favOnly ? 'fill-accent-fill text-accent-fill' : ''} /> {t('catalog.favorites')}
             </button>
@@ -227,10 +300,20 @@ export default function CatalogPage({ onOpen, onAdd }: Props) {
       ) : (
         <div className="mt-3 grid grid-cols-2 gap-x-3.5 gap-y-6 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8">
           {results.map((item) => (
-            <MediaCard key={item.id} item={item} onOpen={onOpen} />
+            <SelectableCard
+              key={item.id}
+              title={item.title}
+              selecting={selecting}
+              selected={!!selection?.has(item.id)}
+              onToggle={() => toggleSelected(item.id)}
+              onStartSelect={() => startSelection(item.id)}
+            >
+              <MediaCard item={item} onOpen={onOpen} />
+            </SelectableCard>
           ))}
         </div>
       )}
+      {selecting && <SelectionBar selected={selected} onDone={exitSelection} />}
         </>
       )}
     </>
