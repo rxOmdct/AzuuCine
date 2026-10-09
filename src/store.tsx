@@ -58,6 +58,16 @@ interface MediaStore {
   clearAll: () => Promise<void>
   /** Met à jour plusieurs fiches d'un coup (sans changer leur date de modification). */
   patchMany: (patches: { id: string; patch: Partial<MediaInput> }[]) => Promise<void>
+  /** Modification groupée par l'utilisateur (la date de modification avance, comme update). */
+  updateMany: (patches: { id: string; patch: Partial<MediaInput> }[]) => Promise<void>
+  /** Suppression groupée. */
+  removeMany: (ids: string[]) => Promise<void>
+  /**
+   * « Annuler » : remet ces fiches exactement comme elles étaient (dates, épisodes, listes…),
+   * avec une date de modification plus récente que la suppression / le changement, pour que
+   * la synchro (la plus récente gagne) recrée bien la fiche côté serveur.
+   */
+  restore: (snapshots: MediaItem[]) => Promise<void>
 
   // Listes perso
   lists: CustomList[]
@@ -253,10 +263,60 @@ export function MediaProvider({ children, cloudUser }: { children: ReactNode; cl
     [save],
   )
 
+  // Dernière suppression locale de chaque fiche (une restauration doit être strictement plus récente)
+  const removedAtRef = useRef(new Map<string, number>())
+
   const remove = useCallback(async (id: string) => {
     await mediaDB.remove(id)
+    removedAtRef.current.set(id, Date.now())
     setItems((prev) => prev.filter((i) => i.id !== id))
   }, [])
+
+  const removeMany = useCallback(async (ids: string[]) => {
+    if (!ids.length) return
+    await mediaDB.removeMany(ids)
+    const now = Date.now()
+    for (const id of ids) removedAtRef.current.set(id, now)
+    const gone = new Set(ids)
+    setItems((prev) => prev.filter((i) => !gone.has(i.id)))
+  }, [])
+
+  const updateMany = useCallback(
+    async (patches: { id: string; patch: Partial<MediaInput> }[]) => {
+      const now = new Date().toISOString()
+      const byId = new Map(itemsRef.current.map((i) => [i.id, i]))
+      const changed = patches.flatMap(({ id, patch }) => {
+        const cur = byId.get(id)
+        const next = cur ? normalizeItem({ ...cur, ...patch, updatedAt: now }) : null
+        return next ? [next] : []
+      })
+      if (!changed.length) return
+      await mediaDB.putMany(changed)
+      const map = new Map(changed.map((c) => [c.id, c]))
+      setItems((prev) => prev.map((i) => map.get(i.id) ?? i).sort(byUpdatedDesc))
+    },
+    [setItems],
+  )
+
+  const restore = useCallback(
+    async (snapshots: MediaItem[]) => {
+      // Horodatage plus récent que la suppression (ou la modification) qu'on annule : la synchro
+      // envoie alors une version qui gagne sur la « pierre tombale » déjà partie au serveur.
+      const current = new Map(itemsRef.current.map((i) => [i.id, i.updatedAt]))
+      let latest = Date.now()
+      for (const snap of snapshots) {
+        latest = Math.max(latest, (removedAtRef.current.get(snap.id) ?? 0) + 1, (Date.parse(current.get(snap.id) ?? '') || 0) + 1)
+      }
+      const at = new Date(latest).toISOString()
+      const restored = snapshots.map((s) => normalizeItem({ ...s, updatedAt: at })).filter((i): i is MediaItem => i !== null)
+      if (!restored.length) return
+      await mediaDB.putMany(restored)
+      for (const r of restored) removedAtRef.current.delete(r.id)
+      const map = new Map(restored.map((r) => [r.id, r]))
+      setItems((prev) => [...restored, ...prev.filter((i) => !map.has(i.id))].sort(byUpdatedDesc))
+    },
+    [setItems],
+  )
 
   const incrementEpisode = useCallback(
     async (id: string, delta = 1) => {
@@ -442,11 +502,11 @@ export function MediaProvider({ children, cloudUser }: { children: ReactNode; cl
   const value = useMemo<MediaStore>(
     () => ({
       items, loading, error, settings: exposedSettings, updateSettings, add, update, remove, incrementEpisode, importItems, setTopList, clearAll,
-      patchMany, lists, createList, renameList, deleteList, toggleInList, mergeLists, account,
+      patchMany, updateMany, removeMany, restore, lists, createList, renameList, deleteList, toggleInList, mergeLists, account,
     }),
     [
       items, loading, error, exposedSettings, updateSettings, add, update, remove, incrementEpisode, importItems, setTopList, clearAll,
-      patchMany, lists, createList, renameList, deleteList, toggleInList, mergeLists, account,
+      patchMany, updateMany, removeMany, restore, lists, createList, renameList, deleteList, toggleInList, mergeLists, account,
     ],
   )
 

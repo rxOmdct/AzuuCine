@@ -12,10 +12,12 @@ interface Props {
   display?: (value: string) => string
   /** Valeur enregistrée à partir du texte saisi (ex. nom de référence d'un genre) */
   normalize?: (input: string) => string
+  /** Propose aussi les suggestions avant de taper (ex. tags perso déjà utilisés) */
+  showAll?: boolean
 }
 
 /** Saisie de tags libres ; des suggestions apparaissent quand on commence à taper. */
-export default function TagInput({ value, onChange, suggestions, placeholder, display = (v) => v, normalize = (v) => v }: Props) {
+export default function TagInput({ value, onChange, suggestions, placeholder, display = (v) => v, normalize = (v) => v, showAll = false }: Props) {
   const [text, setText] = useState('')
 
   const add = (raw: string) => {
@@ -30,9 +32,9 @@ export default function TagInput({ value, onChange, suggestions, placeholder, di
     const q = normalizeText(text)
     const taken = new Set(value.map((v) => normalizeText(display(v))))
     // Suggestions seulement pendant la saisie (pas de rangée de genres affichée en permanence)
-    if (!q) return []
+    if (!q && !showAll) return []
     return suggestions.filter((s) => !taken.has(normalizeText(s)) && normalizeText(s).includes(q)).slice(0, 12)
-  }, [text, value, suggestions])
+  }, [text, value, suggestions, showAll])
 
   return (
     <div>

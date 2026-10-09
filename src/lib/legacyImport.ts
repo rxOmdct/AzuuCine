@@ -167,7 +167,8 @@ export function convertLegacyBackup(data: LegacyFile): { items: MediaItem[]; ski
 
     const genres = splitGenres(rawGenres, isFilm)
     if (isFilm && type === 'film' && countries.includes('JP') && rawGenres.includes('Animation')) genres.unshift('Anime')
-    for (const t of itemTags.get(r.id) ?? []) if (!genres.includes(t) && genres.length < LIMITS.genres) genres.push(t)
+    // Tags perso de l'ancienne appli → tags personnels (privés), plus mélangés aux genres
+    const tags = [...new Set((itemTags.get(r.id) ?? []).map((t) => t.slice(0, LIMITS.tagLength)))].slice(0, LIMITS.tags)
 
     const note = typeof r.note === 'number' && Number.isFinite(r.note) && r.note > 0 ? Math.min(10, Math.round(r.note * 2 * 2) / 2) : undefined
     const created = toISO(r.date_added) ?? now
@@ -192,6 +193,7 @@ export function convertLegacyBackup(data: LegacyFile): { items: MediaItem[]; ski
       startDate,
       endDate,
       genres,
+      tags: tags.length ? tags : undefined,
       notes: cleanText(
         [cleanText(r.comment, LIMITS.notes), cleanText(r.director, LIMITS.shortText) ? `Réalisation : ${cleanText(r.director, LIMITS.shortText)}` : '']
           .filter(Boolean)

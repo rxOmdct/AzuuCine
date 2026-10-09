@@ -15,6 +15,9 @@ import { backdropSrcSet, tmdbSized } from '../../lib/tmdbImage'
 import { renderItemCard, slug } from '../../lib/shareCard'
 import { cx, formatDate, formatDuration, formatRating, todayISO } from '../../lib/utils'
 import { useMedia } from '../../store'
+import { allTags, cleanTag } from '../../lib/bulk'
+import { useLibraryActions } from '../library/useLibraryActions'
+import TagInput from '../TagInput'
 import type { MediaInput, MediaItem, RatingScale, WatchStatus } from '../../types'
 import ConfirmDialog from '../ConfirmDialog'
 import EpisodeList from '../EpisodeList'
@@ -43,7 +46,8 @@ interface Props {
  * Vu / En cours / À voir, note, coup de cœur, avis, épisodes, casting et note moyenne du public.
  */
 export default function TitleSheet({ item: initial, seed, onClose, onGoToSettings }: Props) {
-  const { items, settings, add, update, remove, lists, patchMany } = useMedia()
+  const { items, settings, add, update, lists, patchMany } = useMedia()
+  const actions = useLibraryActions()
   const social = useSocial()
   useScrollLock()
   useEscape(onClose)
@@ -183,7 +187,11 @@ export default function TitleSheet({ item: initial, seed, onClose, onGoToSetting
       const cap = episodeCap(item ?? { episodesTotal: data.episodesTotal, seasons: data.seasons })
       if (episodic && cap) patch.episodesWatched = cap
     }
-    void save(patch)
+    // Changement de statut d'un titre déjà suivi : « Annuler » remet la fiche telle quelle (dates, épisodes…)
+    const before = item
+    void save(patch).then(() => {
+      if (before) actions.offerUndo(t('toast.status', { title: before.title, status: STATUS_BY_VALUE[s].label }), [before])
+    })
   }
 
   /**
@@ -254,11 +262,23 @@ export default function TitleSheet({ item: initial, seed, onClose, onGoToSetting
     }
   }
 
-  const onDelete = async () => {
+  const onDelete = () => {
     if (!item) return
     setConfirmDelete(false)
-    await remove(item.id)
+    // Le message « Supprimé · Annuler » reste affiché après la fermeture de la fiche
+    void actions.deleteItems([item.id])
     onClose()
+  }
+
+  /** Suivi modifié ; retirer le titre d'une liste propose « Annuler ». */
+  const changeTracking = (patch: Partial<MediaInput>) => {
+    if (!item) return
+    const before = item
+    const removed = patch.listIds ? (before.listIds ?? []).filter((id) => !patch.listIds!.includes(id)) : []
+    void update(before.id, patch).then(() => {
+      const list = removed.length === 1 ? lists.find((l) => l.id === removed[0]) : undefined
+      if (list) actions.offerUndo(t('toast.removedFromList', { title: before.title, list: list.name }), [before])
+    })
   }
 
   const heroImage = backdrop ?? extras?.backdrop
@@ -323,6 +343,16 @@ export default function TitleSheet({ item: initial, seed, onClose, onGoToSetting
                 <p className="mt-2 inline-flex items-center gap-1.5 text-xs text-ink-2">
                   <Check size={13} className="text-accent" /> {t('title.inLibrary')} · {STATUS_BY_VALUE[status].label}
                 </p>
+              )}
+              {/* Mes tags perso : discrets, visibles par moi seul */}
+              {item?.tags && item.tags.length > 0 && (
+                <ul className="mt-2 flex flex-wrap gap-1.5" aria-label={t('tags.label')}>
+                  {item.tags.map((tag) => (
+                    <li key={tag} className="rounded-full border border-line px-2 py-0.5 text-[11px] text-ink-3">
+                      #{tag}
+                    </li>
+                  ))}
+                </ul>
               )}
             </div>
           </div>
@@ -492,7 +522,7 @@ export default function TitleSheet({ item: initial, seed, onClose, onGoToSetting
           )}
 
           {/* Mon suivi : dates, plateforme, listes, revisionnages */}
-          {item && <Tracking item={item} lists={lists} onChange={(patch) => void update(item.id, patch)} />}
+          {item && <Tracking item={item} lists={lists} tagSuggestions={allTags(items)} onChange={changeTracking} />}
           </div>
           </div>
         </div>
@@ -685,7 +715,7 @@ function Synopsis({ text }: { text: string }) {
 }
 
 /** Dates, plateforme, listes et revisionnages : enregistrés dès qu'on les change. */
-function Tracking({ item, lists, onChange }: { item: MediaItem; lists: { id: string; name: string }[]; onChange: (p: Partial<MediaInput>) => void }) {
+function Tracking({ item, lists, tagSuggestions, onChange }: { item: MediaItem; lists: { id: string; name: string }[]; tagSuggestions: string[]; onChange: (p: Partial<MediaInput>) => void }) {
   const [open, setOpen] = useState(false)
   // Plus récent en premier (la sauvegarde les range dans l'autre sens)
   const rewatches = [...(item.rewatchDates ?? [])].sort().reverse()
@@ -736,6 +766,18 @@ function Tracking({ item, lists, onChange }: { item: MediaItem; lists: { id: str
               </div>
             )}
             <NewListForm onCreated={(l) => onChange({ listIds: [...(item.listIds ?? []), l.id] })} />
+          </div>
+          <div>
+            <span className="label">{t('tags.label')}</span>
+            <TagInput
+              value={item.tags ?? []}
+              onChange={(tags) => onChange({ tags: tags.length ? tags.slice(0, 30) : undefined })}
+              suggestions={tagSuggestions}
+              placeholder={t('tags.placeholder')}
+              normalize={(v) => cleanTag(v, tagSuggestions)}
+              showAll
+            />
+            <p className="mt-1.5 text-xs text-ink-3">{t('tags.private')}</p>
           </div>
           <div>
             <span className="label">{t('form.rewatches')}</span>
