@@ -1288,6 +1288,18 @@ const dict: Translations = {
   'challenges.more_few': "+ {count} تحديات أخرى",
   'challenges.more_many': "+ {count} تحديًا آخر",
   'challenges.more_other': "+ {count} تحدٍّ آخر",
+  // — Notifications push & indicateur hors-ligne —
+  'push.device': "الإشعارات على هذا الجهاز",
+  'push.deviceHint': "حتى عندما يكون التطبيق مغلقًا. تنطبق الخيارات أدناه أيضًا.",
+  'push.iosInstall': "على iPhone وiPad، أضف AzuuCine أولًا إلى الشاشة الرئيسية (iOS 16.4 أو أحدث)، ثم افتح التطبيق من أيقونته لتفعيل الإشعارات.",
+  'push.unsupported': "هذا المتصفح لا يدعم الإشعارات الفورية.",
+  'push.denied': "الإشعارات محظورة لهذا الموقع. اسمح بها من إعدادات المتصفح ثم حاول مجددًا.",
+  'push.notReady': "الإشعارات الفورية غير متاحة على الخادم بعد.",
+  'push.error': "تعذّر تفعيل الإشعارات. تحقق من اتصالك وحاول مجددًا.",
+  'netPill.offlineSync': "غير متصل — ستتم مزامنة تعديلاتك",
+  'netPill.offlineLocal': "غير متصل — كل شيء محفوظ على هذا الجهاز",
+  'netPill.synced': "تمت المزامنة",
+  'netPill.hide': "إخفاء",
 }
 
 export default dict

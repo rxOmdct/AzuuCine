@@ -1073,6 +1073,18 @@ const dict: Translations = {
   'challenges.startsIn_other': "Starts in {count} days",
   'challenges.more_one': "+ {count} more challenge",
   'challenges.more_other': "+ {count} more challenges",
+  // — Notifications push & indicateur hors-ligne —
+  'push.device': "Notifications on this device",
+  'push.deviceHint': "Even when the app is closed. The choices below apply too.",
+  'push.iosInstall': "On iPhone and iPad, first add AzuuCine to your Home Screen (iOS 16.4 or later), then open the app from its icon to turn on notifications.",
+  'push.unsupported': "This browser doesn’t support push notifications.",
+  'push.denied': "Notifications are blocked for this site. Allow them in your browser settings, then try again.",
+  'push.notReady': "Push notifications aren’t available on the server yet.",
+  'push.error': "Couldn’t turn on notifications. Check your connection and try again.",
+  'netPill.offlineSync': "Offline — your changes will sync",
+  'netPill.offlineLocal': "Offline — everything stays saved on this device",
+  'netPill.synced': "Synced",
+  'netPill.hide': "Hide",
 }
 
 export default dict

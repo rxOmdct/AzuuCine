@@ -3,6 +3,7 @@ import { LanguageSelect } from '../i18n/react'
 import { Check, Download, ExternalLink, Eye, EyeOff, HardDrive, Import, ShieldCheck, Smartphone, Trash2, Upload, UserX } from 'lucide-react'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import AccountSection from '../components/AccountSection'
+import PushToggle from '../components/PushToggle'
 import ConfirmDialog from '../components/ConfirmDialog'
 import ImportWizard from '../components/ImportWizard'
 import { PageHeader, SectionTitle } from '../components/ui'
@@ -311,6 +312,7 @@ export default function SettingsPage({ onOpenAdmin }: { onOpenAdmin: () => void 
         <>
           <SectionTitle>{t('settings.notifs')}</SectionTitle>
           <p className="mb-3 text-xs text-ink-3">{t('settings.notifsHint')}</p>
+          <PushToggle />
           <div className="card divide-y divide-line overflow-hidden">
             {NOTIF_PREFS.map(({ key, label }) => {
               const on = settings.notifPrefs?.[key] !== false

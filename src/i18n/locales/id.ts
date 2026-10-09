@@ -1073,6 +1073,18 @@ const dict: Translations = {
   'challenges.startsIn_other': "Mulai dalam {count} hari",
   'challenges.more_one': "+ {count} tantangan lain",
   'challenges.more_other': "+ {count} tantangan lain",
+  // — Notifications push & indicateur hors-ligne —
+  'push.device': "Notifikasi di perangkat ini",
+  'push.deviceHint': "Bahkan saat aplikasi ditutup. Pilihan di bawah juga berlaku.",
+  'push.iosInstall': "Di iPhone dan iPad, tambahkan dulu AzuuCine ke Layar Utama (iOS 16.4 atau lebih baru), lalu buka aplikasi dari ikonnya untuk mengaktifkan notifikasi.",
+  'push.unsupported': "Browser ini tidak mendukung notifikasi push.",
+  'push.denied': "Notifikasi diblokir untuk situs ini. Izinkan di pengaturan browser, lalu coba lagi.",
+  'push.notReady': "Notifikasi push belum tersedia di server.",
+  'push.error': "Tidak dapat mengaktifkan notifikasi. Periksa koneksimu dan coba lagi.",
+  'netPill.offlineSync': "Offline — perubahanmu akan disinkronkan",
+  'netPill.offlineLocal': "Offline — semuanya tetap tersimpan di perangkat ini",
+  'netPill.synced': "Tersinkron",
+  'netPill.hide': "Sembunyikan",
 }
 
 export default dict

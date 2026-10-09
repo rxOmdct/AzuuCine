@@ -1073,6 +1073,18 @@ const dict: Translations = {
   'challenges.startsIn_other': "{count}일 후 시작",
   'challenges.more_one': "+ 챌린지 {count}개 더",
   'challenges.more_other': "+ 챌린지 {count}개 더",
+  // — Notifications push & indicateur hors-ligne —
+  'push.device': "이 기기의 알림",
+  'push.deviceHint': "앱이 닫혀 있어도 받아요. 아래 선택 사항도 적용돼요.",
+  'push.iosInstall': "iPhone과 iPad에서는 먼저 AzuuCine을 홈 화면에 추가한 뒤(iOS 16.4 이상) 아이콘으로 앱을 열어 알림을 켜 주세요.",
+  'push.unsupported': "이 브라우저는 푸시 알림을 지원하지 않아요.",
+  'push.denied': "이 사이트의 알림이 차단되어 있어요. 브라우저 설정에서 허용한 뒤 다시 시도해 주세요.",
+  'push.notReady': "서버에서 아직 푸시 알림을 사용할 수 없어요.",
+  'push.error': "알림을 켜지 못했어요. 연결을 확인하고 다시 시도해 주세요.",
+  'netPill.offlineSync': "오프라인 — 변경 사항은 나중에 동기화돼요",
+  'netPill.offlineLocal': "오프라인 — 모든 내용이 이 기기에 저장돼 있어요",
+  'netPill.synced': "동기화됨",
+  'netPill.hide': "숨기기",
 }
 
 export default dict

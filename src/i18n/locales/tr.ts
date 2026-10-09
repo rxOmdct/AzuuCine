@@ -1073,6 +1073,18 @@ const dict: Translations = {
   'challenges.startsIn_other': "{count} gün sonra başlıyor",
   'challenges.more_one': "+ {count} hedef daha",
   'challenges.more_other': "+ {count} hedef daha",
+  // — Notifications push & indicateur hors-ligne —
+  'push.device': "Bu cihazda bildirimler",
+  'push.deviceHint': "Uygulama kapalıyken bile. Aşağıdaki seçimler de geçerlidir.",
+  'push.iosInstall': "iPhone ve iPad’de önce AzuuCine’i Ana Ekran’a ekle (iOS 16.4 veya üstü), ardından bildirimleri açmak için uygulamayı simgesinden aç.",
+  'push.unsupported': "Bu tarayıcı anlık bildirimleri desteklemiyor.",
+  'push.denied': "Bu site için bildirimler engellendi. Tarayıcı ayarlarından izin ver ve tekrar dene.",
+  'push.notReady': "Anlık bildirimler sunucuda henüz kullanılamıyor.",
+  'push.error': "Bildirimler açılamadı. Bağlantını kontrol edip tekrar dene.",
+  'netPill.offlineSync': "Çevrimdışı — değişikliklerin eşitlenecek",
+  'netPill.offlineLocal': "Çevrimdışı — her şey bu cihazda kayıtlı kalır",
+  'netPill.synced': "Eşitlendi",
+  'netPill.hide': "Gizle",
 }
 
 export default dict

@@ -1209,6 +1209,18 @@ const dict: Translations = {
   'challenges.more_few': "+ ещё {count} челленджа",
   'challenges.more_many': "+ ещё {count} челленджей",
   'challenges.more_other': "+ ещё {count} челленджа",
+  // — Notifications push & indicateur hors-ligne —
+  'push.device': "Уведомления на этом устройстве",
+  'push.deviceHint': "Даже когда приложение закрыто. Настройки ниже тоже действуют.",
+  'push.iosInstall': "На iPhone и iPad сначала добавьте AzuuCine на экран «Домой» (iOS 16.4 или новее), затем откройте приложение с его значка, чтобы включить уведомления.",
+  'push.unsupported': "Этот браузер не поддерживает push-уведомления.",
+  'push.denied': "Уведомления для этого сайта заблокированы. Разрешите их в настройках браузера и повторите попытку.",
+  'push.notReady': "Push-уведомления пока недоступны на сервере.",
+  'push.error': "Не удалось включить уведомления. Проверьте подключение и повторите попытку.",
+  'netPill.offlineSync': "Нет сети — изменения будут синхронизированы",
+  'netPill.offlineLocal': "Нет сети — всё сохранено на этом устройстве",
+  'netPill.synced': "Синхронизировано",
+  'netPill.hide': "Скрыть",
 }
 
 export default dict

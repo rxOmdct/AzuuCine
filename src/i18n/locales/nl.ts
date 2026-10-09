@@ -1073,6 +1073,18 @@ const dict: Translations = {
   'challenges.startsIn_other': "Begint over {count} dagen",
   'challenges.more_one': "+ {count} andere uitdaging",
   'challenges.more_other': "+ {count} andere uitdagingen",
+  // — Notifications push & indicateur hors-ligne —
+  'push.device': "Meldingen op dit apparaat",
+  'push.deviceHint': "Ook als de app gesloten is. De keuzes hieronder gelden ook.",
+  'push.iosInstall': "Voeg op iPhone en iPad AzuuCine eerst toe aan je beginscherm (iOS 16.4 of nieuwer) en open de app via het pictogram om meldingen aan te zetten.",
+  'push.unsupported': "Deze browser ondersteunt geen pushmeldingen.",
+  'push.denied': "Meldingen zijn geblokkeerd voor deze site. Sta ze toe in je browserinstellingen en probeer het opnieuw.",
+  'push.notReady': "Pushmeldingen zijn nog niet beschikbaar op de server.",
+  'push.error': "Kon meldingen niet aanzetten. Controleer je verbinding en probeer het opnieuw.",
+  'netPill.offlineSync': "Offline — je wijzigingen worden gesynchroniseerd",
+  'netPill.offlineLocal': "Offline — alles blijft op dit apparaat bewaard",
+  'netPill.synced': "Gesynchroniseerd",
+  'netPill.hide': "Verbergen",
 }
 
 export default dict

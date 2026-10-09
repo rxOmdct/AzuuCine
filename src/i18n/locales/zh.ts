@@ -1073,6 +1073,18 @@ const dict: Translations = {
   'challenges.startsIn_other': "{count} 天后开始",
   'challenges.more_one': "+ 另外 {count} 个挑战",
   'challenges.more_other': "+ 另外 {count} 个挑战",
+  // — Notifications push & indicateur hors-ligne —
+  'push.device': "此设备上的通知",
+  'push.deviceHint': "即使应用已关闭也会提醒。下方的选项同样适用。",
+  'push.iosInstall': "在 iPhone 和 iPad 上，请先将 AzuuCine 添加到主屏幕（iOS 16.4 或更高版本），再从图标打开应用以开启通知。",
+  'push.unsupported': "此浏览器不支持推送通知。",
+  'push.denied': "此网站的通知已被阻止。请在浏览器设置中允许后重试。",
+  'push.notReady': "服务器暂未开放推送通知。",
+  'push.error': "无法开启通知。请检查网络连接后重试。",
+  'netPill.offlineSync': "离线 — 你的修改将稍后同步",
+  'netPill.offlineLocal': "离线 — 所有内容都保存在此设备上",
+  'netPill.synced': "已同步",
+  'netPill.hide': "隐藏",
 }
 
 export default dict
