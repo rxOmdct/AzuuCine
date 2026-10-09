@@ -15,7 +15,8 @@ const PARAMS: Record<string, RegExp> = {
   query: /^[^\u0000-\u001f]{1,100}$/,
   include_adult: /^false$/,
   page: /^[1-9]\d?$/,
-  append_to_response: /^(watch\/providers|credits|release_dates)$/,
+  // Une ou plusieurs sous-réponses connues, séparées par des virgules (ex. « credits,watch/providers » pour la fiche)
+  append_to_response: /^(watch\/providers|credits|release_dates)(,(watch\/providers|credits|release_dates)){0,2}$/,
   region: /^[A-Z]{2}$/,
   'release_date.gte': /^\d{4}-\d{2}-\d{2}$/,
   'release_date.lte': /^\d{4}-\d{2}-\d{2}$/,

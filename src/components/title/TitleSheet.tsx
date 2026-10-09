@@ -25,6 +25,7 @@ import { RatingInput } from '../Rating'
 import SharePreview from '../SharePreview'
 import EditDetails from './EditDetails'
 import ReviewEditor from './ReviewEditor'
+import WhereToWatch from './WhereToWatch'
 
 /** Suivi « vide » d'un titre qu'on ajoute. */
 const BLANK: Pick<MediaInput, 'criteria' | 'episodesWatched' | 'genres'> = { criteria: {}, episodesWatched: 0, genres: [] }
@@ -470,6 +471,9 @@ export default function TitleSheet({ item: initial, seed, onClose, onGoToSetting
               )}
             </section>
           )}
+
+          {/* Où regarder (plateformes de streaming) */}
+          <WhereToWatch extras={extras} />
 
           {/* Casting */}
           {extras && extras.cast.length > 0 && (

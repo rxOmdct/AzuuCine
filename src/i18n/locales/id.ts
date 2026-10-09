@@ -897,6 +897,16 @@ const dict: Translations = {
   'sync.pending_one': "{count} perubahan menunggu",
   'sync.pending_other': "{count} perubahan menunggu",
   'sync.now': "Sinkronkan",
+  // — Où regarder —
+  'watch.title': "Tempat menonton",
+  'watch.flatrate': "Langganan",
+  'watch.free': "Gratis",
+  'watch.rent': "Sewa",
+  'watch.buy': "Beli",
+  'watch.country': "Negara",
+  'watch.none': "Tidak tersedia untuk streaming di negara ini.",
+  'watch.source': "Data dari JustWatch",
+  'watch.open': "Tonton di {name}",
 }
 
 export default dict

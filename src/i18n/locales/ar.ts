@@ -1035,6 +1035,16 @@ const dict: Translations = {
   'sync.pending_two': "تعديلان في الانتظار",
   'sync.pending_few': "{count} تعديلات في الانتظار",
   'sync.pending_many': "{count} تعديلًا في الانتظار",
+  // — Où regarder —
+  'watch.title': "أين تشاهد",
+  'watch.flatrate': "اشتراك",
+  'watch.free': "مجاني",
+  'watch.rent': "استئجار",
+  'watch.buy': "شراء",
+  'watch.country': "البلد",
+  'watch.none': "غير متاح للبث في هذا البلد.",
+  'watch.source': "البيانات من JustWatch",
+  'watch.open': "شاهد على {name}",
 }
 
 export default dict

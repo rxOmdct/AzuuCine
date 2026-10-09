@@ -897,6 +897,16 @@ const dict: Translations = {
   'sync.pending_one': "{count} बदलाव बाकी",
   'sync.pending_other': "{count} बदलाव बाकी",
   'sync.now': "अभी सिंक करें",
+  // — Où regarder —
+  'watch.title': "कहाँ देखें",
+  'watch.flatrate': "सब्सक्रिप्शन",
+  'watch.free': "मुफ़्त",
+  'watch.rent': "किराया",
+  'watch.buy': "खरीदें",
+  'watch.country': "देश",
+  'watch.none': "इस देश में स्ट्रीमिंग पर उपलब्ध नहीं।",
+  'watch.source': "डेटा: JustWatch",
+  'watch.open': "{name} पर देखें",
 }
 
 export default dict

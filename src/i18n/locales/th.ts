@@ -897,6 +897,16 @@ const dict: Translations = {
   'sync.pending_one': "รอซิงค์ {count} รายการ",
   'sync.pending_other': "รอซิงค์ {count} รายการ",
   'sync.now': "ซิงค์ตอนนี้",
+  // — Où regarder —
+  'watch.title': "ดูได้ที่ไหน",
+  'watch.flatrate': "สมัครสมาชิก",
+  'watch.free': "ฟรี",
+  'watch.rent': "เช่า",
+  'watch.buy': "ซื้อ",
+  'watch.country': "ประเทศ",
+  'watch.none': "ไม่มีให้สตรีมในประเทศนี้",
+  'watch.source': "ข้อมูลจาก JustWatch",
+  'watch.open': "ดูบน {name}",
 }
 
 export default dict

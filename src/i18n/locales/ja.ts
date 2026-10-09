@@ -897,6 +897,16 @@ const dict: Translations = {
   'sync.pending_one': "{count} 件の変更が保留中",
   'sync.pending_other': "{count} 件の変更が保留中",
   'sync.now': "今すぐ同期",
+  // — Où regarder —
+  'watch.title': "視聴方法",
+  'watch.flatrate': "定額見放題",
+  'watch.free': "無料",
+  'watch.rent': "レンタル",
+  'watch.buy': "購入",
+  'watch.country': "国",
+  'watch.none': "この国では配信されていません。",
+  'watch.source': "データ提供：JustWatch",
+  'watch.open': "{name}で見る",
 }
 
 export default dict

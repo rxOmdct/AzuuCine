@@ -6,6 +6,7 @@ import { subtypeLabel, tmdbGenres } from './genres'
 import { franchiseKey } from './franchise'
 import { cleanText, isSafeExternalId, isSafeTmdbPath, LIMITS, remoteImage, safeCountries, safeDay, safePosterUrl, safeSeasons, safeStringList } from './security'
 import { localDay } from './utils'
+import { parseAniListLinks, parseTmdbProviders, type StreamLink, type WatchRegion } from './watchProviders'
 
 /**
  * Recherche dans les bases publiques :
@@ -1041,6 +1042,10 @@ export interface TitleExtras {
   tagline?: string
   runtime?: number
   seasons?: number
+  /** Où regarder, par pays (TMDB / JustWatch). Absent = inconnu (ex. proxy pas encore à jour). */
+  watch?: Record<string, WatchRegion>
+  /** Liens directs vers les plateformes de streaming (AniList) */
+  streaming?: StreamLink[]
 }
 
 interface TmdbExtras {
@@ -1056,13 +1061,19 @@ interface TmdbExtras {
     cast?: { name?: string; character?: string; profile_path?: string | null; order?: number }[]
     crew?: { name?: string; job?: string }[]
   }
+  'watch/providers'?: unknown
 }
 
 const extrasCache = new Map<string, Promise<TitleExtras>>()
 
 async function tmdbExtras(externalId: string, key: string): Promise<TitleExtras> {
   const [, kind, id] = externalId.split(':') as ['tmdb', 'movie' | 'tv', string]
-  const d = await tmdbFetch<TmdbExtras>(`/${kind}/${id}`, key, { append_to_response: 'credits' })
+  // Une seule requête pour le casting et « Où regarder ». Si le proxy n'accepte pas encore la combinaison
+  // (fonction serveur pas redéployée), on retombe sur le casting seul.
+  const d = await tmdbFetch<TmdbExtras>(`/${kind}/${id}`, key, { append_to_response: 'credits,watch/providers' }).catch((e: unknown) => {
+    if (key.trim() !== CLOUD_TMDB) throw e
+    return tmdbFetch<TmdbExtras>(`/${kind}/${id}`, key, { append_to_response: 'credits' })
+  })
   const cast = (Array.isArray(d.credits?.cast) ? d.credits!.cast! : [])
     .slice()
     .sort((a, b) => (a.order ?? 99) - (b.order ?? 99))
@@ -1088,6 +1099,7 @@ async function tmdbExtras(externalId: string, key: string): Promise<TitleExtras>
     tagline: cleanText(d.tagline, 200),
     runtime: count(kind === 'movie' ? d.runtime : d.episode_run_time?.[0], 6000),
     seasons: kind === 'tv' ? count(d.number_of_seasons, 500) : undefined,
+    watch: parseTmdbProviders(d['watch/providers']),
   }
 }
 
@@ -1105,6 +1117,7 @@ query ($id: Int) {
       }
     }
     staff(sort: [RELEVANCE], perPage: 12) { edges { role node { name { full } } } }
+    externalLinks { site url type language color icon }
   }
 }`
 
@@ -1115,6 +1128,7 @@ interface AniExtras {
   stats?: { scoreDistribution?: { score?: number; amount?: number }[] | null } | null
   characters?: { edges?: { node?: { name?: { full?: string }; image?: { medium?: string } }; voiceActors?: { name?: { full?: string } }[] }[] } | null
   staff?: { edges?: { role?: string; node?: { name?: { full?: string } } }[] } | null
+  externalLinks?: unknown
 }
 
 async function aniListExtras(externalId: string): Promise<TitleExtras> {
@@ -1153,6 +1167,7 @@ async function aniListExtras(externalId: string): Promise<TitleExtras> {
     directors: names(staff.filter((s) => /^Director$/i.test(s.role ?? '')).map((s) => s.node?.name?.full), 3),
     directorKind: 'director',
     runtime: count(m.duration, 6000),
+    streaming: parseAniListLinks(m.externalLinks),
   }
 }
 

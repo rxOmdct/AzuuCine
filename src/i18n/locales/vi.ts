@@ -897,6 +897,16 @@ const dict: Translations = {
   'sync.pending_one': "{count} thay đổi đang chờ",
   'sync.pending_other': "{count} thay đổi đang chờ",
   'sync.now': "Đồng bộ ngay",
+  // — Où regarder —
+  'watch.title': "Xem ở đâu",
+  'watch.flatrate': "Gói thuê bao",
+  'watch.free': "Miễn phí",
+  'watch.rent': "Thuê",
+  'watch.buy': "Mua",
+  'watch.country': "Quốc gia",
+  'watch.none': "Không có trên nền tảng streaming ở quốc gia này.",
+  'watch.source': "Dữ liệu từ JustWatch",
+  'watch.open': "Xem trên {name}",
 }
 
 export default dict

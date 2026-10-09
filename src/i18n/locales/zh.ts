@@ -897,6 +897,16 @@ const dict: Translations = {
   'sync.pending_one': "{count} 项更改待上传",
   'sync.pending_other': "{count} 项更改待上传",
   'sync.now': "立即同步",
+  // — Où regarder —
+  'watch.title': "在哪里看",
+  'watch.flatrate': "订阅",
+  'watch.free': "免费",
+  'watch.rent': "租借",
+  'watch.buy': "购买",
+  'watch.country': "国家/地区",
+  'watch.none': "该国家/地区暂无在线播放。",
+  'watch.source': "数据来自 JustWatch",
+  'watch.open': "在 {name} 观看",
 }
 
 export default dict

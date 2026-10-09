@@ -897,6 +897,16 @@ const dict: Translations = {
   'sync.pending_one': "변경 {count}개 대기 중",
   'sync.pending_other': "변경 {count}개 대기 중",
   'sync.now': "지금 동기화",
+  // — Où regarder —
+  'watch.title': "볼 수 있는 곳",
+  'watch.flatrate': "구독",
+  'watch.free': "무료",
+  'watch.rent': "대여",
+  'watch.buy': "구매",
+  'watch.country': "국가",
+  'watch.none': "이 국가에서는 스트리밍되지 않아요.",
+  'watch.source': "데이터 제공: JustWatch",
+  'watch.open': "{name}에서 보기",
 }
 
 export default dict

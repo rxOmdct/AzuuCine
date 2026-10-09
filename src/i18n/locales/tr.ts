@@ -897,6 +897,16 @@ const dict: Translations = {
   'sync.pending_one': "{count} değişiklik bekliyor",
   'sync.pending_other': "{count} değişiklik bekliyor",
   'sync.now': "Şimdi eşitle",
+  // — Où regarder —
+  'watch.title': "Nerede izlenir",
+  'watch.flatrate': "Abonelik",
+  'watch.free': "Ücretsiz",
+  'watch.rent': "Kiralık",
+  'watch.buy': "Satın al",
+  'watch.country': "Ülke",
+  'watch.none': "Bu ülkede yayın platformlarında yok.",
+  'watch.source': "Veriler: JustWatch",
+  'watch.open': "{name} üzerinde izle",
 }
 
 export default dict

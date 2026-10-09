@@ -899,6 +899,16 @@ const dict = {
   'sync.pending_one': "{count} modification en attente",
   'sync.pending_other': "{count} modifications en attente",
   'sync.now': "Synchroniser",
+  // — Où regarder —
+  'watch.title': "Où regarder",
+  'watch.flatrate': "Abonnement",
+  'watch.free': "Gratuit",
+  'watch.rent': "Location",
+  'watch.buy': "Achat",
+  'watch.country': "Pays",
+  'watch.none': "Pas disponible en streaming dans ce pays.",
+  'watch.source': "Données JustWatch",
+  'watch.open': "Regarder sur {name}",
 }
 
 export default dict

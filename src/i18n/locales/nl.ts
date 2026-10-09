@@ -897,6 +897,16 @@ const dict: Translations = {
   'sync.pending_one': "{count} wijziging in wachtrij",
   'sync.pending_other': "{count} wijzigingen in wachtrij",
   'sync.now': "Nu synchroniseren",
+  // — Où regarder —
+  'watch.title': "Waar te kijken",
+  'watch.flatrate': "Abonnement",
+  'watch.free': "Gratis",
+  'watch.rent': "Huren",
+  'watch.buy': "Kopen",
+  'watch.country': "Land",
+  'watch.none': "Niet te streamen in dit land.",
+  'watch.source': "Gegevens van JustWatch",
+  'watch.open': "Kijk op {name}",
 }
 
 export default dict
