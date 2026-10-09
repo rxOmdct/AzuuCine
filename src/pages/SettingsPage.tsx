@@ -1,9 +1,10 @@
 import { t } from '../i18n'
 import { LanguageSelect } from '../i18n/react'
-import { Check, Download, ExternalLink, Eye, EyeOff, HardDrive, ShieldCheck, Smartphone, Trash2, Upload, UserX } from 'lucide-react'
+import { Check, Download, ExternalLink, Eye, EyeOff, HardDrive, Import, ShieldCheck, Smartphone, Trash2, Upload, UserX } from 'lucide-react'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import AccountSection from '../components/AccountSection'
 import ConfirmDialog from '../components/ConfirmDialog'
+import ImportWizard from '../components/ImportWizard'
 import { PageHeader, SectionTitle } from '../components/ui'
 import { exportBackup, parseBackupFile, type ParsedBackup } from '../lib/backup'
 import { testTmdbKey } from '../lib/catalogApi'
@@ -151,6 +152,7 @@ export default function SettingsPage({ onOpenAdmin }: { onOpenAdmin: () => void 
     setMessage({ kind: 'ok', text: t('settings.cleared') })
   }
 
+  const [showImport, setShowImport] = useState(false)
   const [showInstall, setShowInstall] = useState(false)
   useEscape(() => setShowInstall(false), showInstall)
   useBackToClose(() => setShowInstall(false), showInstall)
@@ -443,7 +445,9 @@ export default function SettingsPage({ onOpenAdmin }: { onOpenAdmin: () => void 
         <Row icon={<Download size={19} />} title={t('settings.export')} hint={t('settings.exportHint', { count: items.length })} onClick={onExport} />
         <Row icon={<Upload size={19} />} title={t('settings.import')} hint={t('settings.importHint')} onClick={() => fileRef.current?.click()} />
         <input ref={fileRef} type="file" accept="application/json,.json" hidden onChange={(e) => onFile(e.target.files?.[0])} />
+        <Row icon={<Import size={19} />} title={t('import.row')} hint={t('import.rowHint')} onClick={() => setShowImport(true)} />
       </div>
+      {showImport && <ImportWizard onClose={() => setShowImport(false)} />}
 
       {pending && (
         <div className="card mt-3 space-y-3 border-ink p-4">
