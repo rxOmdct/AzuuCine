@@ -11,6 +11,7 @@ import { useMedia } from '../../store'
 import type { MediaInput, MediaItem } from '../../types'
 import { StatusPill, TypeBadge } from '../Badges'
 import Poster from '../Poster'
+import ReportButton from '../moderation/ReportButton'
 import Avatar from './Avatar'
 import Reactions from './Reactions'
 import { useEscape } from '../../lib/escape'
@@ -120,6 +121,7 @@ export default function ItemPeek({ item, owner, onClose }: { item: MediaItem; ow
                   {formatRating(item.rating, settings.ratingScale)}
                 </span>
               )}
+              {canReact && review && <ReportButton target={{ type: 'review', id: review.item_id, userId: review.user_id }} className="-me-1.5 size-8" size={16} />}
             </div>
             <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ink-3">
               <StatusPill status={item.status} />

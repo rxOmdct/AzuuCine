@@ -1,4 +1,4 @@
-import { Check, Loader2, Lock, Share2, Star, UserPlus } from 'lucide-react'
+import { Ban, Check, Loader2, Lock, Share2, Star, UserCheck, UserPlus } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { fmtNumber, t } from '../../i18n'
 import { follow, getProfile, getProfileItems, profileLink, unfollow, type Profile } from '../../lib/cloud/social'
@@ -7,6 +7,8 @@ import { cx, formatRating } from '../../lib/utils'
 import { useMedia } from '../../store'
 import type { MediaItem, WatchStatus } from '../../types'
 import ConfirmDialog from '../ConfirmDialog'
+import ReportButton from '../moderation/ReportButton'
+import { blockUser, unblockUser, useBlocked } from '../../lib/cloud/moderation'
 import Poster from '../Poster'
 import { EmptyState, SectionTitle } from '../ui'
 import Avatar from './Avatar'
@@ -58,6 +60,9 @@ export default function ProfileView({ username, onClose }: { username: string; o
   const [busy, setBusy] = useState(false)
   const [confirmUnfollow, setConfirmUnfollow] = useState(false)
   const [toast, setToast] = useState<string>()
+  const [confirmBlock, setConfirmBlock] = useState(false)
+  const { isBlocked } = useBlocked(!!profile && !profile.isMe)
+  const blocked = !!profile && !profile.isMe && isBlocked(profile.id)
 
   const load = useCallback(async () => {
     setError(undefined)
@@ -132,6 +137,36 @@ export default function ProfileView({ username, onClose }: { username: string; o
     }
   }
 
+  // Bloquer : il ne peut plus me suivre ni réagir à mes avis ; ses avis me sont masqués
+  const doBlock = async () => {
+    if (!profile) return
+    setConfirmBlock(false)
+    setBusy(true)
+    try {
+      await blockUser({ id: profile.id, username: profile.username, displayName: profile.displayName, avatarUrl: profile.avatarUrl })
+      await load()
+      void social.refresh()
+      setToast(t('block.done', { name: profile.displayName }))
+    } catch (e) {
+      setToast((e as Error).message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const doUnblock = async () => {
+    if (!profile) return
+    setBusy(true)
+    try {
+      await unblockUser(profile.id)
+      setToast(t('block.undone', { name: profile.displayName }))
+    } catch (e) {
+      setToast((e as Error).message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
   const topByCategory = useMemo(() => {
     const out: { label: string; items: MediaItem[] }[] = []
     // Mon profil : mes réglages locaux font foi tout de suite (même avant la synchro)
@@ -179,26 +214,43 @@ export default function ProfileView({ username, onClose }: { username: string; o
                   {t('social.editProfile')}
                 </button>
               ) : (
-                <button
-                  onClick={toggleFollow}
-                  disabled={busy}
-                  className={cx('btn mb-1 px-4 py-2 text-sm', profile.relation === 'none' ? 'btn-primary' : 'btn-ghost')}
-                >
-                  {busy ? (
-                    <Loader2 size={15} className="animate-spin" />
-                  ) : profile.relation === 'accepted' ? (
-                    <Check size={15} />
-                  ) : profile.relation === 'none' ? (
-                    <UserPlus size={15} />
-                  ) : null}
-                  {profile.relation === 'accepted'
-                    ? t('social.following')
-                    : profile.relation === 'pending'
-                      ? t('social.requested')
-                      : profile.followsMe
-                        ? t('social.followBack')
-                        : t('social.follow')}
-                </button>
+                <div className="mb-1 flex items-center gap-1">
+                  {blocked ? (
+                    <button onClick={doUnblock} disabled={busy} className="btn btn-ghost px-4 py-2 text-sm">
+                      {busy ? <Loader2 size={15} className="animate-spin" /> : <UserCheck size={15} />}
+                      {t('block.unblock')}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={toggleFollow}
+                      disabled={busy}
+                      className={cx('btn px-4 py-2 text-sm', profile.relation === 'none' ? 'btn-primary' : 'btn-ghost')}
+                    >
+                      {busy ? (
+                        <Loader2 size={15} className="animate-spin" />
+                      ) : profile.relation === 'accepted' ? (
+                        <Check size={15} />
+                      ) : profile.relation === 'none' ? (
+                        <UserPlus size={15} />
+                      ) : null}
+                      {profile.relation === 'accepted'
+                        ? t('social.following')
+                        : profile.relation === 'pending'
+                          ? t('social.requested')
+                          : profile.followsMe
+                            ? t('social.followBack')
+                            : t('social.follow')}
+                    </button>
+                  )}
+                  <ReportButton
+                    target={{ type: 'profile', id: profile.id, userId: profile.id }}
+                    actions={[
+                      blocked
+                        ? { icon: <UserCheck size={18} />, label: t('block.unblock'), onClick: () => void doUnblock() }
+                        : { icon: <Ban size={18} />, label: t('block.block'), onClick: () => setConfirmBlock(true) },
+                    ]}
+                  />
+                </div>
               )}
             </div>
 
@@ -213,6 +265,12 @@ export default function ProfileView({ username, onClose }: { username: string; o
               )}
             </p>
             {profile.bio && <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-ink-2 lg:max-w-3xl lg:text-base">{profile.bio}</p>}
+            {blocked && (
+              <p className="mt-4 flex items-start gap-2.5 rounded-2xl border border-line px-4 py-3 text-sm text-ink-2 lg:max-w-2xl">
+                <Ban size={16} className="mt-0.5 shrink-0 text-accent" />
+                {t('block.notice')}
+              </p>
+            )}
 
             <div className="mt-5 flex divide-x divide-line rounded-2xl border border-line py-3 lg:max-w-2xl">
               <Stat value={profile.visible ? (profile.stats?.finished ?? 0) : undefined} label={t('social.seen')} />
@@ -262,6 +320,14 @@ export default function ProfileView({ username, onClose }: { username: string; o
           {toast}
         </p>
       )}
+      <ConfirmDialog
+        open={confirmBlock}
+        title={t('block.confirmTitle', { name: profile?.displayName ?? '' })}
+        message={t('block.confirmText')}
+        confirmLabel={t('block.block')}
+        onConfirm={doBlock}
+        onCancel={() => setConfirmBlock(false)}
+      />
       <ConfirmDialog
         open={confirmUnfollow}
         title={profile?.relation === 'pending' ? t('social.cancelRequestTitle') : t('social.unfollowTitle', { name: profile?.displayName ?? '' })}
