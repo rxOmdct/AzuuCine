@@ -7,6 +7,7 @@ import Avatar from '../components/social/Avatar'
 import FriendsFeed from '../components/social/FriendsFeed'
 import Poster from '../components/Poster'
 import TopFive from '../components/TopFive'
+import ChallengesCard from '../components/challenges/ChallengesCard'
 import Recommendations from '../components/Recommendations'
 import HomeHero, { ContinueCard } from '../components/HomeHero'
 import type { Tab } from '../components/BottomNav'
@@ -240,6 +241,8 @@ export default function HomePage({ onOpen, onAdd, onNavigate, onRoulette, onCale
               </div>
             </>
           )}
+
+          <ChallengesCard onOpen={onOpen} />
 
           {toWatch.length > 0 && (
             <>

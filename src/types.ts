@@ -55,6 +55,8 @@ export interface MediaItem {
   rewatchDates?: string[]
   /** Note moyenne du public sur 10 (TMDB ou AniList). */
   publicRating?: number
+  /** Épisodes cochés par jour (AAAA-MM-JJ → nombre), pour les défis. Privé (retiré des profils publics). */
+  episodeLog?: Record<string, number>
 
   createdAt: string // ISO
   updatedAt: string // ISO
@@ -88,6 +90,24 @@ export interface Settings {
   themeMode: ThemeMode
   /** Notifications reçues (true par défaut si absent). Nécessite un compte. */
   notifPrefs?: NotifPrefs
+  /** Défis de visionnage (synchronisés avec les réglages, privés). */
+  challenges?: Challenge[]
+}
+
+/** Défi : « voir N films en 2026 », « 20 épisodes cette semaine »… */
+export interface Challenge {
+  id: string
+  /** Objectif (quantité) */
+  target: number
+  media: MediaType | 'all'
+  /** Titres terminés ou épisodes vus */
+  unit: 'titles' | 'episodes'
+  period: 'week' | 'month' | 'year' | 'custom'
+  /** Bornes incluses, AAAA-MM-JJ */
+  start: string
+  end: string
+  name?: string
+  archived?: boolean
 }
 
 /** Types de notifications que l'on choisit de recevoir (true par défaut). */

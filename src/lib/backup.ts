@@ -19,6 +19,7 @@ import {
   safeStringList,
 } from './security'
 import { todayISO, uid } from './utils'
+import { normalizeChallenges, normalizeEpisodeLog } from './challenges'
 
 const TYPES = new Set<string>(MEDIA_TYPES.map((t) => t.value))
 const STATUS_SET = new Set<string>(STATUSES.map((s) => s.value))
@@ -113,6 +114,7 @@ export function normalizeItem(raw: unknown): MediaItem | null {
     listIds: listIds.length ? listIds : undefined,
     countries: safeCountries(r.countries),
     rewatchDates: safeDates(r.rewatchDates),
+    episodeLog: normalizeEpisodeLog(r.episodeLog),
     publicRating: (() => {
       const n = num(r.publicRating, 0, 10)
       return n ? Math.round(n * 10) / 10 : undefined
@@ -135,6 +137,8 @@ export function normalizeSettings(raw: unknown): Partial<Settings> | undefined {
     for (const k of ['episodes', 'follows', 'accepted', 'reactions'] as const) if (typeof raw.notifPrefs[k] === 'boolean') np[k] = raw.notifPrefs[k] as boolean
     out.notifPrefs = np
   }
+  const challenges = normalizeChallenges(raw.challenges)
+  if (challenges) out.challenges = challenges
   return out
 }
 
