@@ -897,6 +897,18 @@ const dict: Translations = {
   'sync.pending_one': "{count} thay đổi đang chờ",
   'sync.pending_other': "{count} thay đổi đang chờ",
   'sync.now': "Đồng bộ ngay",
+  // — Notifications push & indicateur hors-ligne —
+  'push.device': "Thông báo trên thiết bị này",
+  'push.deviceHint': "Ngay cả khi ứng dụng đã đóng. Các lựa chọn bên dưới cũng được áp dụng.",
+  'push.iosInstall': "Trên iPhone và iPad, trước tiên hãy thêm AzuuCine vào Màn hình chính (iOS 16.4 trở lên), sau đó mở ứng dụng từ biểu tượng để bật thông báo.",
+  'push.unsupported': "Trình duyệt này không hỗ trợ thông báo đẩy.",
+  'push.denied': "Thông báo đã bị chặn cho trang này. Hãy cho phép trong cài đặt trình duyệt rồi thử lại.",
+  'push.notReady': "Máy chủ chưa hỗ trợ thông báo đẩy.",
+  'push.error': "Không thể bật thông báo. Kiểm tra kết nối rồi thử lại.",
+  'netPill.offlineSync': "Ngoại tuyến — thay đổi của bạn sẽ được đồng bộ",
+  'netPill.offlineLocal': "Ngoại tuyến — mọi thứ vẫn được lưu trên thiết bị này",
+  'netPill.synced': "Đã đồng bộ",
+  'netPill.hide': "Ẩn",
 }
 
 export default dict

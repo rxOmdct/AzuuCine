@@ -9,6 +9,7 @@ import { createSync, type SyncEngine, type SyncStatus } from './lib/cloud/sync'
 import { deleteDatabase, readOtherDatabase } from './lib/db'
 import { cloudFetch } from './lib/cloud/api'
 import { signOut } from './lib/cloud/auth'
+import { disablePush, forgetPushLocally } from './lib/push'
 import { dbNameFor, scopedKey } from './lib/scope'
 import { isPlainObject, LIMITS, readStorage, storageGet, storageSet } from './lib/security'
 import { mediaDB, requestPersistentStorage } from './lib/db'
@@ -396,6 +397,8 @@ export function MediaProvider({ children, cloudUser }: { children: ReactNode; cl
         if (engine && navigator.onLine) await engine.syncNow()
         if (!force && engine && engine.status().pending > 0) return 'pending'
         engine?.stop()
+        // Cet appareil ne doit plus recevoir les notifications push de ce compte
+        await disablePush().catch(() => {})
         await wipeAccountFromDevice(userId)
         await signOut()
         return 'done'
@@ -408,6 +411,7 @@ export function MediaProvider({ children, cloudUser }: { children: ReactNode; cl
         })
         if (!res.ok) throw new Error(res.status === 429 ? t('account.err.deleteRate') : t('account.err.delete'))
         syncRef.current?.stop()
+        await forgetPushLocally().catch(() => {})
         await wipeAccountFromDevice(userId)
         await signOut()
       },

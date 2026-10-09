@@ -897,6 +897,18 @@ const dict: Translations = {
   'sync.pending_one': "{count} wijziging in wachtrij",
   'sync.pending_other': "{count} wijzigingen in wachtrij",
   'sync.now': "Nu synchroniseren",
+  // — Notifications push & indicateur hors-ligne —
+  'push.device': "Meldingen op dit apparaat",
+  'push.deviceHint': "Ook als de app gesloten is. De keuzes hieronder gelden ook.",
+  'push.iosInstall': "Voeg op iPhone en iPad AzuuCine eerst toe aan je beginscherm (iOS 16.4 of nieuwer) en open de app via het pictogram om meldingen aan te zetten.",
+  'push.unsupported': "Deze browser ondersteunt geen pushmeldingen.",
+  'push.denied': "Meldingen zijn geblokkeerd voor deze site. Sta ze toe in je browserinstellingen en probeer het opnieuw.",
+  'push.notReady': "Pushmeldingen zijn nog niet beschikbaar op de server.",
+  'push.error': "Kon meldingen niet aanzetten. Controleer je verbinding en probeer het opnieuw.",
+  'netPill.offlineSync': "Offline — je wijzigingen worden gesynchroniseerd",
+  'netPill.offlineLocal': "Offline — alles blijft op dit apparaat bewaard",
+  'netPill.synced': "Gesynchroniseerd",
+  'netPill.hide': "Verbergen",
 }
 
 export default dict

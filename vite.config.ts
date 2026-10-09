@@ -3,6 +3,10 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
+// Gestion des notifications push (public/push-sw.js), ajoutée au service worker généré.
+// La date de build dans l'adresse fait changer sw.js à chaque version : push-sw.js est toujours rechargé.
+const pushSwVersion = Date.now().toString(36)
+
 /**
  * Politique de sécurité du contenu (CSP) : le navigateur n'exécute que les scripts de l'app,
  * et ne contacte que TMDB / AniList. Même si une donnée piégée arrivait à s'afficher,
@@ -55,6 +59,8 @@ function contentSecurityPolicy(supabaseUrl: string): Plugin {
           '# Le service worker doit toujours être revérifié pour que les mises à jour arrivent',
           '/sw.js',
           '  Cache-Control: no-cache',
+          '/push-sw.js',
+          '  Cache-Control: no-cache',
           '',
         ].join('\n'),
       })
@@ -105,6 +111,7 @@ export default defineConfig(({ mode }) => {
         ],
       },
       workbox: {
+        importScripts: [`push-sw.js?v=${pushSwVersion}`],
         globPatterns: ['**/*.{js,css,html,svg,png,ico,webmanifest,woff2}'],
         // L'app vit entièrement sur « / » (routes après le #) : toute autre adresse reçoit la page 404 du serveur
         navigateFallbackAllowlist: [/^\/(?:index\.html)?(?:\?.*)?$/],

@@ -897,6 +897,18 @@ const dict: Translations = {
   'sync.pending_one': "{count} 件の変更が保留中",
   'sync.pending_other': "{count} 件の変更が保留中",
   'sync.now': "今すぐ同期",
+  // — Notifications push & indicateur hors-ligne —
+  'push.device': "このデバイスの通知",
+  'push.deviceHint': "アプリを閉じていても届きます。下の設定も適用されます。",
+  'push.iosInstall': "iPhone・iPad では、まず AzuuCine をホーム画面に追加し（iOS 16.4 以降）、アイコンからアプリを開いて通知をオンにしてください。",
+  'push.unsupported': "このブラウザはプッシュ通知に対応していません。",
+  'push.denied': "このサイトの通知はブロックされています。ブラウザの設定で許可してから、もう一度お試しください。",
+  'push.notReady': "プッシュ通知はまだサーバーで利用できません。",
+  'push.error': "通知をオンにできませんでした。接続を確認して、もう一度お試しください。",
+  'netPill.offlineSync': "オフライン — 変更は後で同期されます",
+  'netPill.offlineLocal': "オフライン — すべてこのデバイスに保存されています",
+  'netPill.synced': "同期済み",
+  'netPill.hide': "閉じる",
 }
 
 export default dict

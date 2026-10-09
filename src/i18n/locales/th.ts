@@ -897,6 +897,18 @@ const dict: Translations = {
   'sync.pending_one': "รอซิงค์ {count} รายการ",
   'sync.pending_other': "รอซิงค์ {count} รายการ",
   'sync.now': "ซิงค์ตอนนี้",
+  // — Notifications push & indicateur hors-ligne —
+  'push.device': "การแจ้งเตือนบนอุปกรณ์นี้",
+  'push.deviceHint': "แม้ปิดแอปอยู่ ตัวเลือกด้านล่างก็มีผลด้วย",
+  'push.iosInstall': "บน iPhone และ iPad ให้เพิ่ม AzuuCine ไปยังหน้าจอโฮมก่อน (iOS 16.4 ขึ้นไป) แล้วเปิดแอปจากไอคอนเพื่อเปิดการแจ้งเตือน",
+  'push.unsupported': "เบราว์เซอร์นี้ไม่รองรับการแจ้งเตือนแบบพุช",
+  'push.denied': "การแจ้งเตือนถูกบล็อกสำหรับเว็บไซต์นี้ อนุญาตในการตั้งค่าเบราว์เซอร์แล้วลองอีกครั้ง",
+  'push.notReady': "เซิร์ฟเวอร์ยังไม่พร้อมสำหรับการแจ้งเตือนแบบพุช",
+  'push.error': "เปิดการแจ้งเตือนไม่สำเร็จ ตรวจสอบการเชื่อมต่อแล้วลองอีกครั้ง",
+  'netPill.offlineSync': "ออฟไลน์ — การเปลี่ยนแปลงจะซิงค์ภายหลัง",
+  'netPill.offlineLocal': "ออฟไลน์ — ทุกอย่างยังบันทึกอยู่ในอุปกรณ์นี้",
+  'netPill.synced': "ซิงค์แล้ว",
+  'netPill.hide': "ซ่อน",
 }
 
 export default dict

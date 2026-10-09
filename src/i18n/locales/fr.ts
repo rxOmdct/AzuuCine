@@ -899,6 +899,18 @@ const dict = {
   'sync.pending_one': "{count} modification en attente",
   'sync.pending_other': "{count} modifications en attente",
   'sync.now': "Synchroniser",
+  // — Notifications push & indicateur hors-ligne —
+  'push.device': "Notifications sur cet appareil",
+  'push.deviceHint': "Même quand l’app est fermée. Les choix ci-dessous s’appliquent aussi.",
+  'push.iosInstall': "Sur iPhone et iPad, ajoute d’abord AzuuCine à l’écran d’accueil (iOS 16.4 ou plus récent), puis ouvre l’app depuis son icône pour activer les notifications.",
+  'push.unsupported': "Ce navigateur ne gère pas les notifications push.",
+  'push.denied': "Notifications bloquées pour ce site. Autorise-les dans les réglages du navigateur, puis réessaie.",
+  'push.notReady': "Les notifications push ne sont pas encore disponibles sur le serveur.",
+  'push.error': "Impossible d’activer les notifications. Vérifie ta connexion et réessaie.",
+  'netPill.offlineSync': "Hors ligne — tes modifs seront synchronisées",
+  'netPill.offlineLocal': "Hors ligne — tout reste enregistré sur cet appareil",
+  'netPill.synced': "Synchronisé",
+  'netPill.hide': "Masquer",
 }
 
 export default dict

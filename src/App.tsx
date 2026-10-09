@@ -13,6 +13,8 @@ import StatsPage from './pages/StatsPage'
 import SettingsPage from './pages/SettingsPage'
 import AdminPage from './pages/AdminPage'
 import NotFoundPage from './pages/NotFoundPage'
+import PushBridge from './components/PushBridge'
+import SyncIndicator from './components/SyncIndicator'
 import { useMedia } from './store'
 import type { SearchResult } from './lib/catalogApi'
 import type { MediaItem } from './types'
@@ -81,6 +83,8 @@ export default function App() {
       </main>
 
       <BottomNav current={navTab} onChange={go} onAdd={openNew} />
+      <SyncIndicator />
+      <PushBridge />
 
       {roulette && <Roulette onClose={() => setRoulette(false)} onOpen={openItem} />}
       {calendar && <CalendarView onClose={() => setCalendar(false)} onOpen={openItem} />}
