@@ -12,13 +12,19 @@ const publicKey = b64url(await crypto.subtle.exportKey('raw', pair.publicKey))
 const { d: privateKey } = await crypto.subtle.exportKey('jwk', pair.privateKey)
 const webhookSecret = b64url(crypto.getRandomValues(new Uint8Array(32)))
 
-console.log(`# Clés VAPID et secret du webhook — à garder secrètes (sauf VAPID_PUBLIC_KEY)
-# 1) Secrets des fonctions Supabase (Dashboard → Edge Functions → Secrets, ou en ligne de commande) :
-supabase secrets set VAPID_PUBLIC_KEY=${publicKey}
-supabase secrets set VAPID_PRIVATE_KEY=${privateKey}
-supabase secrets set VAPID_SUBJECT=mailto:ton-adresse@example.com
-supabase secrets set PUSH_WEBHOOK_SECRET=${webhookSecret}
+console.log(`
+=== 1) Supabase → Edge Functions → Secrets : 4 secrets (Nom = à gauche, Valeur = à droite) ===
+(un secret qui existe déjà : le remplacer par cette nouvelle valeur)
 
-# 2) Le même PUSH_WEBHOOK_SECRET dans Supabase Vault (SQL Editor) :
-select vault.create_secret('${webhookSecret}', 'azuu_push_secret');
+  VAPID_PUBLIC_KEY      ${publicKey}
+  VAPID_PRIVATE_KEY     ${privateKey}
+  VAPID_SUBJECT         mailto:ton-adresse@example.com   (mets ton adresse)
+  PUSH_WEBHOOK_SECRET   ${webhookSecret}
+
+=== 2) Supabase → SQL Editor : coller CETTE ligne telle quelle, puis Run ===
+
+do $$ begin if exists (select 1 from vault.secrets where name = 'azuu_push_secret') then perform vault.update_secret((select id from vault.secrets where name = 'azuu_push_secret'), '${webhookSecret}'); else perform vault.create_secret('${webhookSecret}', 'azuu_push_secret'); end if; end $$;
+
+Ces valeurs sont secrètes (sauf VAPID_PUBLIC_KEY) : ne les colle nulle part ailleurs.
+Chaque lancement du script crée de NOUVELLES valeurs : les étapes 1 et 2 doivent venir du même lancement.
 `)
