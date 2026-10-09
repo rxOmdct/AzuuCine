@@ -1,5 +1,5 @@
 // Textes courts des notifications push, dans la langue choisie sur l'appareil à l'inscription.
-// Variables : {name} (auteur), {emoji}, {n} (numéro d'épisode), {count}.
+// Variables : {name} (auteur), {emoji}, {n} (numéro d'épisode), {count}, {list} (nom de liste).
 
 export interface PushTexts {
   followRequest: string
@@ -10,6 +10,8 @@ export interface PushTexts {
   season: string
   episodesTitle: string
   many: string
+  comment: string
+  listInvite: string
 }
 
 export const MESSAGES: Record<string, PushTexts> = {
@@ -22,6 +24,8 @@ export const MESSAGES: Record<string, PushTexts> = {
     season: 'Nouvelle saison disponible',
     episodesTitle: 'Nouveaux épisodes',
     many: 'Nouvelles notifications : {count}',
+    comment: '{name} a commenté ton avis',
+    listInvite: "{name} t'invite dans la liste « {list} »",
   },
   en: {
     followRequest: '{name} wants to follow you',
@@ -32,6 +36,8 @@ export const MESSAGES: Record<string, PushTexts> = {
     season: 'New season is out',
     episodesTitle: 'New episodes',
     many: 'New notifications: {count}',
+    comment: '{name} commented on your review',
+    listInvite: '{name} invited you to the list “{list}”',
   },
   es: {
     followRequest: '{name} quiere seguirte',
@@ -42,6 +48,8 @@ export const MESSAGES: Record<string, PushTexts> = {
     season: 'Nueva temporada disponible',
     episodesTitle: 'Nuevos episodios',
     many: 'Notificaciones nuevas: {count}',
+    comment: '{name} comentó tu reseña',
+    listInvite: '{name} te invitó a la lista «{list}»',
   },
   it: {
     followRequest: '{name} vuole seguirti',
@@ -52,6 +60,8 @@ export const MESSAGES: Record<string, PushTexts> = {
     season: 'Nuova stagione disponibile',
     episodesTitle: 'Nuovi episodi',
     many: 'Nuove notifiche: {count}',
+    comment: '{name} ha commentato la tua recensione',
+    listInvite: '{name} ti ha invitato nella lista «{list}»',
   },
   de: {
     followRequest: '{name} möchte dir folgen',
@@ -62,6 +72,8 @@ export const MESSAGES: Record<string, PushTexts> = {
     season: 'Neue Staffel verfügbar',
     episodesTitle: 'Neue Folgen',
     many: 'Neue Benachrichtigungen: {count}',
+    comment: '{name} hat deine Bewertung kommentiert',
+    listInvite: '{name} hat dich zur Liste „{list}“ eingeladen',
   },
   pt: {
     followRequest: '{name} quer seguir você',
@@ -72,6 +84,8 @@ export const MESSAGES: Record<string, PushTexts> = {
     season: 'Nova temporada disponível',
     episodesTitle: 'Novos episódios',
     many: 'Novas notificações: {count}',
+    comment: '{name} comentou sua avaliação',
+    listInvite: '{name} convidou você para a lista “{list}”',
   },
   nl: {
     followRequest: '{name} wil je volgen',
@@ -82,6 +96,8 @@ export const MESSAGES: Record<string, PushTexts> = {
     season: 'Nieuw seizoen beschikbaar',
     episodesTitle: 'Nieuwe afleveringen',
     many: 'Nieuwe meldingen: {count}',
+    comment: '{name} reageerde op je recensie',
+    listInvite: '{name} nodigde je uit voor de lijst ‘{list}’',
   },
   pl: {
     followRequest: '{name} chce cię obserwować',
@@ -92,6 +108,8 @@ export const MESSAGES: Record<string, PushTexts> = {
     season: 'Nowy sezon jest dostępny',
     episodesTitle: 'Nowe odcinki',
     many: 'Nowe powiadomienia: {count}',
+    comment: '{name} skomentował(a) twoją recenzję',
+    listInvite: '{name} zaprasza cię do listy „{list}”',
   },
   ru: {
     followRequest: '{name} хочет подписаться на вас',
@@ -102,6 +120,8 @@ export const MESSAGES: Record<string, PushTexts> = {
     season: 'Вышел новый сезон',
     episodesTitle: 'Новые серии',
     many: 'Новые уведомления: {count}',
+    comment: '{name} прокомментировал(а) ваш отзыв',
+    listInvite: '{name} приглашает вас в список «{list}»',
   },
   tr: {
     followRequest: '{name} seni takip etmek istiyor',
@@ -112,6 +132,8 @@ export const MESSAGES: Record<string, PushTexts> = {
     season: 'Yeni sezon yayında',
     episodesTitle: 'Yeni bölümler',
     many: 'Yeni bildirimler: {count}',
+    comment: '{name} incelemene yorum yaptı',
+    listInvite: '{name} seni “{list}” listesine davet etti',
   },
   ar: {
     followRequest: '{name} يريد متابعتك',
@@ -122,6 +144,8 @@ export const MESSAGES: Record<string, PushTexts> = {
     season: 'موسم جديد متاح',
     episodesTitle: 'حلقات جديدة',
     many: 'إشعارات جديدة: {count}',
+    comment: '{name} علّق على مراجعتك',
+    listInvite: '{name} يدعوك إلى القائمة «{list}»',
   },
   hi: {
     followRequest: '{name} आपको फ़ॉलो करना चाहते हैं',
@@ -132,6 +156,8 @@ export const MESSAGES: Record<string, PushTexts> = {
     season: 'नया सीज़न उपलब्ध है',
     episodesTitle: 'नए एपिसोड',
     many: 'नई सूचनाएँ: {count}',
+    comment: '{name} ने आपकी समीक्षा पर टिप्पणी की',
+    listInvite: '{name} ने आपको सूची “{list}” में आमंत्रित किया',
   },
   id: {
     followRequest: '{name} ingin mengikutimu',
@@ -142,6 +168,8 @@ export const MESSAGES: Record<string, PushTexts> = {
     season: 'Musim baru sudah tersedia',
     episodesTitle: 'Episode baru',
     many: 'Notifikasi baru: {count}',
+    comment: '{name} mengomentari ulasanmu',
+    listInvite: '{name} mengundangmu ke daftar “{list}”',
   },
   th: {
     followRequest: '{name} ต้องการติดตามคุณ',
@@ -152,6 +180,8 @@ export const MESSAGES: Record<string, PushTexts> = {
     season: 'ซีซันใหม่มาแล้ว',
     episodesTitle: 'ตอนใหม่',
     many: 'การแจ้งเตือนใหม่: {count}',
+    comment: '{name} แสดงความคิดเห็นในรีวิวของคุณ',
+    listInvite: '{name} เชิญคุณเข้าร่วมรายการ “{list}”',
   },
   vi: {
     followRequest: '{name} muốn theo dõi bạn',
@@ -162,6 +192,8 @@ export const MESSAGES: Record<string, PushTexts> = {
     season: 'Mùa mới đã ra mắt',
     episodesTitle: 'Tập mới',
     many: 'Thông báo mới: {count}',
+    comment: '{name} đã bình luận về đánh giá của bạn',
+    listInvite: '{name} mời bạn vào danh sách “{list}”',
   },
   zh: {
     followRequest: '{name} 想要关注你',
@@ -172,6 +204,8 @@ export const MESSAGES: Record<string, PushTexts> = {
     season: '新一季已上线',
     episodesTitle: '新剧集',
     many: '新通知：{count}',
+    comment: '{name} 评论了你的影评',
+    listInvite: '{name} 邀请你加入列表「{list}」',
   },
   ja: {
     followRequest: '{name}さんがあなたをフォローしたいと言っています',
@@ -182,6 +216,8 @@ export const MESSAGES: Record<string, PushTexts> = {
     season: '新シーズンが配信されました',
     episodesTitle: '新しいエピソード',
     many: '新しい通知：{count}',
+    comment: '{name}さんがあなたのレビューにコメントしました',
+    listInvite: '{name}さんがリスト「{list}」にあなたを招待しました',
   },
   ko: {
     followRequest: '{name}님이 팔로우를 요청했어요',
@@ -192,6 +228,8 @@ export const MESSAGES: Record<string, PushTexts> = {
     season: '새 시즌이 공개됐어요',
     episodesTitle: '새 에피소드',
     many: '새 알림: {count}',
+    comment: '{name}님이 리뷰에 댓글을 남겼어요',
+    listInvite: "{name}님이 '{list}' 리스트에 초대했어요",
   },
 }
 

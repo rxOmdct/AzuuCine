@@ -141,7 +141,9 @@ begin
         'episode', c.episode, 'ep_count', c.ep_count,
         'actor', case when p.id is null then null
                  else jsonb_build_object('username', p.username, 'display_name', p.display_name) end,
-        'title', (select it.data->>'title' from public.items it where it.user_id = c.user_id and it.id = c.item_id)
+        'title', case when c.kind = 'shared_list_invite'
+                   then (select l.name from public.shared_lists l where l.id::text = c.item_id)
+                   else (select it.data->>'title' from public.items it where it.user_id = c.user_id and it.id = c.item_id) end
       ) order by c.created_at)
       from claimed c left join public.profiles p on p.id = c.actor_id
       where public.azuu_wants(c.user_id, c.kind)), '[]'::jsonb)

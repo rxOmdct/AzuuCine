@@ -21,7 +21,7 @@ la cloche fonctionne comme avant et l'interrupteur des Réglages affiche « pas 
 
 Prérequis déjà appliqués : `20261007120000_social_notifications.sql` et `20261008140000_episode_notifications_fix.sql`.
 
-1. Supabase → **SQL Editor** → coller `supabase/migrations/20261009150000_web_push.sql` → **Run**.
+1. Supabase → **SQL Editor** → coller `supabase/A_COLLER_2026-10-09.sql` (contient `20261009150000_web_push.sql` et l'adresse `azuu_push_url` dans Vault) → **Run**.
    - Elle active l'extension **pg_net** (`create extension if not exists pg_net`). Si l'éditeur refuse,
      l'activer à la main : **Database → Extensions → pg_net → Enable**, puis relancer le fichier.
    - Le fichier est idempotent : on peut le relancer sans risque.
@@ -50,6 +50,8 @@ Supabase → **Edge Functions → Secrets** (ou `supabase secrets set …`) :
 (déjà en place pour `tmdb`) sert aussi ici pour la lecture de la clé publique depuis le site.
 
 ## 4. Déployer la fonction
+
+> ✅ Déjà fait le 9 oct. 2026 (version 1 déployée par Claude). À refaire seulement si `functions/send-push` change.
 
 ```bash
 supabase functions deploy send-push --project-ref qfgnxonqwldcfdjqhhjz
