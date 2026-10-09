@@ -7,7 +7,7 @@ import { corsHeaders, getUserId, json, rateLimited } from '../_shared/auth.ts'
 const TMDB_KEY = Deno.env.get('TMDB_API_KEY') ?? ''
 
 // Mêmes adresses que dans l'app — tout le reste est refusé
-const PATHS = /^\/(search\/multi|configuration|discover\/(movie|tv)|(movie|tv)\/\d{1,10}(\/recommendations|\/season\/\d{1,3})?)$/
+const PATHS = /^\/(search\/multi|configuration|discover\/(movie|tv)|(movie|tv)\/\d{1,10}(\/recommendations|\/season\/\d{1,3})?|find\/(tt)?\d{1,10})$/
 
 // Paramètres autorisés et forme de leur valeur
 const PARAMS: Record<string, RegExp> = {
@@ -26,6 +26,8 @@ const PARAMS: Record<string, RegExp> = {
   sort_by: /^popularity\.desc$/,
   with_origin_country: /^[A-Z]{2}(\|[A-Z]{2}){0,20}$/,
   without_genres: /^\d{1,6}(\|\d{1,6}){0,10}$/,
+  // Import TV Time / IMDb : /find/{id}
+  external_source: /^(tvdb_id|imdb_id)$/,
 }
 
 Deno.serve(async (req) => {

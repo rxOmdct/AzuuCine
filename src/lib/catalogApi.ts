@@ -108,6 +108,7 @@ interface TmdbItem {
   vote_average?: number
   vote_count?: number
   popularity?: number
+  overview?: string
 }
 
 /** Clé v3 (32 caractères hexadécimaux) ou jeton de lecture v4 (JWT). */
@@ -117,7 +118,7 @@ export function isPlausibleTmdbKey(key: string): boolean {
 }
 
 /** Seules ces adresses de l'API TMDB peuvent être appelées. */
-const TMDB_PATHS = /^\/(search\/multi|configuration|discover\/(movie|tv)|(movie|tv)\/\d{1,10}(\/recommendations|\/season\/\d{1,3})?)$/
+const TMDB_PATHS = /^\/(search\/multi|configuration|discover\/(movie|tv)|(movie|tv)\/\d{1,10}(\/recommendations|\/season\/\d{1,3})?|find\/(tt)?\d{1,10})$/
 
 /** « Clé » spéciale : avec un compte, les requêtes passent par le serveur qui détient la vraie clé TMDB. */
 export const CLOUD_TMDB = 'cloud-proxy'
@@ -1183,3 +1184,49 @@ export function getTitleExtras(externalId: string, tmdbKey?: string): Promise<Ti
   p.catch(() => extrasCache.delete(externalId))
   return p
 }
+
+// ─────────────────────────── Import depuis d'autres applis ───────────────────────────
+
+/** Résultat TMDB avec de quoi créer une fiche sans requête de détail (import en masse). */
+function tmdbWithPrefill(r: TmdbItem, kind: 'movie' | 'tv'): SearchResult | null {
+  const base = tmdbToResult(r, kind)
+  if (!base) return null
+  const guess = guessTmdbType(kind, r.genre_ids ?? [], r.origin_country ?? [], r.original_language)
+  return safeResult({
+    ...base,
+    prefill: {
+      title: base.title,
+      originalTitle: base.originalTitle,
+      type: guess.type,
+      subtype: guess.subtype,
+      year: base.year,
+      overview: r.overview || undefined,
+      genres: tmdbGenres(r.genre_ids ?? []).filter((g) => guess.type === 'film' || g !== 'Animation'),
+      externalId: base.externalId,
+      countries: r.origin_country?.length ? r.origin_country.slice(0, 3) : undefined,
+      poster: base.posterUrl,
+      publicRating: tmdbPublicRating(r.vote_average, r.vote_count),
+    },
+  })
+}
+
+/** Recherche TMDB (films et séries) avec métadonnées de base, dans l'ordre de pertinence de TMDB. */
+export async function tmdbImportSearch(query: string, key: string): Promise<SearchResult[]> {
+  const data = await tmdbFetch<{ results: TmdbItem[] }>('/search/multi', key, { query: query.slice(0, 100), include_adult: 'false' })
+  return (Array.isArray(data.results) ? data.results : [])
+    .filter((r) => r && (r.media_type === 'movie' || r.media_type === 'tv'))
+    .slice(0, 20)
+    .map((r) => tmdbWithPrefill(r, r.media_type as 'movie' | 'tv'))
+    .filter((r): r is SearchResult => r !== null)
+}
+
+/** Fiche TMDB à partir d'un identifiant TVDB (TV Time) ou IMDb. */
+export async function tmdbFindExternal(id: string, source: 'tvdb_id' | 'imdb_id', key: string): Promise<SearchResult | undefined> {
+  if (!(source === 'tvdb_id' ? /^\d{1,10}$/ : /^tt\d{1,10}$/).test(id)) return undefined
+  const data = await tmdbFetch<{ movie_results?: TmdbItem[]; tv_results?: TmdbItem[] }>(`/find/${id}`, key, { external_source: source })
+  const tv = Array.isArray(data.tv_results) ? data.tv_results[0] : undefined
+  const movie = Array.isArray(data.movie_results) ? data.movie_results[0] : undefined
+  return (tv && tmdbWithPrefill(tv, 'tv')) || (movie && tmdbWithPrefill(movie, 'movie')) || undefined
+}
+
+export { ANILIST, ANILIST_FIELDS, aniToResult, type AniMedia }
