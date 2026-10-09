@@ -17,6 +17,8 @@ import { cx } from '../lib/utils'
 import { useEscape } from '../lib/escape'
 import { useBackToClose } from '../lib/backNav'
 import { useMedia } from '../store'
+import { BugReportRow } from '../components/moderation/BugReport'
+import { alertsSummary, useAdminAlerts } from '../components/moderation/useAdminAlerts'
 
 type Message = { kind: 'ok' | 'error'; text: string }
 
@@ -50,6 +52,7 @@ export default function SettingsPage({ onOpenAdmin }: { onOpenAdmin: () => void 
     if (signedIn) void isAdmin().then(setAdmin)
     else setAdmin(false)
   }, [signedIn])
+  const adminHint = alertsSummary(useAdminAlerts(admin))
   const fileRef = useRef<HTMLInputElement>(null)
   const [pending, setPending] = useState<ParsedBackup>()
   const [message, setMessage] = useState<Message>()
@@ -184,7 +187,7 @@ export default function SettingsPage({ onOpenAdmin }: { onOpenAdmin: () => void 
         <>
           <SectionTitle>{t('settings.admin')}</SectionTitle>
           <div className="card overflow-hidden">
-            <Row icon={<ShieldCheck size={19} />} title={t('admin.title')} onClick={onOpenAdmin} />
+            <Row icon={<ShieldCheck size={19} />} title={t('admin.title')} hint={adminHint} onClick={onOpenAdmin} />
           </div>
         </>
       )}
@@ -498,6 +501,7 @@ export default function SettingsPage({ onOpenAdmin }: { onOpenAdmin: () => void 
 
       <SectionTitle>{t('settings.about')}</SectionTitle>
       <div className="card divide-y divide-line overflow-hidden">
+        <BugReportRow />
         {(
           [
             ['/privacy.html', t('legal.privacy')],

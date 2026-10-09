@@ -6,6 +6,8 @@ import { initialLang, loadLang } from './i18n'
 import { LangProvider } from './i18n/react'
 import Root from './Root'
 import { applySavedTheme } from './lib/theme'
+import ErrorBoundary from './components/ErrorBoundary'
+import { installErrorReporting } from './lib/errorReporter'
 // Polices embarquées dans l'app (jeu « latin », suffisant pour le français) : aucun appel à Google Fonts, fonctionne hors-ligne
 import '@fontsource/inter/latin-400.css'
 import '@fontsource/inter/latin-500.css'
@@ -15,6 +17,9 @@ import './index.css'
 
 // Thème choisi (couleur + clair/sombre/étoilé) appliqué tout de suite, sans attendre le chargement de l'app
 applySavedTheme()
+
+// Remontée des erreurs (sans donnée perso) : à brancher avant tout le reste
+installErrorReporting()
 
 // Service worker : cache l'app pour un fonctionnement hors-ligne et la met à jour automatiquement.
 registerSW({ immediate: true })
@@ -29,7 +34,9 @@ loadLang(initialLang())
     createRoot(document.getElementById('root')!).render(
       <StrictMode>
         <LangProvider>
-          <Root />
+          <ErrorBoundary>
+            <Root />
+          </ErrorBoundary>
         </LangProvider>
       </StrictMode>,
     )

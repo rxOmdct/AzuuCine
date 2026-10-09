@@ -76,6 +76,8 @@ export default defineConfig(({ mode }) => {
   const supabaseUrl = /^https:\/\/[a-z0-9-]+\.supabase\.(co|in)$/i.test(origin) ? origin : ''
   return {
   base: '/',
+  // Version de l'app (package.json, fournie par « npm run … »), affichée dans « Signaler un bug » et jointe aux erreurs remontées
+  define: { __APP_VERSION__: JSON.stringify(full.npm_package_version || 'dev') },
   // Le serveur de dev n'écoute que sur ce PC (voir « npm run dev:mobile » pour tester sur le téléphone)
   server: { host: 'localhost', strictPort: false },
   preview: { host: 'localhost' },

@@ -1,9 +1,11 @@
 import { Loader2, Star } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { t } from '../../i18n'
+import { useBlocked } from '../../lib/cloud/moderation'
 import { titleReviews, type TitleReview, type TitleReviews as TitleReviewsData } from '../../lib/cloud/reviews'
 import { formatRating } from '../../lib/utils'
 import { useMedia } from '../../store'
+import ReportButton from '../moderation/ReportButton'
 import Avatar from './Avatar'
 import Reactions from './Reactions'
 import Sheet from './Sheet'
@@ -12,6 +14,8 @@ import Sheet from './Sheet'
 export default function TitleReviews({ externalId, title, onClose, onOpenProfile }: { externalId: string; title: string; onClose: () => void; onOpenProfile: (username: string) => void }) {
   const [data, setData] = useState<TitleReviewsData>()
   const [error, setError] = useState(false)
+  // Avis des comptes que j'ai bloqués : masqués
+  const { isBlocked } = useBlocked()
 
   useEffect(() => {
     let alive = true
@@ -23,7 +27,9 @@ export default function TitleReviews({ externalId, title, onClose, onOpenProfile
     }
   }, [externalId])
 
-  const bothEmpty = !!data && data.friends.length === 0 && data.others.length === 0
+  const friends = data?.friends.filter((r) => !isBlocked(r.user_id)) ?? []
+  const others = data?.others.filter((r) => !isBlocked(r.user_id)) ?? []
+  const bothEmpty = !!data && friends.length === 0 && others.length === 0
 
   return (
     <Sheet title={title} label={t('reviews.title')} onClose={onClose} elevated>
@@ -36,8 +42,8 @@ export default function TitleReviews({ externalId, title, onClose, onOpenProfile
         <p className="px-4 py-16 text-center text-sm text-ink-3">{t('reviews.none')}</p>
       ) : (
         <div className="grid grid-cols-1 gap-4 px-4 pt-4 sm:grid-cols-2">
-          <ReviewColumn heading={t('reviews.friends')} empty={t('reviews.noneFriends')} list={data.friends} onOpenProfile={onOpenProfile} />
-          <ReviewColumn heading={t('reviews.others')} empty={t('reviews.noneOthers')} list={data.others} onOpenProfile={onOpenProfile} />
+          <ReviewColumn heading={t('reviews.friends')} empty={t('reviews.noneFriends')} list={friends} onOpenProfile={onOpenProfile} />
+          <ReviewColumn heading={t('reviews.others')} empty={t('reviews.noneOthers')} list={others} onOpenProfile={onOpenProfile} />
         </div>
       )}
     </Sheet>
@@ -77,6 +83,7 @@ function ReviewCard({ r, onOpenProfile }: { r: TitleReview; onOpenProfile: (user
             {formatRating(r.rating, settings.ratingScale)}
           </span>
         )}
+        <ReportButton target={{ type: 'review', id: r.item_id, userId: r.user_id }} className="-me-1.5" size={16} />
       </div>
       {r.notes && <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-ink-2">{r.notes}</p>}
       <div className="mt-3">

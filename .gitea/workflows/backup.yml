@@ -1,0 +1,32 @@
+# Sauvegarde automatique de la base Supabase : chaque nuit, pg_dump -> chiffrement -> VPS, avec rotation
+# (7 quotidiennes, 4 hebdomadaires, 6 mensuelles). Voir deploy/BACKUP.md.
+# Secrets à créer dans Gitea (Dépôt -> Paramètres -> Actions -> Secrets) — JAMAIS dans le dépôt :
+#   SUPABASE_DB_URL     chaîne « Session pooler » (IPv4) de Supabase, avec le mot de passe de la base
+#   BACKUP_PASSPHRASE   phrase de chiffrement (16 caractères min.), conservée aussi hors du VPS
+# Variable optionnelle : BACKUP_DIR (défaut /srv/backups/azuucine)
+name: backup
+on:
+  schedule:
+    - cron: '17 2 * * *' # tous les jours à 02:17 UTC
+  workflow_dispatch:
+
+jobs:
+  backup:
+    runs-on: azuucine
+    timeout-minutes: 30
+    steps:
+      - name: Récupérer le script
+        # Le jeton n'est visible que de cette étape
+        env:
+          GIT_TOKEN: ${{ github.token }}
+          REPO_URL: ${{ github.server_url }}/${{ github.repository }}.git
+        run: |
+          rm -rf src
+          AUTH=$(printf 'x-access-token:%s' "$GIT_TOKEN" | base64 -w0)
+          git -c http.extraheader="AUTHORIZATION: basic $AUTH" clone --depth 1 --branch main "$REPO_URL" src
+      - name: Sauvegarder (dump, contrôle, chiffrement, rotation)
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+          BACKUP_DIR: ${{ vars.BACKUP_DIR }}
+        run: bash src/deploy/backup.sh
