@@ -16,6 +16,7 @@ import { episodesPatch } from './lib/progress'
 import { uid } from './lib/utils'
 import { episodeCap } from './lib/franchise'
 import { airedCount } from './lib/airing'
+import { logEpisodes } from './lib/challenges'
 
 // Clés propres à l'espace actif (compte connecté, ou appareil sans compte)
 const settingsKey = () => scopedKey('settings')
@@ -179,8 +180,8 @@ export function MediaProvider({ children, cloudUser }: { children: ReactNode; cl
       getLists: () => listsRef.current,
       applyLists: (next) => setLists(() => next, true),
       getSettings: () => {
-        const { ratingScale, topCategories, accentColor, themeMode, notifPrefs } = settingsRef.current
-        return { ratingScale, topCategories, accentColor, themeMode, notifPrefs }
+        const { ratingScale, topCategories, accentColor, themeMode, notifPrefs, challenges } = settingsRef.current
+        return { ratingScale, topCategories, accentColor, themeMode, notifPrefs, challenges }
       },
       applySettings: (patch) => updateSettingsRef.current(patch, true),
       itemsChanged: () => void reloadItems(),
@@ -221,7 +222,7 @@ export function MediaProvider({ children, cloudUser }: { children: ReactNode; cl
   }, [settings.themeMode])
 
   const updateSettings = useCallback((patch: Partial<Settings>, silent = false) => {
-    if (!silent && syncRef.current && ('ratingScale' in patch || 'topCategories' in patch || 'accentColor' in patch || 'themeMode' in patch || 'notifPrefs' in patch)) syncRef.current.markSettings()
+    if (!silent && syncRef.current && ('ratingScale' in patch || 'topCategories' in patch || 'accentColor' in patch || 'themeMode' in patch || 'notifPrefs' in patch || 'challenges' in patch)) syncRef.current.markSettings()
     setSettings((prev) => {
       const next = { ...prev, ...patch }
       try {
@@ -258,7 +259,11 @@ export function MediaProvider({ children, cloudUser }: { children: ReactNode; cl
     async (id: string, patch: Partial<MediaInput>) => {
       const current = itemsRef.current.find((i) => i.id === id)
       if (!current) return
-      await save({ ...current, ...patch, updatedAt: new Date().toISOString() })
+      const next = { ...current, ...patch, updatedAt: new Date().toISOString() }
+      // Défis : on retient le jour où des épisodes sont cochés (ou décochés)
+      const delta = (patch.episodesWatched ?? current.episodesWatched) - current.episodesWatched
+      if (delta) next.episodeLog = logEpisodes(current.episodeLog, delta)
+      await save(next)
     },
     [save],
   )

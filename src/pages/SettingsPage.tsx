@@ -18,6 +18,7 @@ import { cx } from '../lib/utils'
 import { useEscape } from '../lib/escape'
 import { useBackToClose } from '../lib/backNav'
 import { useMedia } from '../store'
+import { mergeImportedSettings } from '../lib/challenges'
 
 type Message = { kind: 'ok' | 'error'; text: string }
 
@@ -125,7 +126,7 @@ export default function SettingsPage({ onOpenAdmin }: { onOpenAdmin: () => void 
     if (!pending) return
     setConfirm(null)
     await importItems(pending.items, mode)
-    if (pending.settings) updateSettings(pending.settings)
+    if (pending.settings) updateSettings(mode === 'merge' ? mergeImportedSettings(pending.settings, settings) : pending.settings)
     if (pending.lists) mergeLists(pending.lists, mode)
     setMessage({
       kind: 'ok',
