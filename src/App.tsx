@@ -12,18 +12,23 @@ import CatalogPage from './pages/CatalogPage'
 import StatsPage from './pages/StatsPage'
 import SettingsPage from './pages/SettingsPage'
 import AdminPage from './pages/AdminPage'
+import NotFoundPage from './pages/NotFoundPage'
 import { useMedia } from './store'
 import type { SearchResult } from './lib/catalogApi'
 import type { MediaItem } from './types'
 
 const TABS: Tab[] = ['home', 'catalog', 'stats', 'settings']
 // L'administration a sa propre route (#/admin), hors de la navigation principale
-type Route = Tab | 'admin'
+type Route = Tab | 'admin' | 'notfound'
 
 function routeFromHash(): Route {
-  const h = window.location.hash.replace('#/', '')
+  const hash = window.location.hash
+  // Pas de route (ou retour de connexion « #access_token=… ») : accueil
+  if (!hash.startsWith('#/')) return 'home'
+  const h = hash.slice(2)
+  if (h === '' || h.startsWith('u/')) return 'home'
   if (h === 'admin') return 'admin'
-  return (TABS as string[]).includes(h) ? (h as Tab) : 'home'
+  return (TABS as string[]).includes(h) ? (h as Tab) : 'notfound'
 }
 
 /** Fiche ouverte : un titre de ma bibliothèque, ou un résultat de recherche pas encore ajouté. */
@@ -49,7 +54,7 @@ export default function App() {
     window.scrollTo({ top: 0 })
   }
   // Dans la barre de navigation, l'administration reste rattachée à « Réglages »
-  const navTab: Tab = route === 'admin' ? 'settings' : route
+  const navTab: Tab = route === 'admin' ? 'settings' : route === 'notfound' ? 'home' : route
 
   const openItem = (item: MediaItem) => setOpened({ item })
   const openNew = () => setAdding(true)
@@ -72,6 +77,7 @@ export default function App() {
         {route === 'stats' && <StatsPage />}
         {route === 'settings' && <SettingsPage onOpenAdmin={() => go('admin')} />}
         {route === 'admin' && <AdminPage onBack={() => go('settings')} />}
+        {route === 'notfound' && <NotFoundPage onHome={() => go('home')} />}
       </main>
 
       <BottomNav current={navTab} onChange={go} onAdd={openNew} />
