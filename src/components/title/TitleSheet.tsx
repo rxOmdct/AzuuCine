@@ -29,6 +29,8 @@ import SharePreview from '../SharePreview'
 import EditDetails from './EditDetails'
 import ReviewEditor from './ReviewEditor'
 import WhereToWatch from './WhereToWatch'
+import ReviewComments from '../social/ReviewComments'
+import SharedListPicker from '../social/SharedListPicker'
 
 /** Suivi « vide » d'un titre qu'on ajoute. */
 const BLANK: Pick<MediaInput, 'criteria' | 'episodesWatched' | 'genres'> = { criteria: {}, episodesWatched: 0, genres: [] }
@@ -466,12 +468,23 @@ export default function TitleSheet({ item: initial, seed, onClose, onGoToSetting
           {/* Mon avis */}
           <section className="mx-4 mt-4">
             {item?.notes ? (
-              <button onClick={() => setReviewing(true)} className="card block w-full p-4 text-left">
-                <span className="eyebrow flex items-center justify-between">
-                  {t('form.review')} <Pencil size={13} />
-                </span>
-                <p className="mt-2 line-clamp-6 whitespace-pre-line text-sm leading-relaxed text-ink">{item.notes}</p>
-              </button>
+              <div className="card p-4">
+                <button onClick={() => setReviewing(true)} className="block w-full text-start">
+                  <span className="eyebrow flex items-center justify-between">
+                    <span className="flex items-center gap-2">
+                      {t('form.review')}
+                      {item.notesSpoiler && <span className="rounded-full border border-accent/50 px-1.5 py-px text-[10px] text-accent">{t('spoiler.badge')}</span>}
+                    </span>
+                    <Pencil size={13} />
+                  </span>
+                  <p className="mt-2 line-clamp-6 whitespace-pre-line text-sm leading-relaxed text-ink">{item.notes}</p>
+                </button>
+                {social.enabled && social.me && (
+                  <div className="mt-3 border-t border-line pt-3">
+                    <ReviewComments key={item.id} authorId={social.me.id} itemId={item.id} />
+                  </div>
+                )}
+              </div>
             ) : (
               <button onClick={() => setReviewing(true)} disabled={busy} className="flex w-full items-center gap-2 rounded-2xl border border-dashed border-line-strong px-4 py-3.5 text-left text-sm text-ink-2">
                 <Pencil size={16} className="text-accent" /> {t('title.writeReview')}
@@ -527,6 +540,11 @@ export default function TitleSheet({ item: initial, seed, onClose, onGoToSetting
 
           {/* Mon suivi : dates, plateforme, listes, revisionnages */}
           {item && <Tracking item={item} lists={lists} tagSuggestions={allTags(items)} onChange={changeTracking} />}
+
+          {/* Listes partagées avec d'autres membres (titre de ma bibliothèque ou pas encore ajouté) */}
+          {externalId && social.enabled && (
+            <SharedListPicker snapshot={{ externalId, title, type, year: data.year, poster: item?.poster ?? poster }} posterFallback={seed?.posterUrl} />
+          )}
           </div>
           </div>
         </div>
@@ -556,11 +574,12 @@ export default function TitleSheet({ item: initial, seed, onClose, onGoToSetting
         <ReviewEditor
           title={title}
           initial={item?.notes ?? ''}
+          initialSpoiler={!!item?.notesSpoiler}
           onClose={() => setReviewing(false)}
-          onSave={async (notes) => {
+          onSave={async (notes, spoiler) => {
             setReviewing(false)
             // Écrire un avis sur un titre pas encore ajouté le marque comme vu
-            await save({ notes: notes || undefined, ...(item ? {} : { status: 'termine' as const, endDate: todayISO() }) })
+            await save({ notes: notes || undefined, notesSpoiler: (notes && spoiler) || undefined, ...(item ? {} : { status: 'termine' as const, endDate: todayISO() }) })
           }}
         />
       )}

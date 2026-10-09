@@ -37,6 +37,8 @@ export interface MediaItem {
   platform?: string
   /** Mon avis (visible sur mon profil, comme ma note) */
   notes?: string
+  /** Mon avis contient des spoilers : masqué chez les autres jusqu'au tap */
+  notesSpoiler?: boolean
   /** URL d'image ou image compressée en data URL (reste locale). */
   poster?: string
   /** Grande image horizontale (TMDB), pour l'en-tête de la fiche et l'accueil. */
@@ -122,6 +124,10 @@ export interface NotifPrefs {
   accepted?: boolean
   /** Réactions reçues sur mes avis */
   reactions?: boolean
+  /** Commentaires reçus sous mes avis */
+  comments?: boolean
+  /** Invitations à des listes partagées */
+  lists?: boolean
 }
 
 export interface CustomList {

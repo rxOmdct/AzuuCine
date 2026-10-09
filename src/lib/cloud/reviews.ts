@@ -24,6 +24,10 @@ export interface TitleReview {
   updated_at: string
   rating: number | null
   notes: string
+  /** L'auteur a signalé des spoilers : texte masqué jusqu'au tap */
+  spoiler: boolean
+  /** Nombre de commentaires sous l'avis (null : serveur sans les commentaires) */
+  comments: number | null
   /** emoji -> nombre */
   reactions: Record<string, number>
   total: number
@@ -76,6 +80,8 @@ function toReview(v: unknown): TitleReview | null {
     updated_at: safeIso(v.updated_at) ?? new Date(0).toISOString(),
     rating: typeof v.rating === 'number' && v.rating > 0 && v.rating <= 10 ? v.rating : null,
     notes,
+    spoiler: v.spoiler === true,
+    comments: typeof v.comments === 'number' && Number.isFinite(v.comments) ? Math.min(Math.max(0, Math.floor(v.comments)), 100000) : null,
     reactions,
     total: Object.values(reactions).reduce((a, b) => a + b, 0),
     mine: (REACTION_EMOJIS as readonly string[]).includes(v.mine as string) ? (v.mine as string) : null,

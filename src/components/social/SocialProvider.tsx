@@ -12,6 +12,11 @@ import TitleReviews from './TitleReviews'
 import Notifications from './Notifications'
 import { useOnResume } from '../../lib/onResume'
 import WelcomeProfile, { RANDOM_USERNAME } from './WelcomeProfile'
+import CommentsSheet from './CommentsSheet'
+import { InvitePeople, SharedListSheet } from './SharedLists'
+import { getAniListById, type SearchResult } from '../../lib/catalogApi'
+import { TYPE_BY_VALUE } from '../../lib/constants'
+import type { SharedListItem } from '../../lib/cloud/sharedLists'
 
 interface SocialApi {
   /** Réseau disponible (compte connecté) */
@@ -32,6 +37,17 @@ interface SocialApi {
   peek: (item: MediaItem, owner?: PeekOwner) => void
   /** Ouvre la fiche si elle est à moi, sinon l'aperçu */
   openItem: (item: MediaItem, owner?: PeekOwner) => void
+  /** Fil de commentaires d'un avis, en plein écran (depuis une notification) */
+  openComments: (authorId: string, itemId: string, title: string) => void
+  /** Liste partagée */
+  openSharedList: (id: string) => void
+  /** Inviter des membres dans une liste partagée */
+  openInvite: (listId: string, listName: string) => void
+  /** Fiche d'un titre d'une liste partagée : la mienne si je l'ai, sinon la fiche du catalogue (ajout possible) */
+  openTitle: (title: SharedListItem) => void
+  /** Change à chaque modification des listes partagées (pour recharger les écrans qui les affichent) */
+  sharedTick: number
+  bumpShared: () => void
 }
 
 const SocialContext = createContext<SocialApi>({
@@ -48,6 +64,12 @@ const SocialContext = createContext<SocialApi>({
   unread: 0,
   peek: () => {},
   openItem: () => {},
+  openComments: () => {},
+  openSharedList: () => {},
+  openInvite: () => {},
+  openTitle: () => {},
+  sharedTick: 0,
+  bumpShared: () => {},
 })
 
 export const useSocial = () => useContext(SocialContext)
@@ -59,9 +81,21 @@ type Overlay =
   | { kind: 'follows'; profile: Profile; list: 'followers' | 'following' }
   | { kind: 'reviews'; externalId: string; title: string }
   | { kind: 'notifications' }
+  | { kind: 'comments'; authorId: string; itemId: string; title: string }
+  | { kind: 'sharedList'; id: string }
+  | { kind: 'invite'; listId: string; listName: string }
 
 /** Profils, recherche et aperçus : affichés par-dessus l'app, empilés (le bouton fermer revient au précédent). */
-export function SocialProvider({ children, onOpenOwnItem }: { children: ReactNode; onOpenOwnItem: (item: MediaItem) => void }) {
+export function SocialProvider({
+  children,
+  onOpenOwnItem,
+  onOpenSeed,
+}: {
+  children: ReactNode
+  onOpenOwnItem: (item: MediaItem) => void
+  /** Ouvre la fiche d'un titre pas encore dans ma bibliothèque */
+  onOpenSeed?: (seed: SearchResult) => void
+}) {
   const { account, items } = useMedia()
   const enabled = !!account
   const [me, setMe] = useState<Profile | null>(null)
@@ -69,6 +103,8 @@ export function SocialProvider({ children, onOpenOwnItem }: { children: ReactNod
   const [unread, setUnread] = useState(0)
   const [stack, setStack] = useState<Overlay[]>([])
   const [peeked, setPeeked] = useState<{ item: MediaItem; owner?: PeekOwner }>()
+  const [sharedTick, setSharedTick] = useState(0)
+  const bumpShared = useCallback(() => setSharedTick((n) => n + 1), [])
   // « Plus tard » sur le choix du pseudo : redemandé au prochain lancement
   const [welcomeLater, setWelcomeLater] = useState(() => {
     try {
@@ -131,6 +167,30 @@ export function SocialProvider({ children, onOpenOwnItem }: { children: ReactNod
     [items, me?.username, onOpenOwnItem],
   )
 
+  const openTitle = useCallback(
+    async (s: SharedListItem) => {
+      const local = items.find((i) => i.externalId === s.externalId)
+      if (local) return onOpenOwnItem(local)
+      const anilist = s.externalId.startsWith('anilist:')
+      // AniList : fiche complète si possible (sinon l'instantané de la liste suffit pour l'ouvrir)
+      const full = anilist && navigator.onLine ? await getAniListById(s.externalId).catch(() => null) : null
+      onOpenSeed?.(
+        full ?? {
+          source: anilist ? 'anilist' : 'tmdb',
+          externalId: s.externalId,
+          title: s.title,
+          year: s.year,
+          thumb: s.poster,
+          posterUrl: s.poster,
+          kindLabel: TYPE_BY_VALUE[s.type].label,
+          typeGuess: s.type,
+          prefill: anilist ? { title: s.title, year: s.year, type: s.type, externalId: s.externalId, genres: [] } : undefined,
+        },
+      )
+    },
+    [items, onOpenOwnItem, onOpenSeed],
+  )
+
   const api = useMemo<SocialApi>(
     () => ({
       enabled,
@@ -150,8 +210,14 @@ export function SocialProvider({ children, onOpenOwnItem }: { children: ReactNod
       unread,
       peek: (item, owner) => setPeeked({ item, owner }),
       openItem,
+      openComments: (authorId, itemId, title) => push({ kind: 'comments', authorId, itemId, title }),
+      openSharedList: (id) => push({ kind: 'sharedList', id }),
+      openInvite: (listId, listName) => push({ kind: 'invite', listId, listName }),
+      openTitle: (s) => void openTitle(s),
+      sharedTick,
+      bumpShared,
     }),
-    [enabled, me, requests, unread, refresh, push, openItem],
+    [enabled, me, requests, unread, refresh, push, openItem, openTitle, sharedTick, bumpShared],
   )
 
   return (
@@ -169,6 +235,12 @@ export function SocialProvider({ children, onOpenOwnItem }: { children: ReactNod
             <FollowList key={k} profile={o.profile} initial={o.list} onClose={pop} />
           ) : o.kind === 'reviews' ? (
             <TitleReviews key={k} externalId={o.externalId} title={o.title} onClose={pop} onOpenProfile={(u) => push({ kind: 'profile', username: u })} />
+          ) : o.kind === 'comments' ? (
+            <CommentsSheet key={k} authorId={o.authorId} itemId={o.itemId} title={o.title} onClose={pop} />
+          ) : o.kind === 'sharedList' ? (
+            <SharedListSheet key={k} id={o.id} onClose={pop} />
+          ) : o.kind === 'invite' ? (
+            <InvitePeople key={k} listId={o.listId} listName={o.listName} onClose={pop} />
           ) : (
             <Notifications
               key={k}
@@ -180,6 +252,15 @@ export function SocialProvider({ children, onOpenOwnItem }: { children: ReactNod
                   pop()
                   onOpenOwnItem(it)
                 }
+              }}
+              onOpenComments={(itemId, title) => {
+                if (!me) return
+                pop()
+                push({ kind: 'comments', authorId: me.id, itemId, title })
+              }}
+              onOpenSharedList={(id) => {
+                pop()
+                push({ kind: 'sharedList', id })
               }}
             />
           ),

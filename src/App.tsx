@@ -71,7 +71,7 @@ export default function App() {
 
   return (
     <ToastProvider>
-    <SocialProvider onOpenOwnItem={openItem}>
+    <SocialProvider onOpenOwnItem={openItem} onOpenSeed={(seed) => setOpened({ seed })}>
     <SideNav current={navTab} onChange={go} onAdd={openNew} />
     <div className="mx-auto min-h-dvh max-w-2xl lg:max-w-none lg:ps-60">
       <main className="safe-top px-4 pb-32 lg:px-10 lg:pb-10 2xl:px-14">

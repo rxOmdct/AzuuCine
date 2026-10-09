@@ -1,6 +1,6 @@
 -- ════════════════════════════════════════════════════════════════════════════
 -- AzuuCine — Modération (9 octobre 2026)
---  1. Signalements (avis, profils ; commentaires et listes partagées prêts à brancher).
+--  1. Signalements (avis, profils, commentaires, listes partagées).
 --  2. Tableau de modération (admin) : file des signalements regroupés par cible, actions.
 --  3. Comptes suspendus : journal des suspensions + garde-fou sur la colonne « suspended ».
 --  4. Blocage d'un membre : il ne peut plus te suivre ni réagir à tes avis ; ses avis
@@ -129,12 +129,27 @@ begin
       into snap
     from public.profiles p where p.id = p_target_user;
     if snap is null then raise exception 'not found'; end if;
+  elsif p_type = 'comment' then
+    -- Commentaire sous un avis : il doit exister et l'avis doit m'être visible
+    if p_target_id !~ '^[0-9]{1,18}$' then raise exception 'bad target'; end if;
+    select jsonb_build_object('body', left(c.body, 500), 'review_author', c.author_id, 'item_id', c.item_id,
+                              'title', left((select i.data->>'title' from public.items i where i.user_id = c.author_id and i.id = c.item_id), 200))
+      into snap
+    from public.review_comments c
+    where c.id = p_target_id::bigint and c.user_id = p_target_user
+      and public.azuu_review_visible(c.author_id, c.item_id);
+    if snap is null then raise exception 'not found'; end if;
   else
-    -- 'comment' / 'list' : tables ajoutées par d'autres migrations. On vérifie au minimum que
-    -- l'auteur existe et que son contenu m'est visible ; la copie du contenu sera ajoutée à la fusion.
-    if not exists (select 1 from public.profiles p where p.id = p_target_user) or not public.can_view(p_target_user) then
-      raise exception 'not found';
-    end if;
+    -- Liste partagée : seuls ses membres la voient, donc seuls eux peuvent la signaler
+    if p_target_id !~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' then raise exception 'bad target'; end if;
+    select jsonb_build_object('name', l.name,
+                              'titles', (select coalesce(jsonb_agg(left(it.title, 120) order by it.added_at desc), '[]'::jsonb)
+                                         from (select title, added_at from public.shared_list_items x where x.list_id = l.id order by x.added_at desc limit 20) it))
+      into snap
+    from public.shared_lists l
+    where l.id = p_target_id::uuid and l.owner_id = p_target_user
+      and exists (select 1 from public.shared_list_members m where m.list_id = l.id and m.user_id = me and m.status = 'accepted');
+    if snap is null then raise exception 'not found'; end if;
   end if;
 
   -- Anti-abus : 20 signalements par 24 h, 5 par minute
@@ -234,6 +249,15 @@ do $$ begin
   end if;
 end $$;
 
+-- … ni commenter mes avis.
+do $$ begin
+  if to_regclass('public.review_comments') is not null then
+    execute 'drop trigger if exists review_comments_block_guard on public.review_comments';
+    execute 'create trigger review_comments_block_guard before insert on public.review_comments
+               for each row execute function public.azuu_reaction_block_guard()';
+  end if;
+end $$;
+
 -- ═════════════════════════════ Administration ═════════════════════════════
 
 -- Petite carte « compte » pour l'admin
@@ -308,6 +332,12 @@ begin
         when 'profile' then (select jsonb_build_object('username', p.username, 'display_name', p.display_name, 'bio', p.bio,
                                                        'avatar_url', p.avatar_url, 'banner_url', p.banner_url)
                              from public.profiles p where p.id = pg.target_user_id)
+        when 'comment' then (select jsonb_build_object('body', left(c.body, 500))
+                             from public.review_comments c
+                             where pg.target_id ~ '^[0-9]{1,18}$' and c.id = pg.target_id::bigint and c.user_id = pg.target_user_id)
+        when 'list' then (select jsonb_build_object('name', l.name)
+                          from public.shared_lists l
+                          where pg.target_id ~ '^[0-9a-f-]{36}$' and l.id = pg.target_id::uuid and l.owner_id = pg.target_user_id)
         else null end,
     -- Antécédents : nombre de contenus différents de ce compte déjà signalés
     'user_reported_targets', (select count(distinct (r.target_type, r.target_id))::int from public.reports r
@@ -344,9 +374,13 @@ begin
       -- Remet le profil à zéro : bio, photo et bannière effacées, nom affiché = pseudo
       update public.profiles p set bio = '', avatar_url = null, banner_url = null, display_name = p.username
       where p.id = p_target_user;
+    elsif p_type = 'comment' then
+      if p_target_id !~ '^[0-9]{1,18}$' then raise exception 'bad target'; end if;
+      delete from public.review_comments c where c.id = p_target_id::bigint and c.user_id = p_target_user;
     else
-      -- 'comment' / 'list' : à brancher quand ces tables existent (fusion des fonctionnalités)
-      raise exception 'unsupported target';
+      if p_target_id !~ '^[0-9a-f-]{36}$' then raise exception 'bad target'; end if;
+      -- Supprime la liste (membres et titres partent en cascade)
+      delete from public.shared_lists l where l.id = p_target_id::uuid and l.owner_id = p_target_user;
     end if;
   elsif p_action in ('suspend', 'unsuspend') then
     if p_target_user = me then raise exception 'cannot suspend yourself'; end if;

@@ -8,6 +8,8 @@ import { useMedia } from '../../store'
 import ReportButton from '../moderation/ReportButton'
 import Avatar from './Avatar'
 import Reactions from './Reactions'
+import ReviewComments from './ReviewComments'
+import ReviewText from './ReviewText'
 import Sheet from './Sheet'
 
 /** Écran plein : tous les avis sur un même titre (amis / autres membres) avec réactions. */
@@ -85,9 +87,11 @@ function ReviewCard({ r, onOpenProfile }: { r: TitleReview; onOpenProfile: (user
         )}
         <ReportButton target={{ type: 'review', id: r.item_id, userId: r.user_id }} className="-me-1.5" size={16} />
       </div>
-      {r.notes && <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-ink-2">{r.notes}</p>}
+      {r.notes && <ReviewText text={r.notes} spoiler={r.spoiler} />}
       <div className="mt-3">
-        <Reactions authorId={r.user_id} itemId={r.item_id} reactions={r.reactions} mine={r.mine} />
+        <ReviewComments authorId={r.user_id} itemId={r.item_id} count={r.comments} hidden={r.comments === null}>
+          <Reactions authorId={r.user_id} itemId={r.item_id} reactions={r.reactions} mine={r.mine} />
+        </ReviewComments>
       </div>
     </article>
   )
