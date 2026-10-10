@@ -1313,6 +1313,18 @@ const dict: Translations = {
   'person.job.composer': "ดนตรี",
   'person.job.dop': "กำกับภาพ",
   'person.job.editor': "ตัดต่อ",
+  // — Statistiques (refonte) —
+  'stats.tabAll': "ภาพรวม",
+  'stats.tabOther': "อื่น ๆ",
+  'stats.period': "ช่วงเวลา",
+  'stats.allYears': "ทุกปี",
+  'stats.timeSpent': "เวลาที่ใช้",
+  'stats.finished': "ดูจบ",
+  'stats.filmsSeen': "ภาพยนตร์ที่ดู",
+  'stats.rewatched': "ดูซ้ำ",
+  'stats.avgLength': "ความยาวเฉลี่ย",
+  'stats.episodesSeen': "ตอนที่ดู",
+  'stats.decades': "ทศวรรษที่ออกฉาย",
 }
 
 export default dict

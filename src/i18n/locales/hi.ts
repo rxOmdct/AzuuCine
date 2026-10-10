@@ -1313,6 +1313,18 @@ const dict: Translations = {
   'person.job.composer': "संगीत",
   'person.job.dop': "छायांकन",
   'person.job.editor': "संपादन",
+  // — Statistiques (refonte) —
+  'stats.tabAll': "सामान्य",
+  'stats.tabOther': "अन्य",
+  'stats.period': "अवधि",
+  'stats.allYears': "सभी वर्ष",
+  'stats.timeSpent': "बिताया समय",
+  'stats.finished': "पूरे किए",
+  'stats.filmsSeen': "देखी गई फ़िल्में",
+  'stats.rewatched': "दोबारा देखी",
+  'stats.avgLength': "औसत अवधि",
+  'stats.episodesSeen': "देखे गए एपिसोड",
+  'stats.decades': "रिलीज़ के दशक",
 }
 
 export default dict

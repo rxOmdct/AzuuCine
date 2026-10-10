@@ -1315,6 +1315,18 @@ const dict = {
   'person.job.composer': "Musique",
   'person.job.dop': "Image",
   'person.job.editor': "Montage",
+  // — Statistiques (refonte) —
+  'stats.tabAll': "Général",
+  'stats.tabOther': "Autres",
+  'stats.period': "Période",
+  'stats.allYears': "Toutes les années",
+  'stats.timeSpent': "Temps passé",
+  'stats.finished': "Terminés",
+  'stats.filmsSeen': "Films vus",
+  'stats.rewatched': "revus",
+  'stats.avgLength': "Durée moyenne",
+  'stats.episodesSeen': "Épisodes vus",
+  'stats.decades': "Décennies de sortie",
 }
 
 export default dict

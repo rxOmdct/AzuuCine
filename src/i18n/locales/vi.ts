@@ -1313,6 +1313,18 @@ const dict: Translations = {
   'person.job.composer': "Âm nhạc",
   'person.job.dop': "Quay phim",
   'person.job.editor': "Dựng phim",
+  // — Statistiques (refonte) —
+  'stats.tabAll': "Tổng quan",
+  'stats.tabOther': "Khác",
+  'stats.period': "Thời gian",
+  'stats.allYears': "Tất cả các năm",
+  'stats.timeSpent': "Thời gian đã xem",
+  'stats.finished': "Đã xong",
+  'stats.filmsSeen': "Phim đã xem",
+  'stats.rewatched': "xem lại",
+  'stats.avgLength': "Thời lượng trung bình",
+  'stats.episodesSeen': "Tập đã xem",
+  'stats.decades': "Thập niên phát hành",
 }
 
 export default dict

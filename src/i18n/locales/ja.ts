@@ -1313,6 +1313,18 @@ const dict: Translations = {
   'person.job.composer': "音楽",
   'person.job.dop': "撮影",
   'person.job.editor': "編集",
+  // — Statistiques (refonte) —
+  'stats.tabAll': "全体",
+  'stats.tabOther': "その他",
+  'stats.period': "期間",
+  'stats.allYears': "すべての年",
+  'stats.timeSpent': "視聴時間",
+  'stats.finished': "完了",
+  'stats.filmsSeen': "観た映画",
+  'stats.rewatched': "再視聴",
+  'stats.avgLength': "平均の長さ",
+  'stats.episodesSeen': "観たエピソード",
+  'stats.decades': "公開年代",
 }
 
 export default dict

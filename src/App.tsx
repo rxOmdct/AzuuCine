@@ -90,7 +90,7 @@ export default function App() {
         {error && <p className="mt-4 rounded-xl border border-accent p-3 text-sm text-ink">{error}</p>}
         {route === 'home' && <HomePage onOpen={openItem} onAdd={openNew} onNavigate={go} onRoulette={() => setRoulette(true)} onCalendar={() => setCalendar(true)} />}
         {route === 'catalog' && <CatalogPage onOpen={openItem} onAdd={openNew} />}
-        {route === 'stats' && <StatsPage />}
+        {route === 'stats' && <StatsPage onOpen={openItem} />}
         {route === 'settings' && <SettingsPage onOpenAdmin={() => go('admin')} />}
         {route === 'admin' && <AdminPage onBack={() => go('settings')} />}
         {route === 'notfound' && <NotFoundPage onHome={() => go('home')} />}

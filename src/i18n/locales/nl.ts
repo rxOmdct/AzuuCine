@@ -1313,6 +1313,18 @@ const dict: Translations = {
   'person.job.composer': "Muziek",
   'person.job.dop': "Camera",
   'person.job.editor': "Montage",
+  // — Statistiques (refonte) —
+  'stats.tabAll': "Overzicht",
+  'stats.tabOther': "Overig",
+  'stats.period': "Periode",
+  'stats.allYears': "Alle jaren",
+  'stats.timeSpent': "Bestede tijd",
+  'stats.finished': "Afgerond",
+  'stats.filmsSeen': "Geziene films",
+  'stats.rewatched': "opnieuw gezien",
+  'stats.avgLength': "Gemiddelde duur",
+  'stats.episodesSeen': "Geziene afleveringen",
+  'stats.decades': "Decennia van uitgave",
 }
 
 export default dict

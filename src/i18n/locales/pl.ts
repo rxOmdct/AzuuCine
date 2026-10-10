@@ -1453,6 +1453,18 @@ const dict: Translations = {
   'person.job.composer': "Muzyka",
   'person.job.dop': "Zdjęcia",
   'person.job.editor': "Montaż",
+  // — Statistiques (refonte) —
+  'stats.tabAll': "Ogólne",
+  'stats.tabOther': "Inne",
+  'stats.period': "Okres",
+  'stats.allYears': "Wszystkie lata",
+  'stats.timeSpent': "Spędzony czas",
+  'stats.finished': "Ukończone",
+  'stats.filmsSeen': "Obejrzane filmy",
+  'stats.rewatched': "obejrzane ponownie",
+  'stats.avgLength': "Średnia długość",
+  'stats.episodesSeen': "Obejrzane odcinki",
+  'stats.decades': "Dekady premiery",
 }
 
 export default dict

@@ -1313,6 +1313,18 @@ const dict: Translations = {
   'person.job.composer': "Müzik",
   'person.job.dop': "Görüntü yönetmeni",
   'person.job.editor': "Kurgu",
+  // — Statistiques (refonte) —
+  'stats.tabAll': "Genel",
+  'stats.tabOther': "Diğer",
+  'stats.period': "Dönem",
+  'stats.allYears': "Tüm yıllar",
+  'stats.timeSpent': "Harcanan süre",
+  'stats.finished': "Bitenler",
+  'stats.filmsSeen': "İzlenen filmler",
+  'stats.rewatched': "yeniden izlenen",
+  'stats.avgLength': "Ortalama süre",
+  'stats.episodesSeen': "İzlenen bölümler",
+  'stats.decades': "Yayın on yılları",
 }
 
 export default dict

@@ -1313,6 +1313,18 @@ const dict: Translations = {
   'person.job.composer': "음악",
   'person.job.dop': "촬영",
   'person.job.editor': "편집",
+  // — Statistiques (refonte) —
+  'stats.tabAll': "전체",
+  'stats.tabOther': "기타",
+  'stats.period': "기간",
+  'stats.allYears': "모든 연도",
+  'stats.timeSpent': "시청 시간",
+  'stats.finished': "완료",
+  'stats.filmsSeen': "본 영화",
+  'stats.rewatched': "다시 봄",
+  'stats.avgLength': "평균 길이",
+  'stats.episodesSeen': "본 에피소드",
+  'stats.decades': "개봉 연대",
 }
 
 export default dict

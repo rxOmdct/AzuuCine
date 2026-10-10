@@ -1313,6 +1313,18 @@ const dict: Translations = {
   'person.job.composer': "配乐",
   'person.job.dop': "摄影",
   'person.job.editor': "剪辑",
+  // — Statistiques (refonte) —
+  'stats.tabAll': "总览",
+  'stats.tabOther': "其他",
+  'stats.period': "时间段",
+  'stats.allYears': "所有年份",
+  'stats.timeSpent': "观看时长",
+  'stats.finished': "已看完",
+  'stats.filmsSeen': "看过的电影",
+  'stats.rewatched': "重看",
+  'stats.avgLength': "平均时长",
+  'stats.episodesSeen': "看过的集数",
+  'stats.decades': "上映年代",
 }
 
 export default dict

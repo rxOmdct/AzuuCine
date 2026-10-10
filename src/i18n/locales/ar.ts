@@ -1536,6 +1536,18 @@ const dict: Translations = {
   'person.job.composer': "موسيقى",
   'person.job.dop': "تصوير",
   'person.job.editor': "مونتاج",
+  // — Statistiques (refonte) —
+  'stats.tabAll': "عام",
+  'stats.tabOther': "أخرى",
+  'stats.period': "الفترة",
+  'stats.allYears': "كل السنوات",
+  'stats.timeSpent': "الوقت المستغرق",
+  'stats.finished': "المكتملة",
+  'stats.filmsSeen': "الأفلام المشاهدة",
+  'stats.rewatched': "أعيدت مشاهدتها",
+  'stats.avgLength': "متوسط المدة",
+  'stats.episodesSeen': "الحلقات المشاهدة",
+  'stats.decades': "عقود الإصدار",
 }
 
 export default dict

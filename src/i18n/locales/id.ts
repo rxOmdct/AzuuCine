@@ -1313,6 +1313,18 @@ const dict: Translations = {
   'person.job.composer': "Musik",
   'person.job.dop': "Sinematografi",
   'person.job.editor': "Penyunting",
+  // — Statistiques (refonte) —
+  'stats.tabAll': "Umum",
+  'stats.tabOther': "Lainnya",
+  'stats.period': "Periode",
+  'stats.allYears': "Semua tahun",
+  'stats.timeSpent': "Waktu yang dihabiskan",
+  'stats.finished': "Selesai",
+  'stats.filmsSeen': "Film ditonton",
+  'stats.rewatched': "ditonton ulang",
+  'stats.avgLength': "Durasi rata-rata",
+  'stats.episodesSeen': "Episode ditonton",
+  'stats.decades': "Dekade rilis",
 }
 
 export default dict

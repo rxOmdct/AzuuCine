@@ -1453,6 +1453,18 @@ const dict: Translations = {
   'person.job.composer': "Композитор",
   'person.job.dop': "Оператор",
   'person.job.editor': "Монтаж",
+  // — Statistiques (refonte) —
+  'stats.tabAll': "Общее",
+  'stats.tabOther': "Другое",
+  'stats.period': "Период",
+  'stats.allYears': "Все годы",
+  'stats.timeSpent': "Затраченное время",
+  'stats.finished': "Завершено",
+  'stats.filmsSeen': "Просмотрено фильмов",
+  'stats.rewatched': "пересмотрено",
+  'stats.avgLength': "Средняя длительность",
+  'stats.episodesSeen': "Просмотрено серий",
+  'stats.decades': "Десятилетия выхода",
 }
 
 export default dict
