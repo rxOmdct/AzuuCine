@@ -196,6 +196,7 @@ const dict: Translations = {
   'auth.err.notConfirmed': 'Bevestig eerst je adres via de link in je e-mail.',
   'auth.err.exists': 'Er bestaat al een account met dit e-mailadres.',
   'auth.err.weak': 'Wachtwoord te zwak (minstens {n} tekens, mix van letters en cijfers).',
+  'auth.err.pwned': "Dit wachtwoord is uitgelekt bij een bekend datalek — kies een ander.",
   'auth.err.samePassword': 'Je nieuwe wachtwoord moet anders zijn dan het oude.',
   'auth.err.emailRate': 'Te veel verzoeken. Probeer het over een paar minuten opnieuw.',
   'auth.err.rate': 'Te veel pogingen. Probeer het over een paar minuten opnieuw.',

@@ -196,6 +196,7 @@ const dict: Translations = {
   'auth.err.notConfirmed': 'Confirm your address first with the link we emailed you.',
   'auth.err.exists': 'An account already exists with this email.',
   'auth.err.weak': 'Password too weak (at least {n} characters, mix letters and numbers).',
+  'auth.err.pwned': "This password has appeared in a known data breach — please choose another one.",
   'auth.err.samePassword': 'Your new password must be different from the old one.',
   'auth.err.emailRate': 'Too many requests. Try again in a few minutes.',
   'auth.err.rate': 'Too many attempts. Try again in a few minutes.',

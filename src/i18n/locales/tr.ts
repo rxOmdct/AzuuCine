@@ -196,6 +196,7 @@ const dict: Translations = {
   'auth.err.notConfirmed': 'Önce e-postayla gelen bağlantıyla adresini onayla.',
   'auth.err.exists': 'Bu e-postayla zaten bir hesap var.',
   'auth.err.weak': 'Şifre çok zayıf (en az {n} karakter, harf ve rakam karışık).',
+  'auth.err.pwned': "Bu şifre bilinen bir veri sızıntısında yer aldı — lütfen başka bir şifre seç.",
   'auth.err.samePassword': 'Yeni şifren eskisinden farklı olmalı.',
   'auth.err.emailRate': 'Çok fazla istek. Birkaç dakika sonra tekrar dene.',
   'auth.err.rate': 'Çok fazla deneme. Birkaç dakika sonra tekrar dene.',

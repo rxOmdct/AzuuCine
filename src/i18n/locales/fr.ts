@@ -198,6 +198,7 @@ const dict = {
   'auth.err.notConfirmed': 'Confirme d\'abord ton adresse avec le lien reçu par email.',
   'auth.err.exists': 'Un compte existe déjà avec cet email.',
   'auth.err.weak': 'Mot de passe trop faible (au moins {n} caractères, mélange lettres et chiffres).',
+  'auth.err.pwned': "Ce mot de passe est apparu dans une fuite de données connue : choisis-en un autre.",
   'auth.err.samePassword': 'Le nouveau mot de passe doit être différent de l\'ancien.',
   'auth.err.emailRate': 'Trop de demandes. Réessaie dans quelques minutes.',
   'auth.err.rate': 'Trop de tentatives. Réessaie dans quelques minutes.',

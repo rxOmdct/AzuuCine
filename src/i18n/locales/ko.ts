@@ -196,6 +196,7 @@ const dict: Translations = {
   'auth.err.notConfirmed': '먼저 이메일로 받은 링크로 주소를 인증해 주세요.',
   'auth.err.exists': '이미 이 이메일로 가입된 계정이 있어요.',
   'auth.err.weak': '비밀번호가 너무 약해요 ({n}자 이상, 영문과 숫자를 섞어 주세요).',
+  'auth.err.pwned': "이 비밀번호는 알려진 데이터 유출에서 발견됐어요. 다른 비밀번호를 선택해 주세요.",
   'auth.err.samePassword': '새 비밀번호는 이전 비밀번호와 달라야 해요.',
   'auth.err.emailRate': '요청이 너무 많아요. 몇 분 뒤에 다시 시도해 주세요.',
   'auth.err.rate': '시도 횟수가 너무 많아요. 몇 분 뒤에 다시 시도해 주세요.',

@@ -18,7 +18,7 @@ export const buildCsp = (supabaseUrl = '') => [
   "style-src 'self' 'unsafe-inline'",
   `img-src 'self' data: blob: https://image.tmdb.org https://s4.anilist.co${supabaseUrl ? ' ' + supabaseUrl : ''}`,
   "font-src 'self'",
-  `connect-src 'self' https://api.themoviedb.org https://graphql.anilist.co https://image.tmdb.org https://s4.anilist.co${supabaseUrl ? ' ' + supabaseUrl : ''}`,
+  `connect-src 'self' https://api.themoviedb.org https://graphql.anilist.co https://image.tmdb.org https://s4.anilist.co https://api.pwnedpasswords.com${supabaseUrl ? ' ' + supabaseUrl : ''}`,
   "manifest-src 'self'",
   "worker-src 'self'",
   "media-src 'none'",

@@ -196,6 +196,7 @@ const dict: Translations = {
   'auth.err.notConfirmed': 'Primero confirma tu dirección con el enlace que recibiste por correo.',
   'auth.err.exists': 'Ya existe una cuenta con este correo.',
   'auth.err.weak': 'Contraseña demasiado débil (al menos {n} caracteres, mezcla letras y números).',
+  'auth.err.pwned': "Esta contraseña apareció en una filtración de datos conocida: elige otra.",
   'auth.err.samePassword': 'La nueva contraseña tiene que ser distinta de la anterior.',
   'auth.err.emailRate': 'Demasiadas solicitudes. Vuelve a intentarlo en unos minutos.',
   'auth.err.rate': 'Demasiados intentos. Vuelve a intentarlo en unos minutos.',

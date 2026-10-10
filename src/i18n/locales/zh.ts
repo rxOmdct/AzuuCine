@@ -196,6 +196,7 @@ const dict: Translations = {
   'auth.err.notConfirmed': '请先通过邮件里的链接验证你的邮箱。',
   'auth.err.exists': '该邮箱已注册账号。',
   'auth.err.weak': '密码太弱（至少{n}个字符，需混合字母和数字）。',
+  'auth.err.pwned': "此密码曾出现在已知的数据泄露中，请换一个。",
   'auth.err.samePassword': '新密码不能与旧密码相同。',
   'auth.err.emailRate': '请求太频繁了，过几分钟再试吧。',
   'auth.err.rate': '尝试次数太多，过几分钟再试吧。',

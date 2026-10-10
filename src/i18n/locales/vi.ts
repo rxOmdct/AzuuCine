@@ -196,6 +196,7 @@ const dict: Translations = {
   'auth.err.notConfirmed': 'Hãy xác nhận địa chỉ email trước bằng liên kết đã gửi cho bạn.',
   'auth.err.exists': 'Đã có tài khoản dùng email này.',
   'auth.err.weak': 'Mật khẩu quá yếu (ít nhất {n} ký tự, kết hợp chữ và số).',
+  'auth.err.pwned': "Mật khẩu này đã xuất hiện trong một vụ rò rỉ dữ liệu đã biết — hãy chọn mật khẩu khác.",
   'auth.err.samePassword': 'Mật khẩu mới phải khác mật khẩu cũ.',
   'auth.err.emailRate': 'Quá nhiều yêu cầu. Thử lại sau vài phút nhé.',
   'auth.err.rate': 'Quá nhiều lần thử. Thử lại sau vài phút nhé.',

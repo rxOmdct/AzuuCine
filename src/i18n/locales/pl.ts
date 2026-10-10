@@ -198,6 +198,7 @@ const dict: Translations = {
   'auth.err.notConfirmed': 'Najpierw potwierdź swój adres linkiem z e-maila.',
   'auth.err.exists': 'Konto z tym adresem e-mail już istnieje.',
   'auth.err.weak': 'Hasło jest za słabe (co najmniej {n} znaków, litery i cyfry).',
+  'auth.err.pwned': "To hasło pojawiło się w znanym wycieku danych — wybierz inne.",
   'auth.err.samePassword': 'Nowe hasło musi być inne niż poprzednie.',
   'auth.err.emailRate': 'Za dużo próśb. Spróbuj ponownie za kilka minut.',
   'auth.err.rate': 'Za dużo prób. Spróbuj ponownie za kilka minut.',

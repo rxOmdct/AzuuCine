@@ -196,6 +196,7 @@ const dict: Translations = {
   'auth.err.notConfirmed': 'Konfirmasi dulu alamatmu lewat tautan yang dikirim ke email.',
   'auth.err.exists': 'Sudah ada akun dengan email ini.',
   'auth.err.weak': 'Kata sandi terlalu lemah (minimal {n} karakter, campur huruf dan angka).',
+  'auth.err.pwned': "Kata sandi ini pernah muncul dalam kebocoran data yang diketahui — pilih yang lain.",
   'auth.err.samePassword': 'Kata sandi baru harus beda dari yang lama.',
   'auth.err.emailRate': 'Terlalu banyak permintaan. Coba lagi beberapa menit lagi.',
   'auth.err.rate': 'Terlalu banyak percobaan. Coba lagi beberapa menit lagi.',
