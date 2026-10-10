@@ -1,6 +1,6 @@
 import { type Tab } from './BottomNav'
 import { t } from '../i18n'
-import { BarChart3, Home, LibraryBig, Plus, Settings } from 'lucide-react'
+import { BarChart3, Home, LibraryBig, Search, Settings } from 'lucide-react'
 import { cx } from '../lib/utils'
 
 const ITEMS: { tab: Tab; readonly label: string; Icon: typeof Home }[] = [
@@ -27,8 +27,8 @@ export default function SideNav({ current, onChange, onAdd }: Props) {
         onClick={onAdd}
         className="mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-accent-fill px-4 py-2.5 text-sm font-semibold text-on-accent transition active:scale-95"
       >
-        <Plus size={18} strokeWidth={2.2} />
-        {t('nav.addTitle')}
+        <Search size={17} strokeWidth={2.4} />
+        {t('search.title')}
       </button>
 
       <div className="mt-6 flex flex-col gap-1">

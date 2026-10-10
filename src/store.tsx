@@ -9,12 +9,15 @@ import { createSync, type SyncEngine, type SyncStatus } from './lib/cloud/sync'
 import { deleteDatabase, readOtherDatabase } from './lib/db'
 import { cloudFetch } from './lib/cloud/api'
 import { signOut } from './lib/cloud/auth'
+import { disablePush, forgetPushLocally } from './lib/push'
 import { dbNameFor, scopedKey } from './lib/scope'
-import { isPlainObject, LIMITS, readStorage } from './lib/security'
+import { isPlainObject, LIMITS, readStorage, storageGet, storageSet } from './lib/security'
 import { mediaDB, requestPersistentStorage } from './lib/db'
-import { todayISO, uid } from './lib/utils'
-import { episodeCap, seasonPosition } from './lib/franchise'
+import { episodesPatch } from './lib/progress'
+import { uid } from './lib/utils'
+import { episodeCap } from './lib/franchise'
 import { airedCount } from './lib/airing'
+import { logEpisodes } from './lib/challenges'
 
 // Clés propres à l'espace actif (compte connecté, ou appareil sans compte)
 const settingsKey = () => scopedKey('settings')
@@ -57,6 +60,16 @@ interface MediaStore {
   clearAll: () => Promise<void>
   /** Met à jour plusieurs fiches d'un coup (sans changer leur date de modification). */
   patchMany: (patches: { id: string; patch: Partial<MediaInput> }[]) => Promise<void>
+  /** Modification groupée par l'utilisateur (la date de modification avance, comme update). */
+  updateMany: (patches: { id: string; patch: Partial<MediaInput> }[]) => Promise<void>
+  /** Suppression groupée. */
+  removeMany: (ids: string[]) => Promise<void>
+  /**
+   * « Annuler » : remet ces fiches exactement comme elles étaient (dates, épisodes, listes…),
+   * avec une date de modification plus récente que la suppression / le changement, pour que
+   * la synchro (la plus récente gagne) recrée bien la fiche côté serveur.
+   */
+  restore: (snapshots: MediaItem[]) => Promise<void>
 
   // Listes perso
   lists: CustomList[]
@@ -168,8 +181,8 @@ export function MediaProvider({ children, cloudUser }: { children: ReactNode; cl
       getLists: () => listsRef.current,
       applyLists: (next) => setLists(() => next, true),
       getSettings: () => {
-        const { ratingScale, topCategories, accentColor, themeMode, notifPrefs } = settingsRef.current
-        return { ratingScale, topCategories, accentColor, themeMode, notifPrefs }
+        const { ratingScale, topCategories, accentColor, themeMode, notifPrefs, challenges } = settingsRef.current
+        return { ratingScale, topCategories, accentColor, themeMode, notifPrefs, challenges }
       },
       applySettings: (patch) => updateSettingsRef.current(patch, true),
       itemsChanged: () => void reloadItems(),
@@ -181,7 +194,7 @@ export function MediaProvider({ children, cloudUser }: { children: ReactNode; cl
 
     // Données créées sur cet appareil avant les comptes : proposer de les rapatrier
     let alive = true
-    if (localStorage.getItem(scopedKey('device-import', cloudUser.id)) !== 'done') {
+    if (storageGet(scopedKey('device-import', cloudUser.id)) !== 'done') {
       readOtherDatabase(dbNameFor(null))
         .then((old) => {
           const oldLists = normalizeLists(readStorage(scopedKey('lists', null), [])) ?? []
@@ -210,7 +223,7 @@ export function MediaProvider({ children, cloudUser }: { children: ReactNode; cl
   }, [settings.themeMode])
 
   const updateSettings = useCallback((patch: Partial<Settings>, silent = false) => {
-    if (!silent && syncRef.current && ('ratingScale' in patch || 'topCategories' in patch || 'accentColor' in patch || 'themeMode' in patch || 'notifPrefs' in patch)) syncRef.current.markSettings()
+    if (!silent && syncRef.current && ('ratingScale' in patch || 'topCategories' in patch || 'accentColor' in patch || 'themeMode' in patch || 'notifPrefs' in patch || 'challenges' in patch)) syncRef.current.markSettings()
     setSettings((prev) => {
       const next = { ...prev, ...patch }
       try {
@@ -247,15 +260,69 @@ export function MediaProvider({ children, cloudUser }: { children: ReactNode; cl
     async (id: string, patch: Partial<MediaInput>) => {
       const current = itemsRef.current.find((i) => i.id === id)
       if (!current) return
-      await save({ ...current, ...patch, updatedAt: new Date().toISOString() })
+      const next = { ...current, ...patch, updatedAt: new Date().toISOString() }
+      // Défis : on retient le jour où des épisodes sont cochés (ou décochés)
+      const delta = (patch.episodesWatched ?? current.episodesWatched) - current.episodesWatched
+      if (delta) next.episodeLog = logEpisodes(current.episodeLog, delta)
+      await save(next)
     },
     [save],
   )
 
+  // Dernière suppression locale de chaque fiche (une restauration doit être strictement plus récente)
+  const removedAtRef = useRef(new Map<string, number>())
+
   const remove = useCallback(async (id: string) => {
     await mediaDB.remove(id)
+    removedAtRef.current.set(id, Date.now())
     setItems((prev) => prev.filter((i) => i.id !== id))
   }, [])
+
+  const removeMany = useCallback(async (ids: string[]) => {
+    if (!ids.length) return
+    await mediaDB.removeMany(ids)
+    const now = Date.now()
+    for (const id of ids) removedAtRef.current.set(id, now)
+    const gone = new Set(ids)
+    setItems((prev) => prev.filter((i) => !gone.has(i.id)))
+  }, [])
+
+  const updateMany = useCallback(
+    async (patches: { id: string; patch: Partial<MediaInput> }[]) => {
+      const now = new Date().toISOString()
+      const byId = new Map(itemsRef.current.map((i) => [i.id, i]))
+      const changed = patches.flatMap(({ id, patch }) => {
+        const cur = byId.get(id)
+        const next = cur ? normalizeItem({ ...cur, ...patch, updatedAt: now }) : null
+        return next ? [next] : []
+      })
+      if (!changed.length) return
+      await mediaDB.putMany(changed)
+      const map = new Map(changed.map((c) => [c.id, c]))
+      setItems((prev) => prev.map((i) => map.get(i.id) ?? i).sort(byUpdatedDesc))
+    },
+    [setItems],
+  )
+
+  const restore = useCallback(
+    async (snapshots: MediaItem[]) => {
+      // Horodatage plus récent que la suppression (ou la modification) qu'on annule : la synchro
+      // envoie alors une version qui gagne sur la « pierre tombale » déjà partie au serveur.
+      const current = new Map(itemsRef.current.map((i) => [i.id, i.updatedAt]))
+      let latest = Date.now()
+      for (const snap of snapshots) {
+        latest = Math.max(latest, (removedAtRef.current.get(snap.id) ?? 0) + 1, (Date.parse(current.get(snap.id) ?? '') || 0) + 1)
+      }
+      const at = new Date(latest).toISOString()
+      const restored = snapshots.map((s) => normalizeItem({ ...s, updatedAt: at })).filter((i): i is MediaItem => i !== null)
+      if (!restored.length) return
+      await mediaDB.putMany(restored)
+      for (const r of restored) removedAtRef.current.delete(r.id)
+      const map = new Map(restored.map((r) => [r.id, r]))
+      setItems((prev) => [...restored, ...prev.filter((i) => !map.has(i.id))].sort(byUpdatedDesc))
+    },
+    [setItems],
+  )
 
   const incrementEpisode = useCallback(
     async (id: string, delta = 1) => {
@@ -268,26 +335,25 @@ export function MediaProvider({ children, cloudUser }: { children: ReactNode; cl
       const aired = airedCount(item)
       if (delta > 0 && aired != null) next = Math.min(next, Math.max(aired, item.episodesWatched))
       if (next === item.episodesWatched) return
-      const patch: Partial<MediaInput> = { episodesWatched: next }
-      // Série en plusieurs saisons : la saison suit les épisodes vus
-      const pos = seasonPosition({ episodesWatched: next, seasons: item.seasons })
-      if (pos && pos.season !== item.season) patch.season = pos.season
-      if (delta > 0 && (item.status === 'a_voir' || item.status === 'pause')) {
-        patch.status = 'en_cours'
-        if (!item.startDate) patch.startDate = todayISO()
-      }
-      if (cap && next === cap && delta > 0) {
-        patch.status = 'termine'
-        if (!item.endDate) patch.endDate = todayISO()
-      }
+      // Statut, saison et dates (début au premier épisode, fin au dernier) suivent
+      const patch = episodesPatch(item, next)
       await update(id, patch)
     },
     [update],
   )
 
   const importItems = useCallback(async (incoming: MediaItem[], mode: 'merge' | 'replace') => {
-    if (mode === 'replace') await mediaDB.clear()
-    await mediaDB.putMany(incoming)
+    if (mode === 'replace') {
+      await mediaDB.clear()
+      // Remplacement voulu : les fiches importées deviennent la version la plus récente
+      // (sinon le serveur garderait ses versions plus récentes et les appareils divergeraient)
+      const now = new Date().toISOString()
+      await mediaDB.putMany(incoming.map((i) => ({ ...i, updatedAt: now })))
+    } else {
+      // Fusion : une sauvegarde plus ancienne n'écrase pas une fiche modifiée depuis
+      const current = new Map((await mediaDB.getAll()).map((i) => [i.id, i]))
+      await mediaDB.putMany(incoming.filter((i) => !current.has(i.id) || current.get(i.id)!.updatedAt < i.updatedAt))
+    }
     const all = await mediaDB.getAll()
     setItems(all.sort(byUpdatedDesc))
   }, [])
@@ -396,6 +462,8 @@ export function MediaProvider({ children, cloudUser }: { children: ReactNode; cl
         if (engine && navigator.onLine) await engine.syncNow()
         if (!force && engine && engine.status().pending > 0) return 'pending'
         engine?.stop()
+        // Cet appareil ne doit plus recevoir les notifications push de ce compte
+        await disablePush().catch(() => {})
         await wipeAccountFromDevice(userId)
         await signOut()
         return 'done'
@@ -408,6 +476,7 @@ export function MediaProvider({ children, cloudUser }: { children: ReactNode; cl
         })
         if (!res.ok) throw new Error(res.status === 429 ? t('account.err.deleteRate') : t('account.err.delete'))
         syncRef.current?.stop()
+        await forgetPushLocally().catch(() => {})
         await wipeAccountFromDevice(userId)
         await signOut()
       },
@@ -424,13 +493,13 @@ export function MediaProvider({ children, cloudUser }: { children: ReactNode; cl
         await reloadItems()
         // Les données sont maintenant dans le compte : on retire la copie « sans compte » de l'appareil
         await deleteDatabase(dbNameFor(null))
-        for (const name of ['settings', 'lists']) localStorage.removeItem(scopedKey(name, null))
-        localStorage.setItem(scopedKey('device-import', userId), 'done')
+        for (const name of ['settings', 'lists']) storageSet(scopedKey(name, null), null)
+        storageSet(scopedKey('device-import', userId), 'done')
         setDeviceData(null)
         return incoming.length
       },
       dismissDeviceData() {
-        localStorage.setItem(scopedKey('device-import', userId), 'done')
+        storageSet(scopedKey('device-import', userId), 'done')
         setDeviceData(null)
       },
     }
@@ -442,11 +511,11 @@ export function MediaProvider({ children, cloudUser }: { children: ReactNode; cl
   const value = useMemo<MediaStore>(
     () => ({
       items, loading, error, settings: exposedSettings, updateSettings, add, update, remove, incrementEpisode, importItems, setTopList, clearAll,
-      patchMany, lists, createList, renameList, deleteList, toggleInList, mergeLists, account,
+      patchMany, updateMany, removeMany, restore, lists, createList, renameList, deleteList, toggleInList, mergeLists, account,
     }),
     [
       items, loading, error, exposedSettings, updateSettings, add, update, remove, incrementEpisode, importItems, setTopList, clearAll,
-      patchMany, lists, createList, renameList, deleteList, toggleInList, mergeLists, account,
+      patchMany, updateMany, removeMany, restore, lists, createList, renameList, deleteList, toggleInList, mergeLists, account,
     ],
   )
 

@@ -9,6 +9,8 @@ import ConfirmDialog from './ConfirmDialog'
 import { MediaCard } from './MediaCard'
 import Poster from './Poster'
 import { EmptyState } from './ui'
+import { useLibraryActions } from './library/useLibraryActions'
+import { SharedListsSection } from './social/SharedLists'
 
 /** Mosaïque 2×2 des premières affiches d'une liste. */
 function Mosaic({ items }: { items: MediaItem[] }) {
@@ -60,6 +62,7 @@ export function NewListForm({ onCreated, autoFocus }: { onCreated?: (list: Custo
 
 function ListDetail({ list, onBack, onOpen }: { list: CustomList; onBack: () => void; onOpen: (item: MediaItem) => void }) {
   const { items, renameList, deleteList, toggleInList } = useMedia()
+  const actions = useLibraryActions()
   const [renaming, setRenaming] = useState(false)
   const [name, setName] = useState(list.name)
   const [adding, setAdding] = useState(false)
@@ -130,7 +133,7 @@ function ListDetail({ list, onBack, onOpen }: { list: CustomList; onBack: () => 
               const inList = item.listIds?.includes(list.id)
               return (
                 <li key={item.id}>
-                  <button onClick={() => toggleInList(item.id, list.id)} className="flex w-full items-center gap-3 py-2.5 text-start">
+                  <button onClick={() => (inList ? void actions.removeFromList([item.id], list.id) : void toggleInList(item.id, list.id))} className="flex w-full items-center gap-3 py-2.5 text-start">
                     <div className="w-9 shrink-0">
                       <Poster src={item.poster} title={item.title} />
                     </div>
@@ -155,7 +158,7 @@ function ListDetail({ list, onBack, onOpen }: { list: CustomList; onBack: () => 
           </ul>
         </div>
       ) : members.length ? (
-        <div className="grid grid-cols-2 gap-x-3.5 gap-y-6 sm:grid-cols-3">
+        <div className="grid grid-cols-2 gap-x-3.5 gap-y-6 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8">
           {members.map((item) => (
             <MediaCard key={item.id} item={item} onOpen={onOpen} />
           ))}
@@ -213,7 +216,7 @@ export default function ListsView({ onOpen }: { onOpen: (item: MediaItem) => voi
           text={t('lists.noneText')}
         />
       ) : (
-        <div className="grid grid-cols-2 gap-x-3.5 gap-y-6 sm:grid-cols-3">
+        <div className="grid grid-cols-2 gap-x-3.5 gap-y-6 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8">
           {lists.map((l) => {
             const members = items.filter((i) => i.listIds?.includes(l.id))
             return (
@@ -228,6 +231,9 @@ export default function ListsView({ onOpen }: { onOpen: (item: MediaItem) => voi
           })}
         </div>
       )}
+
+      {/* Listes partagées avec d'autres membres (compte requis ; masqué sinon) */}
+      <SharedListsSection />
     </div>
   )
 }

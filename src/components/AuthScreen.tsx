@@ -3,7 +3,9 @@ import { LanguageSelect } from '../i18n/react'
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import { useState, type FormEvent, type ReactNode } from 'react'
 import { PASSWORD_MIN, requestPasswordReset, signIn, signInWithGoogle, signUp, updatePassword } from '../lib/cloud/auth'
+import { USERNAME_RE } from '../lib/cloud/social'
 import { cx } from '../lib/utils'
+import { RANDOM_USERNAME } from './social/WelcomeProfile'
 
 type Mode = 'login' | 'signup' | 'forgot'
 
@@ -50,11 +52,14 @@ function Shell({ children, subtitle }: { children: ReactNode; subtitle: string }
 export default function AuthScreen({ notice }: { notice?: string }) {
   const [mode, setMode] = useState<Mode>('login')
   const [email, setEmail] = useState('')
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string>()
   const [info, setInfo] = useState<string | undefined>(notice)
+  const cleanUsername = username.trim().replace(/^@/, '').toLowerCase()
+  const usernameOk = USERNAME_RE.test(cleanUsername) && !RANDOM_USERNAME.test(cleanUsername)
 
   const switchTo = (m: Mode) => {
     setMode(m)
@@ -78,12 +83,13 @@ export default function AuthScreen({ notice }: { notice?: string }) {
     e.preventDefault()
     setError(undefined)
     setInfo(undefined)
+    if (mode === 'signup' && !usernameOk) return setError(t('social.usernameRule'))
     if (mode === 'signup' && password !== confirm) return setError(t('auth.mismatch'))
     setBusy(true)
     try {
       if (mode === 'login') await signIn(email, password)
       else if (mode === 'signup') {
-        const needsConfirm = await signUp(email, password)
+        const needsConfirm = await signUp(email, password, cleanUsername)
         if (needsConfirm) {
           setInfo(t('auth.created', { email: email.trim() }))
           setMode('login')
@@ -134,6 +140,26 @@ export default function AuthScreen({ notice }: { notice?: string }) {
 
       <form onSubmit={submit} className="space-y-3">
         {mode === 'forgot' && <h2 className="mb-1 text-lg font-semibold">{t('auth.forgotTitle')}</h2>}
+        {mode === 'signup' && (
+          <div>
+            <div className="relative">
+              <span className="pointer-events-none absolute start-3.5 top-1/2 -translate-y-1/2 text-ink-3">@</span>
+              <input
+                className="field ps-8"
+                value={username}
+                onChange={(e) => setUsername(e.target.value.toLowerCase())}
+                placeholder={t('welcome.usernamePh')}
+                aria-label={t('social.username')}
+                autoComplete="username"
+                autoCapitalize="off"
+                spellCheck={false}
+                maxLength={21}
+                required
+              />
+            </div>
+            <p className={cx('mt-1.5 text-xs', username && !usernameOk ? 'text-accent' : 'text-ink-3')}>{t('social.usernameRule')}</p>
+          </div>
+        )}
         <input
           className="field"
           type="email"
@@ -172,6 +198,7 @@ export default function AuthScreen({ notice }: { notice?: string }) {
           {busy && <Loader2 size={17} className="animate-spin" />}
           {mode === 'login' ? t('auth.login') : mode === 'signup' ? t('auth.signup') : t('auth.sendLink')}
         </button>
+        {mode === 'signup' && <p className="text-center text-xs leading-relaxed text-ink-3">{t('auth.consent')}</p>}
       </form>
 
       <div className="mt-5 text-center text-sm">
@@ -190,6 +217,7 @@ export default function AuthScreen({ notice }: { notice?: string }) {
       <p className="mt-10 text-center text-[11px] leading-relaxed text-ink-3">
         {t('auth.privacy')}
       </p>
+      <LegalLinks />
     </Shell>
   )
 }
@@ -233,5 +261,16 @@ export function NewPasswordScreen({ onDone }: { onDone: () => void }) {
         </button>
       </form>
     </Shell>
+  )
+}
+
+/** Liens vers les pages légales (statiques, hors de l'app). */
+export function LegalLinks() {
+  return (
+    <nav className="mt-4 flex flex-wrap justify-center gap-x-4 gap-y-1 text-[11px] text-ink-3">
+      <a href="/legal.html#conditions" target="_blank" rel="noopener" className="underline underline-offset-2">{t('legal.terms')}</a>
+      <a href="/privacy.html" target="_blank" rel="noopener" className="underline underline-offset-2">{t('legal.privacy')}</a>
+      <a href="/legal.html#mentions" target="_blank" rel="noopener" className="underline underline-offset-2">{t('legal.notice')}</a>
+    </nav>
   )
 }

@@ -6,6 +6,7 @@ import { subtypeLabel, tmdbGenres } from './genres'
 import { franchiseKey } from './franchise'
 import { cleanText, isSafeExternalId, isSafeTmdbPath, LIMITS, remoteImage, safeCountries, safeDay, safePosterUrl, safeSeasons, safeStringList } from './security'
 import { localDay } from './utils'
+import { parseAniListLinks, parseTmdbProviders, type StreamLink, type WatchRegion } from './watchProviders'
 
 /**
  * Recherche dans les bases publiques :
@@ -107,6 +108,7 @@ interface TmdbItem {
   vote_average?: number
   vote_count?: number
   popularity?: number
+  overview?: string
 }
 
 /** Clé v3 (32 caractères hexadécimaux) ou jeton de lecture v4 (JWT). */
@@ -116,7 +118,7 @@ export function isPlausibleTmdbKey(key: string): boolean {
 }
 
 /** Seules ces adresses de l'API TMDB peuvent être appelées. */
-const TMDB_PATHS = /^\/(search\/multi|configuration|discover\/(movie|tv)|(movie|tv)\/\d{1,10}(\/recommendations|\/season\/\d{1,3})?)$/
+const TMDB_PATHS = /^\/(search\/(multi|person)|configuration|discover\/(movie|tv)|(movie|tv)\/\d{1,10}(\/recommendations|\/season\/\d{1,3})?|find\/(tt)?\d{1,10}|person\/\d{1,10})$/
 
 /** « Clé » spéciale : avec un compte, les requêtes passent par le serveur qui détient la vraie clé TMDB. */
 export const CLOUD_TMDB = 'cloud-proxy'
@@ -580,6 +582,21 @@ interface TmdbCredits {
 const names = (list: (string | undefined)[], max: number) =>
   [...new Set(list.map((n) => cleanText(n, 60)).filter((n): n is string => !!n))].slice(0, max)
 
+const tmdbPersonId = (id: unknown) => (typeof id === 'number' && Number.isInteger(id) && id > 0 && id < 1e10 ? `tmdbp:${id}` : undefined)
+const aniPersonId = (id: unknown) => (typeof id === 'number' && Number.isInteger(id) && id > 0 && id < 1e10 ? `anilistp:${id}` : undefined)
+
+/** Noms + pages des personnes (sans doublon, 3 au plus). */
+function crewRefs(list: { id?: number; name?: string }[], toId: (id: unknown) => string | undefined): CrewRef[] {
+  const out: CrewRef[] = []
+  for (const c of list) {
+    const name = cleanText(c.name, 60)
+    if (!name || out.some((o) => o.name === name)) continue
+    out.push({ name, personId: toId(c.id) })
+    if (out.length >= 3) break
+  }
+  return out
+}
+
 /** Réalisation, production et casting principal depuis TMDB. */
 export async function getTmdbCredits(externalId: string, key: string): Promise<Credits | undefined> {
   if (!isSafeExternalId(externalId) || !externalId.startsWith('tmdb:')) return undefined
@@ -1013,4 +1030,245 @@ export function releaseToResult(r: GlobalRelease): SearchResult | null {
     kindLabel: kindLabel(type),
     typeGuess: type,
   })
+}
+
+// ─────────────────────────── Fiche détaillée (note moyenne, casting) ───────────────────────────
+
+export interface CastMember {
+  name: string
+  /** Personnage joué */
+  role?: string
+  photo?: string
+  /** Doubleur·se (animes) */
+  voice?: string
+  /** Page de la personne (acteur·rice, ou doubleur·se pour les animes) : « tmdbp:123 » / « anilistp:123 » */
+  personId?: string
+}
+
+/** Personne de l'équipe (réalisation, création) avec sa page. */
+export interface CrewRef {
+  name: string
+  personId?: string
+}
+
+export interface TitleExtras {
+  /** Image de scène (paysage) */
+  backdrop?: string
+  /** Note moyenne du public, sur 10 */
+  average?: number
+  votes?: number
+  /** Répartition des notes du public (AniList) : note sur 10 → nombre de votes */
+  distribution?: { score: number; amount: number }[]
+  cast: CastMember[]
+  /** Réalisation (films) ou création (séries) */
+  directors: string[]
+  /** Les mêmes, avec de quoi ouvrir leur page */
+  directorPeople?: CrewRef[]
+  directorKind: 'director' | 'creator'
+  tagline?: string
+  runtime?: number
+  seasons?: number
+  /** Où regarder, par pays (TMDB / JustWatch). Absent = inconnu (ex. proxy pas encore à jour). */
+  watch?: Record<string, WatchRegion>
+  /** Liens directs vers les plateformes de streaming (AniList) */
+  streaming?: StreamLink[]
+}
+
+interface TmdbExtras {
+  vote_average?: number
+  vote_count?: number
+  backdrop_path?: string | null
+  tagline?: string
+  runtime?: number
+  episode_run_time?: number[]
+  number_of_seasons?: number
+  created_by?: { id?: number; name?: string }[]
+  credits?: {
+    cast?: { id?: number; name?: string; character?: string; profile_path?: string | null; order?: number }[]
+    crew?: { id?: number; name?: string; job?: string }[]
+  }
+  'watch/providers'?: unknown
+}
+
+const extrasCache = new Map<string, Promise<TitleExtras>>()
+
+async function tmdbExtras(externalId: string, key: string): Promise<TitleExtras> {
+  const [, kind, id] = externalId.split(':') as ['tmdb', 'movie' | 'tv', string]
+  // Une seule requête pour le casting et « Où regarder ». Si le proxy n'accepte pas encore la combinaison
+  // (fonction serveur pas redéployée), on retombe sur le casting seul.
+  const d = await tmdbFetch<TmdbExtras>(`/${kind}/${id}`, key, { append_to_response: 'credits,watch/providers' }).catch((e: unknown) => {
+    if (key.trim() !== CLOUD_TMDB) throw e
+    return tmdbFetch<TmdbExtras>(`/${kind}/${id}`, key, { append_to_response: 'credits' })
+  })
+  const cast = (Array.isArray(d.credits?.cast) ? d.credits!.cast! : [])
+    .slice()
+    .sort((a, b) => (a.order ?? 99) - (b.order ?? 99))
+    .slice(0, 20)
+    .map((c): Partial<CastMember> => ({
+      name: cleanText(c.name, 60),
+      role: cleanText(c.character, 80),
+      photo: isSafeTmdbPath(c.profile_path) ? `${TMDB_IMG}/w185${c.profile_path}` : undefined,
+      personId: tmdbPersonId(c.id),
+    }))
+    .filter((c): c is CastMember => !!c.name)
+  const crew = Array.isArray(d.credits?.crew) ? d.credits!.crew! : []
+  const votes = count(d.vote_count, 100_000_000)
+  return {
+    backdrop: isSafeTmdbPath(d.backdrop_path) ? `${TMDB_IMG}/w780${d.backdrop_path}` : undefined,
+    average: tmdbPublicRating(d.vote_average, d.vote_count),
+    votes,
+    cast,
+    directors:
+      kind === 'movie'
+        ? names(crew.filter((c) => c.job === 'Director').map((c) => c.name), 3)
+        : names((Array.isArray(d.created_by) ? d.created_by : []).map((c) => c.name), 3),
+    directorPeople: crewRefs(
+      kind === 'movie' ? crew.filter((c) => c.job === 'Director') : Array.isArray(d.created_by) ? d.created_by : [],
+      tmdbPersonId,
+    ),
+    directorKind: kind === 'movie' ? 'director' : 'creator',
+    tagline: cleanText(d.tagline, 200),
+    runtime: count(kind === 'movie' ? d.runtime : d.episode_run_time?.[0], 6000),
+    seasons: kind === 'tv' ? count(d.number_of_seasons, 500) : undefined,
+    watch: parseTmdbProviders(d['watch/providers']),
+  }
+}
+
+const ANILIST_EXTRAS = `
+query ($id: Int) {
+  Media(id: $id, type: ANIME) {
+    averageScore
+    bannerImage
+    duration
+    stats { scoreDistribution { score amount } }
+    characters(sort: [ROLE, RELEVANCE], perPage: 16) {
+      edges {
+        node { name { full } image { medium } }
+        voiceActors(language: JAPANESE, sort: [RELEVANCE]) { id name { full } }
+      }
+    }
+    staff(sort: [RELEVANCE], perPage: 12) { edges { role node { id name { full } } } }
+    externalLinks { site url type language color icon }
+  }
+}`
+
+interface AniExtras {
+  averageScore?: number | null
+  bannerImage?: string | null
+  duration?: number | null
+  stats?: { scoreDistribution?: { score?: number; amount?: number }[] | null } | null
+  characters?: { edges?: { node?: { name?: { full?: string }; image?: { medium?: string } }; voiceActors?: { id?: number; name?: { full?: string } }[] }[] } | null
+  staff?: { edges?: { role?: string; node?: { id?: number; name?: { full?: string } } }[] } | null
+  externalLinks?: unknown
+}
+
+async function aniListExtras(externalId: string): Promise<TitleExtras> {
+  const id = Number(externalId.split(':')[1])
+  const res = await fetch(ANILIST, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify({ query: ANILIST_EXTRAS, variables: { id } }),
+    referrerPolicy: 'no-referrer',
+    credentials: 'omit',
+  })
+  if (res.status === 429) throw new Error(t('err.anilistRate'))
+  if (!res.ok) throw new Error(t('err.anilistStatus', { status: res.status }))
+  const json = (await res.json()) as { data?: { Media?: AniExtras } }
+  const m = json.data?.Media ?? {}
+  const distribution = (Array.isArray(m.stats?.scoreDistribution) ? m.stats!.scoreDistribution! : [])
+    .map((s) => ({ score: count(s.score, 100), amount: count(s.amount, 100_000_000) ?? 0 }))
+    .filter((s): s is { score: number; amount: number } => s.score != null && s.score % 10 === 0)
+    .map((s) => ({ score: s.score / 10, amount: s.amount }))
+    .sort((a, b) => a.score - b.score)
+  const votes = distribution.reduce((n, s) => n + s.amount, 0)
+  const cast = (Array.isArray(m.characters?.edges) ? m.characters!.edges! : [])
+    .map((e): Partial<CastMember> => ({
+      name: cleanText(e.node?.name?.full, 60),
+      photo: safePosterUrl(e.node?.image?.medium),
+      voice: cleanText(e.voiceActors?.[0]?.name?.full, 60),
+      personId: aniPersonId(e.voiceActors?.[0]?.id),
+    }))
+    .filter((c): c is CastMember => !!c.name)
+  const staff = Array.isArray(m.staff?.edges) ? m.staff!.edges! : []
+  return {
+    backdrop: safePosterUrl(m.bannerImage),
+    average: typeof m.averageScore === 'number' && m.averageScore > 0 ? Math.round(m.averageScore) / 10 : undefined,
+    votes: votes || undefined,
+    distribution: votes ? distribution : undefined,
+    cast,
+    directors: names(staff.filter((s) => /^Director$/i.test(s.role ?? '')).map((s) => s.node?.name?.full), 3),
+    directorPeople: crewRefs(
+      staff.filter((s) => /^Director$/i.test(s.role ?? '')).map((s) => ({ id: s.node?.id, name: s.node?.name?.full })),
+      aniPersonId,
+    ),
+    directorKind: 'director',
+    runtime: count(m.duration, 6000),
+    streaming: parseAniListLinks(m.externalLinks),
+  }
+}
+
+/** Infos de la fiche (note moyenne, votes, casting…), gardées en mémoire le temps de la session. */
+export function getTitleExtras(externalId: string, tmdbKey?: string): Promise<TitleExtras> {
+  if (!isSafeExternalId(externalId)) return Promise.reject(new Error(t('err.tmdbRef')))
+  const isTmdb = externalId.startsWith('tmdb:')
+  if (isTmdb && !tmdbKey?.trim()) return Promise.reject(new Error(t('search.animeOnly')))
+  const cached = extrasCache.get(externalId)
+  if (cached) return cached
+  const p = isTmdb ? tmdbExtras(externalId, tmdbKey!) : aniListExtras(externalId)
+  extrasCache.set(externalId, p)
+  p.catch(() => extrasCache.delete(externalId))
+  return p
+}
+
+// ─────────────────────────── Import depuis d'autres applis ───────────────────────────
+
+/** Résultat TMDB avec de quoi créer une fiche sans requête de détail (import en masse). */
+function tmdbWithPrefill(r: TmdbItem, kind: 'movie' | 'tv'): SearchResult | null {
+  const base = tmdbToResult(r, kind)
+  if (!base) return null
+  const guess = guessTmdbType(kind, r.genre_ids ?? [], r.origin_country ?? [], r.original_language)
+  return safeResult({
+    ...base,
+    prefill: {
+      title: base.title,
+      originalTitle: base.originalTitle,
+      type: guess.type,
+      subtype: guess.subtype,
+      year: base.year,
+      overview: r.overview || undefined,
+      genres: tmdbGenres(r.genre_ids ?? []).filter((g) => guess.type === 'film' || g !== 'Animation'),
+      externalId: base.externalId,
+      countries: r.origin_country?.length ? r.origin_country.slice(0, 3) : undefined,
+      poster: base.posterUrl,
+      publicRating: tmdbPublicRating(r.vote_average, r.vote_count),
+    },
+  })
+}
+
+/** Recherche TMDB (films et séries) avec métadonnées de base, dans l'ordre de pertinence de TMDB. */
+export async function tmdbImportSearch(query: string, key: string): Promise<SearchResult[]> {
+  const data = await tmdbFetch<{ results: TmdbItem[] }>('/search/multi', key, { query: query.slice(0, 100), include_adult: 'false' })
+  return (Array.isArray(data.results) ? data.results : [])
+    .filter((r) => r && (r.media_type === 'movie' || r.media_type === 'tv'))
+    .slice(0, 20)
+    .map((r) => tmdbWithPrefill(r, r.media_type as 'movie' | 'tv'))
+    .filter((r): r is SearchResult => r !== null)
+}
+
+/** Fiche TMDB à partir d'un identifiant TVDB (TV Time) ou IMDb. */
+export async function tmdbFindExternal(id: string, source: 'tvdb_id' | 'imdb_id', key: string): Promise<SearchResult | undefined> {
+  if (!(source === 'tvdb_id' ? /^\d{1,10}$/ : /^tt\d{1,10}$/).test(id)) return undefined
+  const data = await tmdbFetch<{ movie_results?: TmdbItem[]; tv_results?: TmdbItem[] }>(`/find/${id}`, key, { external_source: source })
+  const tv = Array.isArray(data.tv_results) ? data.tv_results[0] : undefined
+  const movie = Array.isArray(data.movie_results) ? data.movie_results[0] : undefined
+  return (tv && tmdbWithPrefill(tv, 'tv')) || (movie && tmdbWithPrefill(movie, 'movie')) || undefined
+}
+
+export { ANILIST, ANILIST_FIELDS, aniToResult, tmdbFetch, tmdbToResult, TMDB_IMG, type AniMedia, type TmdbItem }
+/** Adresse de l'affiche TMDB d'un titre (listes partagées : la copie locale de l'affiche ne se partage pas). */
+export async function getTmdbPosterUrl(externalId: string, key: string): Promise<string | undefined> {
+  if (!isSafeExternalId(externalId) || !externalId.startsWith('tmdb:')) return undefined
+  const [, kind, id] = externalId.split(':') as ['tmdb', 'movie' | 'tv', string]
+  const d = await tmdbFetch<{ poster_path?: string | null }>(`/${kind}/${id}`, key)
+  return isSafeTmdbPath(d.poster_path) ? `${TMDB_IMG}/w342${d.poster_path}` : undefined
 }

@@ -7,6 +7,8 @@ import { useMedia } from '../store'
 import type { TopCategory } from '../types'
 import { TypeBadge } from './Badges'
 import Poster from './Poster'
+import { useBackToClose } from '../lib/backNav'
+import { useEscape } from '../lib/escape'
 import { useScrollLock } from '../lib/scrollLock'
 
 interface Props {
@@ -31,6 +33,8 @@ export default function TopFiveEditor({ category: initialCategory, onClose }: Pr
   const byId = useMemo(() => new Map(items.map((i) => [i.id, i])), [items])
 
   useScrollLock()
+  useEscape(onClose)
+  useBackToClose(onClose)
 
   /** Changer de catégorie enregistre d'abord celle en cours. */
   const switchCategory = async (cat: TopCategory) => {
@@ -68,7 +72,7 @@ export default function TopFiveEditor({ category: initialCategory, onClose }: Pr
   }
 
   return (
-    <div className="sheet-in fixed inset-0 z-50 flex flex-col bg-bg" role="dialog" aria-modal="true" aria-label={t('top.editLabel')}>
+    <div className="sheet sheet-in" role="dialog" aria-modal="true" aria-label={t('top.editLabel')}>
       <header className="safe-top border-b border-line">
         <div className="mx-auto flex max-w-2xl items-center gap-2 px-3 py-2.5">
           <button onClick={onClose} className="grid size-10 place-items-center rounded-full text-ink-2" aria-label={t('common.close')}>
@@ -83,7 +87,7 @@ export default function TopFiveEditor({ category: initialCategory, onClose }: Pr
         </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto overscroll-contain">
+      <div className="sheet-scroll">
         <div className="safe-bottom mx-auto max-w-2xl space-y-6 px-4 py-5 pb-16">
           <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4">
             {TOP_CATEGORIES.filter((c) => c.value === category || settings.topCategories.includes(c.value)).map((c) => (

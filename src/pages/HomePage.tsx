@@ -7,11 +7,12 @@ import Avatar from '../components/social/Avatar'
 import FriendsFeed from '../components/social/FriendsFeed'
 import Poster from '../components/Poster'
 import TopFive from '../components/TopFive'
+import ChallengesCard from '../components/challenges/ChallengesCard'
 import Recommendations from '../components/Recommendations'
 import HomeHero, { ContinueCard } from '../components/HomeHero'
 import type { Tab } from '../components/BottomNav'
 import { EmptyState, LinkArrow, PageHeader, SectionTitle, StatTile } from '../components/ui'
-import { CACHE_EVENT, isCaughtUp, loadAiring, needsCheck, novelties, refreshAiring, saveAiring, trackable } from '../lib/airing'
+import { CACHE_EVENT, isCaughtUp, loadAiring, needsCheck, refreshAiring, saveAiring, trackable } from '../lib/airing'
 import { addEpisodeNotifications } from '../lib/cloud/notifications'
 import { useOnResume } from '../lib/onResume'
 import { calendarEvents } from '../lib/releases'
@@ -51,14 +52,20 @@ export default function HomePage({ onOpen, onAdd, onNavigate, onRoulette, onCale
   // Revérifié aussi au retour dans l'app : un épisode sorti entre-temps fait réapparaître la série dans « Continuer »
   const airingStarted = useRef(false)
   const airingRunning = useRef(false)
+  // Vérification des sorties en cours (au lancement) : sert à ne pas afficher une série dont on ignore encore si je suis à jour
+  const [checkingAiring, setCheckingAiring] = useState(() => navigator.onLine)
   const latest = useRef({ items, tmdbKey: settings.tmdbKey })
   latest.current = { items, tmdbKey: settings.tmdbKey }
   const checkAiring = useCallback(() => {
     const { items, tmdbKey } = latest.current
-    if (airingRunning.current || !navigator.onLine) return
+    if (airingRunning.current) return
     const cache = loadAiring()
-    if (!trackable(items).some((i) => needsCheck(i, cache))) return
+    if (!navigator.onLine || !trackable(items).some((i) => needsCheck(i, cache))) {
+      setCheckingAiring(false)
+      return
+    }
     airingRunning.current = true
+    setCheckingAiring(true)
     void refreshAiring(items, cache, tmdbKey)
       .then((next) => {
         saveAiring(next)
@@ -72,21 +79,27 @@ export default function HomePage({ onOpen, onAdd, onNavigate, onRoulette, onCale
           if (info.backdrop && !i.backdrop) patch.backdrop = info.backdrop
           return Object.keys(patch).length ? [{ id: i.id, patch }] : []
         })
-        // Notifications : nouveaux épisodes / saisons des séries suivies (dédoublonné côté serveur)
+        // Notifications : on envoie le dernier épisode sorti de chaque série encore en diffusion ;
+        // le serveur retient le précédent et ne signale que ce qui est sorti depuis (le passé n'est pas « nouveau »).
         if (social.enabled) {
-          const notices = novelties(items, next)
-            .filter((nv) => nv.kind !== 'upcoming')
-            .map((nv) => ({ item_id: nv.item.id, kind: nv.kind === 'new_season' ? ('new_season' as const) : ('new_episode' as const), episode: nv.info.aired, count: nv.unwatched }))
-          if (notices.length)
-            void addEpisodeNotifications(notices).then((n) => {
-              if (n > 0) void social.refresh()
-            })
+          const notices = trackable(items).flatMap((i) => {
+            const info = next[i.id]
+            if (!info || info.ended || info.aired < 1 || i.status === 'abandonne') return []
+            const kind = i.status === 'termine' ? ('new_season' as const) : ('new_episode' as const)
+            return [{ item_id: i.id, kind, episode: info.aired, count: Math.max(1, info.aired - i.episodesWatched) }]
+          })
+          void (async () => {
+            let created = 0
+            for (let k = 0; k < notices.length; k += 50) created += await addEpisodeNotifications(notices.slice(k, k + 50))
+            if (created > 0) void social.refresh()
+          })()
         }
         if (patches.length) return patchMany(patches)
       })
       .catch(() => {})
       .finally(() => {
         airingRunning.current = false
+        setCheckingAiring(false)
       })
   }, [patchMany, social])
   useEffect(() => {
@@ -95,6 +108,16 @@ export default function HomePage({ onOpen, onAdd, onNavigate, onRoulette, onCale
     checkAiring()
   }, [loading, checkAiring])
   useOnResume(checkAiring, !loading)
+  // Séries arrivées après le lancement (synchro du compte) : on vérifie aussi leurs sorties
+  const unknownCount = useMemo(() => {
+    const cache = loadAiring()
+    return trackable(items).filter((i) => !cache[i.id]).length
+  }, [items])
+  useEffect(() => {
+    if (loading || !airingStarted.current || !unknownCount) return
+    const id = setTimeout(checkAiring, 800)
+    return () => clearTimeout(id)
+  }, [loading, unknownCount, checkAiring])
 
   const [cacheVersion, setCacheVersion] = useState(0)
   useEffect(() => {
@@ -112,7 +135,10 @@ export default function HomePage({ onOpen, onAdd, onNavigate, onRoulette, onCale
 
   // En cours, sans les séries où j'ai tout vu en attendant le prochain épisode
   const airing = useMemo(() => loadAiring(), [cacheVersion]) // eslint-disable-line react-hooks/exhaustive-deps
-  const inProgress = items.filter((i) => i.status === 'en_cours' && !isCaughtUp(i, airing))
+  // Pendant la vérification, une série suivie dont on ne connaît pas encore les sorties reste masquée :
+  // sinon elle s'affichait puis disparaissait quelques secondes après (une fois vue « à jour »).
+  const unknownWhileChecking = (i: MediaItem) => (checkingAiring || loading) && !airing[i.id] && trackable([i]).length > 0
+  const inProgress = items.filter((i) => i.status === 'en_cours' && !isCaughtUp(i, airing) && !unknownWhileChecking(i))
   // Bannière : ce que je regarde en ce moment (le plus récemment touché), sinon le prochain « à voir »
   const byRecent = [...inProgress].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
   const firstToWatch = items.find((i) => i.status === 'a_voir')
@@ -215,6 +241,8 @@ export default function HomePage({ onOpen, onAdd, onNavigate, onRoulette, onCale
               </div>
             </>
           )}
+
+          <ChallengesCard onOpen={onOpen} />
 
           {toWatch.length > 0 && (
             <>

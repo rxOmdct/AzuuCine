@@ -1,5 +1,5 @@
 import { ArrowLeft, Ban, Loader2, MessageSquareOff, RotateCcw, Search, Star } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import ConfirmDialog from '../components/ConfirmDialog'
 import { EmptyState, PageHeader, SectionTitle, StatTile } from '../components/ui'
 import { fmtNumber, t } from '../i18n'
@@ -15,8 +15,10 @@ import {
   type AdminUser,
 } from '../lib/cloud/admin'
 import { cx, formatDate } from '../lib/utils'
+import { useAdminAlerts } from '../components/moderation/useAdminAlerts'
+import { BugsTab, ErrorsTab, ReportsTab, SuspendedTab } from './admin/ModerationTabs'
 
-type Tab = 'overview' | 'users' | 'reviews'
+type Tab = 'overview' | 'reports' | 'users' | 'suspended' | 'reviews' | 'bugs' | 'errors'
 
 const USERS_PAGE = 50
 const REVIEWS_PAGE = 30
@@ -368,15 +370,23 @@ function ReviewsTab() {
 
 /* ------------------------------------------------------------------ Page */
 
-const TABS: { id: Tab; label: () => string }[] = [
+const TABS: { id: Tab; label: () => string; alert?: 'reports' | 'bugs' | 'errors' | 'suspended' }[] = [
   { id: 'overview', label: () => t('admin.tabOverview') },
+  { id: 'reports', label: () => t('adminMod.tabReports'), alert: 'reports' },
   { id: 'users', label: () => t('admin.tabUsers') },
+  { id: 'suspended', label: () => t('adminMod.tabSuspended'), alert: 'suspended' },
   { id: 'reviews', label: () => t('admin.tabReviews') },
+  { id: 'bugs', label: () => t('adminMod.tabBugs'), alert: 'bugs' },
+  { id: 'errors', label: () => t('adminMod.tabErrors'), alert: 'errors' },
 ]
 
 export default function AdminPage({ onBack }: { onBack: () => void }) {
   const [allowed, setAllowed] = useState<boolean | null>(null)
   const [tab, setTab] = useState<Tab>('overview')
+  // Compteurs « à traiter » (signalements ouverts, nouveaux bugs, nouvelles erreurs), relus après chaque action
+  const [alertsKey, setAlertsKey] = useState(0)
+  const alerts = useAdminAlerts(allowed === true, alertsKey)
+  const refreshAlerts = useCallback(() => setAlertsKey((k) => k + 1), [])
 
   useEffect(() => {
     let alive = true
@@ -403,18 +413,25 @@ export default function AdminPage({ onBack }: { onBack: () => void }) {
         <EmptyState title={t('admin.title')} text={t('admin.loadError')} />
       ) : (
         <>
-          <div className="grid grid-cols-3 gap-1 rounded-full border border-line p-1">
+          <div role="tablist" className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
             {TABS.map((tb) => {
               const on = tab === tb.id
+              const n = tb.alert && alerts ? alerts[tb.alert] : 0
               return (
                 <button
                   key={tb.id}
                   type="button"
-                  aria-pressed={on}
+                  role="tab"
+                  aria-selected={on}
                   onClick={() => setTab(tb.id)}
-                  className={cx('rounded-full py-2 text-sm font-medium transition-colors', on ? 'bg-ink text-bg' : 'text-ink-3')}
+                  className={cx('chip shrink-0', on && 'chip-on')}
                 >
                   {tb.label()}
+                  {n > 0 && (
+                    <span className={cx('min-w-5 rounded-full px-1.5 text-center text-[11px] font-semibold tabular-nums', tb.alert === 'suspended' ? (on ? 'bg-bg/20' : 'bg-surface-2 text-ink-2') : 'bg-accent-fill text-on-accent')}>
+                      {fmtNumber(n)}
+                    </span>
+                  )}
                 </button>
               )
             })}
@@ -423,6 +440,10 @@ export default function AdminPage({ onBack }: { onBack: () => void }) {
           {tab === 'overview' && <OverviewTab />}
           {tab === 'users' && <UsersTab />}
           {tab === 'reviews' && <ReviewsTab />}
+          {tab === 'reports' && <ReportsTab onChange={refreshAlerts} />}
+          {tab === 'suspended' && <SuspendedTab onChange={refreshAlerts} />}
+          {tab === 'bugs' && <BugsTab onChange={refreshAlerts} />}
+          {tab === 'errors' && <ErrorsTab onChange={refreshAlerts} />}
         </>
       )}
     </>

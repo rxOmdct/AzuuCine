@@ -1,10 +1,12 @@
-import { Loader2, Tv } from 'lucide-react'
+import { Check, Loader2, MessageCircle, Tv, Users } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { t } from '../../i18n'
 import { listNotifications, markNotificationsRead, type AppNotification, type NotificationKind } from '../../lib/cloud/notifications'
 import { cx, formatDate } from '../../lib/utils'
 import { EmptyState } from '../ui'
 import Avatar from './Avatar'
+import { respondToInvite } from '../../lib/cloud/sharedLists'
+import { useSocial } from './SocialProvider'
 import Sheet from './Sheet'
 
 const PAGE = 30
@@ -18,10 +20,24 @@ const VERB: Record<NotificationKind, () => string> = {
   reaction: () => t('notif.reaction'),
   new_episode: () => '',
   new_season: () => '',
+  review_comment: () => t('notif.review_comment'),
+  shared_list_invite: () => t('notif.shared_list_invite'),
 }
 
 /** Liste des notifications (abonnements, réactions, nouveaux épisodes). Marque comme lues à l'ouverture. */
-export default function Notifications({ onClose, onOpenProfile, onOpenItem }: { onClose: () => void; onOpenProfile: (username: string) => void; onOpenItem: (itemId: string) => void }) {
+export default function Notifications({
+  onClose,
+  onOpenProfile,
+  onOpenItem,
+  onOpenComments,
+  onOpenSharedList,
+}: {
+  onClose: () => void
+  onOpenProfile: (username: string) => void
+  onOpenItem: (itemId: string) => void
+  onOpenComments?: (itemId: string, title: string) => void
+  onOpenSharedList?: (listId: string) => void
+}) {
   const [items, setItems] = useState<AppNotification[] | undefined>(undefined)
   const [done, setDone] = useState(false)
   const [loadingMore, setLoadingMore] = useState(false)
@@ -74,7 +90,7 @@ export default function Notifications({ onClose, onOpenProfile, onOpenItem }: { 
       ) : (
         <ul>
           {items.map((n) => (
-            <Row key={n.id} n={n} onOpenProfile={onOpenProfile} onOpenItem={onOpenItem} />
+            <Row key={n.id} n={n} onOpenProfile={onOpenProfile} onOpenItem={onOpenItem} onOpenComments={onOpenComments} onOpenSharedList={onOpenSharedList} />
           ))}
           {!done && (
             <li className="p-4">
@@ -89,7 +105,19 @@ export default function Notifications({ onClose, onOpenProfile, onOpenItem }: { 
   )
 }
 
-function Row({ n, onOpenProfile, onOpenItem }: { n: AppNotification; onOpenProfile: (username: string) => void; onOpenItem: (itemId: string) => void }) {
+function Row({
+  n,
+  onOpenProfile,
+  onOpenItem,
+  onOpenComments,
+  onOpenSharedList,
+}: {
+  n: AppNotification
+  onOpenProfile: (username: string) => void
+  onOpenItem: (itemId: string) => void
+  onOpenComments?: (itemId: string, title: string) => void
+  onOpenSharedList?: (listId: string) => void
+}) {
   const unread = n.read_at === null
   const isEpisode = EPISODE_KINDS.includes(n.kind)
   const base = cx('flex items-center gap-3 border-b border-line px-4 py-3 text-start', unread && 'bg-surface-2')
@@ -121,6 +149,11 @@ function Row({ n, onOpenProfile, onOpenItem }: { n: AppNotification; onOpenProfi
         )}
       </li>
     )
+  }
+
+  // ── Commentaire sur mon avis / invitation à une liste partagée ──
+  if (n.kind === 'review_comment' || n.kind === 'shared_list_invite') {
+    return <SocialRow n={n} base={base} unread={unread} onOpenProfile={onOpenProfile} onOpenComments={onOpenComments} onOpenSharedList={onOpenSharedList} />
   }
 
   // ── Abonnements / réactions ──
@@ -155,6 +188,102 @@ function Row({ n, onOpenProfile, onOpenItem }: { n: AppNotification; onOpenProfi
       ) : (
         <div className={base}>{inner}</div>
       )}
+    </li>
+  )
+}
+
+function SocialRow({
+  n,
+  base,
+  unread,
+  onOpenProfile,
+  onOpenComments,
+  onOpenSharedList,
+}: {
+  n: AppNotification
+  base: string
+  unread: boolean
+  onOpenProfile: (username: string) => void
+  onOpenComments?: (itemId: string, title: string) => void
+  onOpenSharedList?: (listId: string) => void
+}) {
+  const social = useSocial()
+  const [status, setStatus] = useState(n.invite_status)
+  const [busy, setBusy] = useState(false)
+  const actor = n.actor
+  const actorName = actor?.display_name ?? t('notif.someone')
+  const isInvite = n.kind === 'shared_list_invite'
+
+  const respond = async (accept: boolean) => {
+    if (!n.item_id) return
+    setBusy(true)
+    try {
+      await respondToInvite(n.item_id, accept)
+      setStatus(accept ? 'accepted' : null)
+      social.bumpShared()
+      if (accept) onOpenSharedList?.(n.item_id)
+    } catch {
+      /* invitation expirée ou réseau : rien ne change */
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  // Où mène un tap sur la ligne
+  const open =
+    !isInvite && n.item_id && onOpenComments
+      ? () => onOpenComments(n.item_id!, n.title ?? '')
+      : isInvite && status === 'accepted' && n.item_id && onOpenSharedList
+        ? () => onOpenSharedList(n.item_id!)
+        : null
+
+  const text = (
+    <span className="min-w-0 flex-1 text-sm leading-snug text-ink-2">
+      <b className="text-ink">{actorName}</b> {VERB[n.kind]()}
+      {isInvite ? (
+        n.title ? (
+          <>
+            {' '}
+            <b className="text-ink">{n.title}</b>
+          </>
+        ) : (
+          ` (${t('shared.expired')})`
+        )
+      ) : n.title ? (
+        ` ${t('notif.on', { title: n.title })}`
+      ) : (
+        ''
+      )}
+    </span>
+  )
+
+  return (
+    <li>
+      <div className={cx(base, 'flex-wrap')}>
+        {unread && <span className="size-2 shrink-0 rounded-full bg-accent-fill" aria-hidden="true" />}
+        <button type="button" onClick={() => actor && onOpenProfile(actor.username)} className="shrink-0" aria-label={actorName} disabled={!actor}>
+          <Avatar url={actor?.avatar_url ?? undefined} name={actorName} size={38} />
+        </button>
+        {open ? (
+          <button type="button" onClick={open} className="flex min-w-0 flex-1 items-center gap-2 text-start">
+            {isInvite ? <Users size={14} className="shrink-0 text-accent" aria-hidden="true" /> : <MessageCircle size={14} className="shrink-0 text-accent" aria-hidden="true" />}
+            {text}
+          </button>
+        ) : (
+          text
+        )}
+        <span className="shrink-0 text-xs text-ink-3">{formatDate(n.created_at)}</span>
+        {isInvite && status === 'pending' && n.title && (
+          <div className="flex w-full justify-end gap-2 ps-[3.25rem]">
+            <button type="button" onClick={() => void respond(false)} disabled={busy} className="btn btn-ghost px-3.5 py-1.5 text-sm">
+              {t('shared.decline')}
+            </button>
+            <button type="button" onClick={() => void respond(true)} disabled={busy} className="btn btn-primary px-3.5 py-1.5 text-sm">
+              {busy ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />} {t('shared.accept')}
+            </button>
+          </div>
+        )}
+      </div>
     </li>
   )
 }

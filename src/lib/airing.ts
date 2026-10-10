@@ -115,7 +115,8 @@ const followed = (item: AiringItem) =>
  */
 export function airedCount(item: AiringItem, cache: AiringCache = loadAiring()): number | undefined {
   const info = cache[item.id]
-  if (!info || !info.aired || !followed(item)) return undefined
+  // 0 épisode sorti n'est une info sûre que si une date de sortie est annoncée
+  if (!info || !followed(item) || (!info.aired && !info.next)) return undefined
   return info.next && info.next.date <= localDay() ? info.aired + 1 : info.aired
 }
 
@@ -194,6 +195,8 @@ async function checkTmdb(tvId: string, key: string): Promise<Omit<AiringInfo, 'c
   }
   const nx = d.next_episode_to_air
   const nextDate = safeDay(nx?.air_date)
+  // Rien encore diffusé (série annoncée) : les épisodes prévus ne sont pas « sortis »
+  if (!last && (nx || d.status === 'Planned' || d.status === 'In Production')) aired = 0
   return {
     aired,
     seasons: n0(d.number_of_seasons) || undefined,
@@ -235,7 +238,7 @@ async function checkAniList(ids: number[]): Promise<Map<number, Omit<AiringInfo,
       const nx = m.nextAiringEpisode
       const ts = n0(nx?.airingAt, 4102444800) // borne : an 2100
       out.set(m.id, {
-        aired: nx ? Math.max(0, n0(nx.episode) - 1) : n0(m.episodes),
+        aired: nx ? Math.max(0, n0(nx.episode) - 1) : m.status === 'NOT_YET_RELEASED' ? 0 : n0(m.episodes),
         ended: m.status === 'FINISHED' || m.status === 'CANCELLED',
         next: nx && ts ? { episode: n0(nx.episode), date: localDay(new Date(ts * 1000)) } : undefined,
       })
@@ -297,6 +300,9 @@ export function novelties(items: MediaItem[], cache: AiringCache): Novelty[] {
     const info = cache[item.id]
     if (!info) continue
     const unwatched = Math.max(0, info.aired - item.episodesWatched)
+    // Série terminée depuis (ex. Friends) : les épisodes non vus ne sont pas des nouveautés,
+    // et une « nouvelle saison » n'y est qu'un décalage de numérotation entre TMDB et AniList.
+    if (info.ended) continue
     if (item.status === 'termine') {
       // Terminé de mon côté, mais de nouveaux épisodes sont sortis depuis → nouvelle saison
       if (unwatched > 0 && episodeCap(item) && info.aired > episodeCap(item)!) out.push({ item, info, unwatched, kind: 'new_season' })

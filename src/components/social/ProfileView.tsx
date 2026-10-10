@@ -1,4 +1,4 @@
-import { Check, Loader2, Lock, Share2, Star, UserPlus } from 'lucide-react'
+import { Ban, Check, Loader2, Lock, Share2, Star, UserCheck, UserPlus } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { fmtNumber, t } from '../../i18n'
 import { follow, getProfile, getProfileItems, profileLink, unfollow, type Profile } from '../../lib/cloud/social'
@@ -7,6 +7,8 @@ import { cx, formatRating } from '../../lib/utils'
 import { useMedia } from '../../store'
 import type { MediaItem, WatchStatus } from '../../types'
 import ConfirmDialog from '../ConfirmDialog'
+import ReportButton from '../moderation/ReportButton'
+import { blockUser, unblockUser, useBlocked } from '../../lib/cloud/moderation'
 import Poster from '../Poster'
 import { EmptyState, SectionTitle } from '../ui'
 import Avatar from './Avatar'
@@ -58,6 +60,9 @@ export default function ProfileView({ username, onClose }: { username: string; o
   const [busy, setBusy] = useState(false)
   const [confirmUnfollow, setConfirmUnfollow] = useState(false)
   const [toast, setToast] = useState<string>()
+  const [confirmBlock, setConfirmBlock] = useState(false)
+  const { isBlocked } = useBlocked(!!profile && !profile.isMe)
+  const blocked = !!profile && !profile.isMe && isBlocked(profile.id)
 
   const load = useCallback(async () => {
     setError(undefined)
@@ -132,6 +137,36 @@ export default function ProfileView({ username, onClose }: { username: string; o
     }
   }
 
+  // Bloquer : il ne peut plus me suivre ni réagir à mes avis ; ses avis me sont masqués
+  const doBlock = async () => {
+    if (!profile) return
+    setConfirmBlock(false)
+    setBusy(true)
+    try {
+      await blockUser({ id: profile.id, username: profile.username, displayName: profile.displayName, avatarUrl: profile.avatarUrl })
+      await load()
+      void social.refresh()
+      setToast(t('block.done', { name: profile.displayName }))
+    } catch (e) {
+      setToast((e as Error).message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const doUnblock = async () => {
+    if (!profile) return
+    setBusy(true)
+    try {
+      await unblockUser(profile.id)
+      setToast(t('block.undone', { name: profile.displayName }))
+    } catch (e) {
+      setToast((e as Error).message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
   const topByCategory = useMemo(() => {
     const out: { label: string; items: MediaItem[] }[] = []
     // Mon profil : mes réglages locaux font foi tout de suite (même avant la synchro)
@@ -145,6 +180,7 @@ export default function ProfileView({ username, onClose }: { username: string; o
 
   return (
     <Sheet
+      wide
       label={t('social.profile')}
       title={profile ? `@${profile.username}` : ''}
       onClose={onClose}
@@ -167,37 +203,54 @@ export default function ProfileView({ username, onClose }: { username: string; o
       ) : (
         <>
           {/* Bannière + photo */}
-          <div className="relative aspect-[3/1] w-full overflow-hidden bg-surface-2">
+          <div className={cx('relative aspect-[3/1] w-full overflow-hidden bg-surface-2 lg:aspect-auto', profile.bannerUrl ? 'lg:h-[min(40vh,22rem)]' : 'lg:h-40')}>
             {profile.bannerUrl && <img src={profile.bannerUrl} alt="" className="size-full object-cover" />}
           </div>
-          <div className="px-4">
-            <div className="relative -mt-11 flex items-end justify-between gap-3">
+          <div className="px-4 lg:px-10">
+            <div className="relative -mt-11 flex items-end justify-between gap-3 lg:-mt-14">
               <Avatar url={profile.avatarUrl} name={profile.displayName} size={88} className="border-4 border-bg" />
               {profile.isMe ? (
                 <button onClick={social.openEdit} className="btn btn-ghost mb-1 px-4 py-2 text-sm">
                   {t('social.editProfile')}
                 </button>
               ) : (
-                <button
-                  onClick={toggleFollow}
-                  disabled={busy}
-                  className={cx('btn mb-1 px-4 py-2 text-sm', profile.relation === 'none' ? 'btn-primary' : 'btn-ghost')}
-                >
-                  {busy ? (
-                    <Loader2 size={15} className="animate-spin" />
-                  ) : profile.relation === 'accepted' ? (
-                    <Check size={15} />
-                  ) : profile.relation === 'none' ? (
-                    <UserPlus size={15} />
-                  ) : null}
-                  {profile.relation === 'accepted'
-                    ? t('social.following')
-                    : profile.relation === 'pending'
-                      ? t('social.requested')
-                      : profile.followsMe
-                        ? t('social.followBack')
-                        : t('social.follow')}
-                </button>
+                <div className="mb-1 flex items-center gap-1">
+                  {blocked ? (
+                    <button onClick={doUnblock} disabled={busy} className="btn btn-ghost px-4 py-2 text-sm">
+                      {busy ? <Loader2 size={15} className="animate-spin" /> : <UserCheck size={15} />}
+                      {t('block.unblock')}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={toggleFollow}
+                      disabled={busy}
+                      className={cx('btn px-4 py-2 text-sm', profile.relation === 'none' ? 'btn-primary' : 'btn-ghost')}
+                    >
+                      {busy ? (
+                        <Loader2 size={15} className="animate-spin" />
+                      ) : profile.relation === 'accepted' ? (
+                        <Check size={15} />
+                      ) : profile.relation === 'none' ? (
+                        <UserPlus size={15} />
+                      ) : null}
+                      {profile.relation === 'accepted'
+                        ? t('social.following')
+                        : profile.relation === 'pending'
+                          ? t('social.requested')
+                          : profile.followsMe
+                            ? t('social.followBack')
+                            : t('social.follow')}
+                    </button>
+                  )}
+                  <ReportButton
+                    target={{ type: 'profile', id: profile.id, userId: profile.id }}
+                    actions={[
+                      blocked
+                        ? { icon: <UserCheck size={18} />, label: t('block.unblock'), onClick: () => void doUnblock() }
+                        : { icon: <Ban size={18} />, label: t('block.block'), onClick: () => setConfirmBlock(true) },
+                    ]}
+                  />
+                </div>
               )}
             </div>
 
@@ -211,9 +264,15 @@ export default function ProfileView({ username, onClose }: { username: string; o
                 </span>
               )}
             </p>
-            {profile.bio && <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-ink-2">{profile.bio}</p>}
+            {profile.bio && <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-ink-2 lg:max-w-3xl lg:text-base">{profile.bio}</p>}
+            {blocked && (
+              <p className="mt-4 flex items-start gap-2.5 rounded-2xl border border-line px-4 py-3 text-sm text-ink-2 lg:max-w-2xl">
+                <Ban size={16} className="mt-0.5 shrink-0 text-accent" />
+                {t('block.notice')}
+              </p>
+            )}
 
-            <div className="mt-5 flex divide-x divide-line rounded-2xl border border-line py-3">
+            <div className="mt-5 flex divide-x divide-line rounded-2xl border border-line py-3 lg:max-w-2xl">
               <Stat value={profile.visible ? (profile.stats?.finished ?? 0) : undefined} label={t('social.seen')} />
               <Stat value={profile.followers} label={t('social.followers', { count: profile.followers })} onClick={profile.visible ? () => social.openFollowList(profile, 'followers') : undefined} />
               <Stat value={profile.following} label={t('social.followingCount', { count: profile.following })} onClick={profile.visible ? () => social.openFollowList(profile, 'following') : undefined} />
@@ -234,7 +293,7 @@ export default function ProfileView({ username, onClose }: { username: string; o
               </div>
             ) : (
               <>
-                <div className="mt-6 grid grid-cols-2 gap-1 rounded-full border border-line p-1">
+                <div className="mt-6 grid grid-cols-2 gap-1 rounded-full border border-line p-1 lg:max-w-md">
                   {(['profile', 'library'] as const).map((v) => (
                     <button
                       key={v}
@@ -262,6 +321,14 @@ export default function ProfileView({ username, onClose }: { username: string; o
         </p>
       )}
       <ConfirmDialog
+        open={confirmBlock}
+        title={t('block.confirmTitle', { name: profile?.displayName ?? '' })}
+        message={t('block.confirmText')}
+        confirmLabel={t('block.block')}
+        onConfirm={doBlock}
+        onCancel={() => setConfirmBlock(false)}
+      />
+      <ConfirmDialog
         open={confirmUnfollow}
         title={profile?.relation === 'pending' ? t('social.cancelRequestTitle') : t('social.unfollowTitle', { name: profile?.displayName ?? '' })}
         message={profile?.isPrivate && profile.relation === 'accepted' ? t('social.unfollowPrivate') : undefined}
@@ -282,7 +349,7 @@ function ProfileTab({ profile, topByCategory, onOpen }: { profile: Profile; topB
           <SectionTitle>
             {t('social.top5')} · {c.label}
           </SectionTitle>
-          <div className="grid grid-cols-5 gap-2">
+          <div className="grid grid-cols-5 gap-2 lg:grid-cols-8 lg:gap-3 xl:grid-cols-10">
             {c.items.map((item) => (
               <div key={item.id} className="relative">
                 <PosterTile item={item} onOpen={() => onOpen(item)} />
@@ -296,7 +363,7 @@ function ProfileTab({ profile, topByCategory, onOpen }: { profile: Profile; topB
       {profile.watching.length > 0 && (
         <>
           <SectionTitle>{t('social.watching')}</SectionTitle>
-          <div className="grid grid-cols-4 gap-2.5">
+          <div className="grid grid-cols-4 gap-2.5 sm:grid-cols-5 lg:grid-cols-8 lg:gap-3 xl:grid-cols-10">
             {profile.watching.map((item) => (
               <PosterTile key={item.id} item={item} onOpen={() => onOpen(item)} />
             ))}
@@ -306,7 +373,7 @@ function ProfileTab({ profile, topByCategory, onOpen }: { profile: Profile; topB
 
       <SectionTitle>{t('social.recent')}</SectionTitle>
       {profile.recent.length ? (
-        <div className="grid grid-cols-4 gap-2.5">
+        <div className="grid grid-cols-4 gap-2.5 sm:grid-cols-5 lg:grid-cols-8 lg:gap-3 xl:grid-cols-10">
           {profile.recent.map((item) => (
             <PosterTile key={item.id} item={item} onOpen={() => onOpen(item)} />
           ))}
@@ -318,7 +385,7 @@ function ProfileTab({ profile, topByCategory, onOpen }: { profile: Profile; topB
       {profile.watchlist.length > 0 && (
         <>
           <SectionTitle>{t('social.watchlist')}</SectionTitle>
-          <div className="grid grid-cols-4 gap-2.5">
+          <div className="grid grid-cols-4 gap-2.5 sm:grid-cols-5 lg:grid-cols-8 lg:gap-3 xl:grid-cols-10">
             {profile.watchlist.map((item) => (
               <PosterTile key={item.id} item={item} onOpen={() => onOpen(item)} />
             ))}
@@ -329,7 +396,7 @@ function ProfileTab({ profile, topByCategory, onOpen }: { profile: Profile; topB
       {s && (
         <>
           <SectionTitle>{t('nav.stats')}</SectionTitle>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             {[
               [s.finishedYear, t('social.statYear')],
               [s.films, t('social.statFilms')],
@@ -395,7 +462,7 @@ function LibraryTab({ profile, onOpen }: { profile: Profile; onOpen: (i: MediaIt
         ))}
       </div>
       {list.length ? (
-        <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
+        <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10">
           {list.map((item) => (
             <PosterTile key={item.id} item={item} onOpen={() => onOpen(item)} />
           ))}

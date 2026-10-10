@@ -5,6 +5,7 @@ import { TYPE_BY_VALUE } from '../lib/constants'
 import { canWatchMore, nextAirDate } from '../lib/airing'
 import { episodeCap, seasonPosition } from '../lib/franchise'
 import { genreLabel } from '../lib/genres'
+import { backdropSrcSet, tmdbSized } from '../lib/tmdbImage'
 import { cx, formatDate } from '../lib/utils'
 import { useMedia } from '../store'
 import type { MediaItem } from '../types'
@@ -75,13 +76,15 @@ export default function HomeHero({ items, onOpen }: { items: MediaItem[]; onOpen
         if (Math.abs(dx) > 45) go(current + (dx < 0 ? 1 : -1))
       }}
     >
-      <button onClick={() => onOpen(item)} className="relative block aspect-[4/3] w-full bg-surface-2 sm:aspect-video" aria-label={t('card.open', { title: item.title })}>
+      <button onClick={() => onOpen(item)} className="relative block aspect-[4/3] w-full bg-surface-2 sm:aspect-video lg:aspect-auto lg:h-[min(62vh,34rem)]" aria-label={t('card.open', { title: item.title })}>
         {items.map((it, k) => {
           const image = it.backdrop ?? it.poster
           return image ? (
             <img
               key={it.id}
-              src={image}
+              src={it.backdrop ? tmdbSized(image, 'w1280') : image}
+              srcSet={it.backdrop ? backdropSrcSet(image) : undefined}
+              sizes="100vw"
               alt=""
               loading={k === 0 ? 'eager' : 'lazy'}
               className={cx(
@@ -94,9 +97,9 @@ export default function HomeHero({ items, onOpen }: { items: MediaItem[]; onOpen
         })}
         <span className="absolute inset-0 bg-bg/50" />
       </button>
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 p-5">
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 p-5 lg:p-10">
         <p className="eyebrow text-ink-2">{item.status === 'en_cours' ? t('homeHero.continue') : t('homeHero.next')}</p>
-        <h2 className="mt-1.5 line-clamp-2 text-[1.9rem] font-bold leading-[1.1]">{item.title}</h2>
+        <h2 className="mt-1.5 line-clamp-2 text-[1.9rem] font-bold leading-[1.1] lg:text-5xl">{item.title}</h2>
         {meta && <p className="mt-1.5 text-xs text-ink-2">{meta}</p>}
         <div className="pointer-events-auto mt-4 flex items-center gap-2">
           {episodic && next ? (

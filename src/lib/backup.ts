@@ -18,7 +18,8 @@ import {
   safeSeasons,
   safeStringList,
 } from './security'
-import { todayISO, uid } from './utils'
+import { normalizeText, todayISO, uid } from './utils'
+import { normalizeChallenges, normalizeEpisodeLog } from './challenges'
 
 const TYPES = new Set<string>(MEDIA_TYPES.map((t) => t.value))
 const STATUS_SET = new Set<string>(STATUSES.map((s) => s.value))
@@ -62,6 +63,21 @@ function safeDates(v: unknown): string[] | undefined {
   return out.length ? out : undefined
 }
 
+/** Tags perso : texte court, sans doublon (casse et accents ignorés), 30 max. */
+export function safeTags(v: unknown): string[] | undefined {
+  const seen = new Set<string>()
+  const out: string[] = []
+  for (const tag of safeStringList(v, LIMITS.tags * 2, LIMITS.tagLength)) {
+    const s = tag.replace(/\s+/g, ' ').replace(/^#+/, '').trim()
+    const key = normalizeText(s)
+    if (!s || seen.has(key)) continue
+    seen.add(key)
+    out.push(s)
+    if (out.length >= LIMITS.tags) break
+  }
+  return out.length ? out : undefined
+}
+
 /** Valide et nettoie une fiche (import, synchro, écriture locale). Renvoie null si inutilisable. */
 export function normalizeItem(raw: unknown): MediaItem | null {
   if (!isPlainObject(raw)) return null
@@ -83,6 +99,7 @@ export function normalizeItem(raw: unknown): MediaItem | null {
   const cap = episodeCap({ episodesTotal, seasons })
   if (cap && episodesWatched > cap) episodesWatched = cap
   const listIds = safeStringList(r.listIds, LIMITS.lists, 64).filter(isSafeId)
+  const tags = safeTags(r.tags)
   return {
     id: isSafeId(r.id) ? r.id : uid(),
     title,
@@ -105,14 +122,17 @@ export function normalizeItem(raw: unknown): MediaItem | null {
     genres: safeStringList(r.genres, LIMITS.genres),
     platform: cleanText(r.platform, LIMITS.shortText),
     notes: cleanText(r.notes, LIMITS.notes),
+    notesSpoiler: (r.notesSpoiler === true && !!cleanText(r.notes, LIMITS.notes)) || undefined,
     poster: safePosterUrl(r.poster),
     backdrop: remoteImage(r.backdrop),
     overview: cleanText(r.overview, LIMITS.overview),
     externalId: isSafeExternalId(r.externalId) ? r.externalId : undefined,
     top: normalizeTop(r.top),
     listIds: listIds.length ? listIds : undefined,
+    tags,
     countries: safeCountries(r.countries),
     rewatchDates: safeDates(r.rewatchDates),
+    episodeLog: normalizeEpisodeLog(r.episodeLog),
     publicRating: (() => {
       const n = num(r.publicRating, 0, 10)
       return n ? Math.round(n * 10) / 10 : undefined
@@ -132,9 +152,11 @@ export function normalizeSettings(raw: unknown): Partial<Settings> | undefined {
   if (raw.themeMode === 'auto' || raw.themeMode === 'light' || raw.themeMode === 'dark' || raw.themeMode === 'night' || raw.themeMode === 'starfield') out.themeMode = raw.themeMode
   if (isPlainObject(raw.notifPrefs)) {
     const np: NotifPrefs = {}
-    for (const k of ['episodes', 'follows', 'accepted', 'reactions'] as const) if (typeof raw.notifPrefs[k] === 'boolean') np[k] = raw.notifPrefs[k] as boolean
+    for (const k of ['episodes', 'follows', 'accepted', 'reactions', 'comments', 'lists'] as const) if (typeof raw.notifPrefs[k] === 'boolean') np[k] = raw.notifPrefs[k] as boolean
     out.notifPrefs = np
   }
+  const challenges = normalizeChallenges(raw.challenges)
+  if (challenges) out.challenges = challenges
   return out
 }
 

@@ -26,6 +26,8 @@ export const LIMITS = {
   notes: 20000,
   overview: 10000,
   genres: 40,
+  tags: 30,
+  tagLength: 40,
   posterDataUrl: 3 * 1024 * 1024, // ~3 Mo par affiche en data URL
   searchQuery: 200,
 }
@@ -121,6 +123,25 @@ export function readStorage<T>(key: string, fallback: T): unknown | T {
     return JSON.parse(raw) as unknown
   } catch {
     return fallback
+  }
+}
+
+/** Lecture brute du localStorage (null si absent ou inaccessible, ex. navigation privée). */
+export function storageGet(key: string): string | null {
+  try {
+    return localStorage.getItem(key)
+  } catch {
+    return null
+  }
+}
+
+/** Écriture dans le localStorage (null = suppression) ; ne lève jamais d'erreur. */
+export function storageSet(key: string, value: string | null) {
+  try {
+    if (value === null) localStorage.removeItem(key)
+    else localStorage.setItem(key, value)
+  } catch {
+    /* ignore */
   }
 }
 

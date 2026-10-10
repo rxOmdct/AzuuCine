@@ -1,5 +1,5 @@
 import { t } from '../i18n'
-import { BarChart3, Home, LibraryBig, Plus, Settings } from 'lucide-react'
+import { BarChart3, Home, LibraryBig, Search, Settings } from 'lucide-react'
 import { cx } from '../lib/utils'
 
 export type Tab = 'home' | 'catalog' | 'stats' | 'settings'
@@ -44,10 +44,10 @@ export default function BottomNav({ current, onChange, onAdd }: Props) {
         <div className="flex flex-1 justify-center">
           <button
             onClick={onAdd}
-            aria-label={t('nav.addTitle')}
+            aria-label={t('search.title')}
             className="grid size-12 place-items-center rounded-full bg-accent-fill text-on-accent transition active:scale-95"
           >
-            <Plus size={24} strokeWidth={2.2} />
+            <Search size={22} strokeWidth={2.4} />
           </button>
         </div>
         {ITEMS.slice(2).map(button)}

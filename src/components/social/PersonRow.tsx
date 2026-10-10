@@ -7,7 +7,7 @@ import Avatar from './Avatar'
 import { useSocial } from './SocialProvider'
 
 /** Ligne « personne » : photo, nom, @pseudo, et bouton d'abonnement (ou actions personnalisées). */
-export default function PersonRow({ person, actions }: { person: ProfileCard; actions?: ReactNode }) {
+export default function PersonRow({ person, actions, onOpen }: { person: ProfileCard; actions?: ReactNode; /** Appelé juste avant d'ouvrir le profil */ onOpen?: () => void }) {
   const social = useSocial()
   const [relation, setRelation] = useState(person.relation)
   const [busy, setBusy] = useState(false)
@@ -31,7 +31,13 @@ export default function PersonRow({ person, actions }: { person: ProfileCard; ac
 
   return (
     <div className="flex items-center gap-3 py-2.5">
-      <button onClick={() => social.openProfile(person.username)} className="flex min-w-0 flex-1 items-center gap-3 text-start">
+      <button
+        onClick={() => {
+          onOpen?.()
+          social.openProfile(person.username)
+        }}
+        className="flex min-w-0 flex-1 items-center gap-3 text-start"
+      >
         <Avatar url={person.avatarUrl} name={person.displayName} size={44} />
         <span className="min-w-0">
           <span className="block truncate text-sm font-semibold">{person.displayName}</span>

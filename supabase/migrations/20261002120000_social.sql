@@ -8,7 +8,7 @@
 --  - Les tables de données (items, lists, settings) restent visibles uniquement par leur propriétaire.
 --  - Les autres ne voient un profil QUE via les fonctions ci-dessous (get_profile, get_feed…),
 --    qui vérifient l'accès (profil public, ou abonné accepté pour un compte privé) et retirent
---    les infos privées : avis écrits (sauf ceux marqués publics), listes perso.
+--    les infos privées : listes perso. Les avis écrits font partie du profil (comme sur Letterboxd).
 --  - Les pseudos sont choisis par chacun ; aucun email n'est jamais exposé.
 -- ─────────────────────────────────────────────────────────────────────────────
 

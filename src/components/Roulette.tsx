@@ -21,6 +21,8 @@ import type { MediaItem } from '../types'
 import { TypeBadge } from './Badges'
 import Poster from './Poster'
 import { RatingBadge } from './Rating'
+import { useBackToClose } from '../lib/backNav'
+import { useEscape } from '../lib/escape'
 import { useScrollLock } from '../lib/scrollLock'
 
 const CARD = 112 // largeur d'une affiche dans le rouleau (w-28)
@@ -73,6 +75,8 @@ export default function Roulette({ onClose, onOpen }: Props) {
 
   // Bloque le défilement derrière + mémorise les filtres
   useScrollLock()
+  useEscape(onClose)
+  useBackToClose(onClose)
   useEffect(() => saveFilters(filters), [filters])
 
   // Changer les filtres efface le tirage en cours
@@ -153,7 +157,7 @@ export default function Roulette({ onClose, onOpen }: Props) {
   const winnerIndex = result ? reel.indexOf(result, reel.length > TARGET ? TARGET : 0) : -1
 
   return (
-    <div className="sheet-in fixed inset-0 z-50 flex flex-col bg-bg" role="dialog" aria-modal="true" aria-label={t('roulette.name')}>
+    <div className="sheet sheet-in" role="dialog" aria-modal="true" aria-label={t('roulette.name')}>
       <header className="safe-top border-b border-line">
         <div className="mx-auto flex max-w-2xl items-center gap-2 px-3 py-2.5">
           <button onClick={onClose} className="grid size-10 place-items-center rounded-full text-ink-2" aria-label={t('common.close')}>
@@ -166,7 +170,7 @@ export default function Roulette({ onClose, onOpen }: Props) {
         </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto overscroll-contain">
+      <div className="sheet-scroll">
         <div className="safe-bottom mx-auto max-w-2xl pb-16">
           {/* Rouleau d'affiches */}
           <div ref={viewport} dir="ltr" className="relative mt-6 h-[184px] overflow-hidden">

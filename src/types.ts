@@ -37,6 +37,8 @@ export interface MediaItem {
   platform?: string
   /** Mon avis (visible sur mon profil, comme ma note) */
   notes?: string
+  /** Mon avis contient des spoilers : masqué chez les autres jusqu'au tap */
+  notesSpoiler?: boolean
   /** URL d'image ou image compressée en data URL (reste locale). */
   poster?: string
   /** Grande image horizontale (TMDB), pour l'en-tête de la fiche et l'accueil. */
@@ -49,12 +51,16 @@ export interface MediaItem {
   top?: TopEntry
   /** Listes perso auxquelles appartient la fiche. */
   listIds?: string[]
+  /** Tags personnels libres (« comfort », « halloween »…). Privés : jamais affichés sur le profil public. */
+  tags?: string[]
   /** Pays d'origine (codes ISO, ex. ['KR']). */
   countries?: string[]
   /** Dates de revisionnage (AAAA-MM-JJ), en plus du premier visionnage. */
   rewatchDates?: string[]
   /** Note moyenne du public sur 10 (TMDB ou AniList). */
   publicRating?: number
+  /** Épisodes cochés par jour (AAAA-MM-JJ → nombre), pour les défis. Privé (retiré des profils publics). */
+  episodeLog?: Record<string, number>
 
   createdAt: string // ISO
   updatedAt: string // ISO
@@ -88,6 +94,24 @@ export interface Settings {
   themeMode: ThemeMode
   /** Notifications reçues (true par défaut si absent). Nécessite un compte. */
   notifPrefs?: NotifPrefs
+  /** Défis de visionnage (synchronisés avec les réglages, privés). */
+  challenges?: Challenge[]
+}
+
+/** Défi : « voir N films en 2026 », « 20 épisodes cette semaine »… */
+export interface Challenge {
+  id: string
+  /** Objectif (quantité) */
+  target: number
+  media: MediaType | 'all'
+  /** Titres terminés ou épisodes vus */
+  unit: 'titles' | 'episodes'
+  period: 'week' | 'month' | 'year' | 'custom'
+  /** Bornes incluses, AAAA-MM-JJ */
+  start: string
+  end: string
+  name?: string
+  archived?: boolean
 }
 
 /** Types de notifications que l'on choisit de recevoir (true par défaut). */
@@ -100,6 +124,10 @@ export interface NotifPrefs {
   accepted?: boolean
   /** Réactions reçues sur mes avis */
   reactions?: boolean
+  /** Commentaires reçus sous mes avis */
+  comments?: boolean
+  /** Invitations à des listes partagées */
+  lists?: boolean
 }
 
 export interface CustomList {

@@ -1,9 +1,11 @@
 import { t } from '../i18n'
 import { LanguageSelect } from '../i18n/react'
-import { Check, Download, Eye, EyeOff, HardDrive, ShieldCheck, Smartphone, Trash2, Upload, UserX } from 'lucide-react'
+import { Check, Download, ExternalLink, Eye, EyeOff, HardDrive, Import, ShieldCheck, Smartphone, Trash2, Upload, UserX } from 'lucide-react'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import AccountSection from '../components/AccountSection'
+import PushToggle from '../components/PushToggle'
 import ConfirmDialog from '../components/ConfirmDialog'
+import ImportWizard from '../components/ImportWizard'
 import { PageHeader, SectionTitle } from '../components/ui'
 import { exportBackup, parseBackupFile, type ParsedBackup } from '../lib/backup'
 import { testTmdbKey } from '../lib/catalogApi'
@@ -14,7 +16,12 @@ import { detectPlatform, useInstallPrompt } from '../lib/pwa'
 import { isAdmin } from '../lib/cloud/admin'
 import type { NotifPrefs } from '../types'
 import { cx } from '../lib/utils'
+import { useEscape } from '../lib/escape'
+import { useBackToClose } from '../lib/backNav'
 import { useMedia } from '../store'
+import { mergeImportedSettings } from '../lib/challenges'
+import { BugReportRow } from '../components/moderation/BugReport'
+import { alertsSummary, useAdminAlerts } from '../components/moderation/useAdminAlerts'
 
 type Message = { kind: 'ok' | 'error'; text: string }
 
@@ -23,6 +30,8 @@ const NOTIF_PREFS: { key: keyof NotifPrefs; readonly label: () => string }[] = [
   { key: 'follows', label: () => t('settings.notifFollows') },
   { key: 'accepted', label: () => t('settings.notifAccepted') },
   { key: 'reactions', label: () => t('settings.notifReactions') },
+  { key: 'comments', label: () => t('settings.notifComments') },
+  { key: 'lists', label: () => t('settings.notifLists') },
 ]
 
 function Row({ icon, title, hint, onClick, danger }: { icon: ReactNode; title: string; hint?: string; onClick: () => void; danger?: boolean }) {
@@ -42,10 +51,13 @@ export default function SettingsPage({ onOpenAdmin }: { onOpenAdmin: () => void 
   const { items, settings, updateSettings, importItems, clearAll, lists, mergeLists, account } = useMedia()
   const { canInstall, installed, install } = useInstallPrompt()
   const [admin, setAdmin] = useState(false)
+  // Une seule vérification par connexion (et pas à chaque changement d'état de la synchro)
+  const signedIn = !!account
   useEffect(() => {
-    if (account) void isAdmin().then(setAdmin)
+    if (signedIn) void isAdmin().then(setAdmin)
     else setAdmin(false)
-  }, [account])
+  }, [signedIn])
+  const adminHint = alertsSummary(useAdminAlerts(admin))
   const fileRef = useRef<HTMLInputElement>(null)
   const [pending, setPending] = useState<ParsedBackup>()
   const [message, setMessage] = useState<Message>()
@@ -120,7 +132,7 @@ export default function SettingsPage({ onOpenAdmin }: { onOpenAdmin: () => void 
     if (!pending) return
     setConfirm(null)
     await importItems(pending.items, mode)
-    if (pending.settings) updateSettings(pending.settings)
+    if (pending.settings) updateSettings(mode === 'merge' ? mergeImportedSettings(pending.settings, settings) : pending.settings)
     if (pending.lists) mergeLists(pending.lists, mode)
     setMessage({
       kind: 'ok',
@@ -147,7 +159,10 @@ export default function SettingsPage({ onOpenAdmin }: { onOpenAdmin: () => void 
     setMessage({ kind: 'ok', text: t('settings.cleared') })
   }
 
+  const [showImport, setShowImport] = useState(false)
   const [showInstall, setShowInstall] = useState(false)
+  useEscape(() => setShowInstall(false), showInstall)
+  useBackToClose(() => setShowInstall(false), showInstall)
   const platform = detectPlatform()
 
   const doNativeInstall = async () => {
@@ -178,7 +193,7 @@ export default function SettingsPage({ onOpenAdmin }: { onOpenAdmin: () => void 
         <>
           <SectionTitle>{t('settings.admin')}</SectionTitle>
           <div className="card overflow-hidden">
-            <Row icon={<ShieldCheck size={19} />} title={t('admin.title')} onClick={onOpenAdmin} />
+            <Row icon={<ShieldCheck size={19} />} title={t('admin.title')} hint={adminHint} onClick={onOpenAdmin} />
           </div>
         </>
       )}
@@ -302,6 +317,7 @@ export default function SettingsPage({ onOpenAdmin }: { onOpenAdmin: () => void 
         <>
           <SectionTitle>{t('settings.notifs')}</SectionTitle>
           <p className="mb-3 text-xs text-ink-3">{t('settings.notifsHint')}</p>
+          <PushToggle />
           <div className="card divide-y divide-line overflow-hidden">
             {NOTIF_PREFS.map(({ key, label }) => {
               const on = settings.notifPrefs?.[key] !== false
@@ -437,7 +453,9 @@ export default function SettingsPage({ onOpenAdmin }: { onOpenAdmin: () => void 
         <Row icon={<Download size={19} />} title={t('settings.export')} hint={t('settings.exportHint', { count: items.length })} onClick={onExport} />
         <Row icon={<Upload size={19} />} title={t('settings.import')} hint={t('settings.importHint')} onClick={() => fileRef.current?.click()} />
         <input ref={fileRef} type="file" accept="application/json,.json" hidden onChange={(e) => onFile(e.target.files?.[0])} />
+        <Row icon={<Import size={19} />} title={t('import.row')} hint={t('import.rowHint')} onClick={() => setShowImport(true)} />
       </div>
+      {showImport && <ImportWizard onClose={() => setShowImport(false)} />}
 
       {pending && (
         <div className="card mt-3 space-y-3 border-ink p-4">
@@ -489,6 +507,25 @@ export default function SettingsPage({ onOpenAdmin }: { onOpenAdmin: () => void 
           </div>
         )}
       </div>
+
+      <SectionTitle>{t('settings.about')}</SectionTitle>
+      <div className="card divide-y divide-line overflow-hidden">
+        <BugReportRow />
+        {(
+          [
+            ['/privacy.html', t('legal.privacy')],
+            ['/legal.html#conditions', t('legal.terms')],
+            ['/legal.html#mentions', t('legal.notice')],
+            ['/legal.html#credits', t('legal.credits')],
+          ] as const
+        ).map(([href, label]) => (
+          <a key={href} href={href} target="_blank" rel="noopener" className="flex items-center gap-3.5 px-4 py-4 font-medium transition-colors active:bg-surface-2">
+            <span className="flex-1">{label}</span>
+            <ExternalLink size={16} className="text-ink-3" />
+          </a>
+        ))}
+      </div>
+      <p className="mt-3 px-1 text-[11px] leading-relaxed text-ink-3">{t('legal.tmdb')}</p>
 
       <p className="mt-10 text-center text-xs text-ink-3">AzuuCine v2.2 · {account ? t('settings.footerCloud') : t('settings.footerLocal')}</p>
 

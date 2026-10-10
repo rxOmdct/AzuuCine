@@ -3,6 +3,10 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
+// Gestion des notifications push (public/push-sw.js), ajoutée au service worker généré.
+// La date de build dans l'adresse fait changer sw.js à chaque version : push-sw.js est toujours rechargé.
+const pushSwVersion = Date.now().toString(36)
+
 /**
  * Politique de sécurité du contenu (CSP) : le navigateur n'exécute que les scripts de l'app,
  * et ne contacte que TMDB / AniList. Même si une donnée piégée arrivait à s'afficher,
@@ -14,7 +18,7 @@ export const buildCsp = (supabaseUrl = '') => [
   "style-src 'self' 'unsafe-inline'",
   `img-src 'self' data: blob: https://image.tmdb.org https://s4.anilist.co${supabaseUrl ? ' ' + supabaseUrl : ''}`,
   "font-src 'self'",
-  `connect-src 'self' https://api.themoviedb.org https://graphql.anilist.co https://image.tmdb.org https://s4.anilist.co${supabaseUrl ? ' ' + supabaseUrl : ''}`,
+  `connect-src 'self' https://api.themoviedb.org https://graphql.anilist.co https://image.tmdb.org https://s4.anilist.co https://api.pwnedpasswords.com${supabaseUrl ? ' ' + supabaseUrl : ''}`,
   "manifest-src 'self'",
   "worker-src 'self'",
   "media-src 'none'",
@@ -55,6 +59,8 @@ function contentSecurityPolicy(supabaseUrl: string): Plugin {
           '# Le service worker doit toujours être revérifié pour que les mises à jour arrivent',
           '/sw.js',
           '  Cache-Control: no-cache',
+          '/push-sw.js',
+          '  Cache-Control: no-cache',
           '',
         ].join('\n'),
       })
@@ -76,6 +82,8 @@ export default defineConfig(({ mode }) => {
   const supabaseUrl = /^https:\/\/[a-z0-9-]+\.supabase\.(co|in)$/i.test(origin) ? origin : ''
   return {
   base: '/',
+  // Version de l'app (package.json, fournie par « npm run … »), affichée dans « Signaler un bug » et jointe aux erreurs remontées
+  define: { __APP_VERSION__: JSON.stringify(full.npm_package_version || 'dev') },
   // Le serveur de dev n'écoute que sur ce PC (voir « npm run dev:mobile » pour tester sur le téléphone)
   server: { host: 'localhost', strictPort: false },
   preview: { host: 'localhost' },
@@ -105,9 +113,12 @@ export default defineConfig(({ mode }) => {
         ],
       },
       workbox: {
+        importScripts: [`push-sw.js?v=${pushSwVersion}`],
         globPatterns: ['**/*.{js,css,html,svg,png,ico,webmanifest,woff2}'],
-        // La page de confidentialité est une vraie page, pas l'app
-        navigateFallbackDenylist: [/^\/privacy/],
+        // L'app vit entièrement sur « / » (routes après le #) : toute autre adresse reçoit la page 404 du serveur
+        navigateFallbackAllowlist: [/^\/(?:index\.html)?(?:\?.*)?$/],
+        // Les pages légales sont de vraies pages, pas l'app
+        navigateFallbackDenylist: [/^\/privacy/, /^\/legal/],
         // Les affiches AniList ne peuvent pas être copiées dans la base (CORS) :
         // on les garde en cache après le premier affichage pour les voir hors-ligne.
         runtimeCaching: [

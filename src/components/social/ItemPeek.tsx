@@ -2,6 +2,7 @@ import { Check, Loader2, MessagesSquare, Plus, Star } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { t } from '../../i18n'
 import { genreLabel } from '../../lib/genres'
+import { useBackToClose } from '../../lib/backNav'
 import { useScrollLock } from '../../lib/scrollLock'
 import { titleReviews, type TitleReview } from '../../lib/cloud/reviews'
 import { useSocial } from './SocialProvider'
@@ -10,8 +11,11 @@ import { useMedia } from '../../store'
 import type { MediaInput, MediaItem } from '../../types'
 import { StatusPill, TypeBadge } from '../Badges'
 import Poster from '../Poster'
+import ReportButton from '../moderation/ReportButton'
 import Avatar from './Avatar'
 import Reactions from './Reactions'
+import ReviewComments from './ReviewComments'
+import ReviewText from './ReviewText'
 import { useEscape } from '../../lib/escape'
 
 export interface PeekOwner {
@@ -48,6 +52,7 @@ export default function ItemPeek({ item, owner, onClose }: { item: MediaItem; ow
   )
 
   useScrollLock()
+  useBackToClose(onClose)
 
   useEscape(onClose)
 
@@ -118,16 +123,19 @@ export default function ItemPeek({ item, owner, onClose }: { item: MediaItem; ow
                   {formatRating(item.rating, settings.ratingScale)}
                 </span>
               )}
+              {canReact && review && <ReportButton target={{ type: 'review', id: review.item_id, userId: review.user_id }} className="-me-1.5 size-8" size={16} />}
             </div>
             <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ink-3">
               <StatusPill status={item.status} />
               {item.endDate && item.status === 'termine' && <span>{formatDate(item.endDate)}</span>}
               {item.favorite && <span className="text-accent">♥ {t('form.favorite')}</span>}
             </div>
-            {item.notes && <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-ink-2">{item.notes}</p>}
+            {item.notes && <ReviewText text={item.notes} spoiler={item.notesSpoiler} className="mt-3" />}
             {canReact && review && (
               <div className="mt-3 border-t border-line pt-3">
-                <Reactions authorId={review.user_id} itemId={review.item_id} reactions={review.reactions} mine={review.mine} />
+                <ReviewComments authorId={review.user_id} itemId={review.item_id} count={review.comments} hidden={review.comments === null}>
+                  <Reactions authorId={review.user_id} itemId={review.item_id} reactions={review.reactions} mine={review.mine} />
+                </ReviewComments>
               </div>
             )}
           </div>

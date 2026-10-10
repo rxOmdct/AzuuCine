@@ -1,18 +1,20 @@
 import { X } from 'lucide-react'
 import { type ReactNode } from 'react'
 import { t } from '../../i18n'
+import { useBackToClose } from '../../lib/backNav'
 import { useScrollLock } from '../../lib/scrollLock'
 import { useEscape } from '../../lib/escape'
 import { cx } from '../../lib/utils'
 
 /** Écran plein (profil, recherche…) avec en-tête et bouton fermer. */
-export default function Sheet({ title, onClose, right, children, label, elevated }: { title: ReactNode; onClose: () => void; right?: ReactNode; children: ReactNode; label: string; elevated?: boolean }) {
+export default function Sheet({ title, onClose, right, children, label, elevated, wide }: { title: ReactNode; onClose: () => void; right?: ReactNode; children: ReactNode; label: string; elevated?: boolean; /** Pleine largeur sur ordinateur (profil) */ wide?: boolean }) {
   useScrollLock()
   useEscape(onClose)
+  useBackToClose(onClose)
   return (
-    <div className={cx('sheet-in fixed inset-0 flex flex-col bg-bg', elevated ? 'z-[70]' : 'z-50')} role="dialog" aria-modal="true" aria-label={label}>
+    <div className={cx('sheet sheet-in', elevated && 'z-[70]')} role="dialog" aria-modal="true" aria-label={label}>
       <header className="safe-top border-b border-line">
-        <div className="mx-auto flex max-w-2xl items-center gap-2 px-3 py-2.5">
+        <div className={cx('mx-auto flex max-w-2xl items-center gap-2 px-3 py-2.5', wide && 'lg:max-w-none lg:px-8')}>
           <button onClick={onClose} className="grid size-10 place-items-center rounded-full text-ink-2" aria-label={t('common.close')}>
             <X size={22} />
           </button>
@@ -20,8 +22,8 @@ export default function Sheet({ title, onClose, right, children, label, elevated
           <span className="flex size-10 items-center justify-end">{right}</span>
         </div>
       </header>
-      <div className="flex-1 overflow-y-auto overscroll-contain">
-        <div className="safe-bottom mx-auto max-w-2xl pb-16">{children}</div>
+      <div className="sheet-scroll">
+        <div className={cx('mx-auto max-w-2xl pb-[calc(6rem+env(safe-area-inset-bottom))]', wide && 'lg:max-w-none')}>{children}</div>
       </div>
     </div>
   )

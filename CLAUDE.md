@@ -57,9 +57,10 @@ npm run build        # build de prod
 - Garder les fichiers idempotents côté SQL.
 - RTL géré (arabe) : préférer les classes logiques (`ps-`/`pe-`, `ms-`/`me-`, `start-`/`end-`, `border-e`).
 
-## État / en attente (au 8 oct. 2026)
-- **À appliquer dans Supabase SQL Editor** : `supabase/migrations/20261007120000_social_notifications.sql`
-  (avis par titre, réactions emoji, notifications : abonnements / demandes acceptées / réactions reçues /
-  **nouveaux épisodes** des séries suivies, + préférences `notifPrefs` dans les réglages). Testé localement, jamais encore exécuté sur le projet réel.
-- Ensuite : `git push` pour déployer le client.
-- Recommandé dans le tableau de bord Supabase : activer **Leaked Password Protection** (Authentication → Passwords).
+## État / en attente (au 9 oct. 2026)
+- Appliqués en ligne : tout jusqu'à `20261008150000`, + `20261009110000_private_tags` et `20261009140000_challenges`.
+- **À coller dans SQL Editor** : `supabase/A_COLLER_2026-10-09.sql` (commentaires/spoilers, listes partagées, web push, modération, bugs/erreurs). Idempotent.
+- Edge functions déployées : `tmdb` v4 (watch/providers, /find), `send-push` v1.
+- Push : générer les clés (`node scripts/gen-vapid.mjs`), 4 secrets Edge Functions + `azuu_push_secret` dans Vault → voir `supabase/PUSH_SETUP.md`.
+- Sauvegardes : secrets Gitea `SUPABASE_DB_URL` + `BACKUP_PASSPHRASE`, préparation du VPS → voir `deploy/BACKUP.md`.
+- Recommandé : activer **Leaked Password Protection** (Authentication → Passwords) ; supprimer `_tmp_ping2` / `_tmp_sd2`.

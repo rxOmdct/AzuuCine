@@ -1,5 +1,6 @@
 import { t, type TKey } from '../../i18n'
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from './config'
+import { isPwnedPassword } from '../pwned'
 
 /**
  * Connexion aux comptes (Supabase Auth), sans dépendance.
@@ -160,9 +161,13 @@ export async function signIn(email: string, password: string): Promise<void> {
 }
 
 /** Crée un compte. Renvoie true si un email de confirmation a été envoyé (pas encore connecté). */
-export async function signUp(email: string, password: string): Promise<boolean> {
+/** Inscription. Le pseudo choisi est repris par la base à la création du profil (s'il est libre). */
+export async function signUp(email: string, password: string, username?: string): Promise<boolean> {
   if (password.length < PASSWORD_MIN) throw new AuthError(t('auth.err.weak', { n: PASSWORD_MIN }))
-  const data = await gotrue(`/signup?redirect_to=${encodeURIComponent(appUrl())}`, { body: { email: cleanEmail(email), password } })
+  if (await isPwnedPassword(password)) throw new AuthError(t('auth.err.pwned'))
+  const data = await gotrue(`/signup?redirect_to=${encodeURIComponent(appUrl())}`, {
+    body: { email: cleanEmail(email), password, ...(username ? { data: { username } } : {}) },
+  })
   const s = toSession(data)
   if (s) {
     setSession(s)
@@ -177,6 +182,7 @@ export async function requestPasswordReset(email: string): Promise<void> {
 
 export async function updatePassword(password: string): Promise<void> {
   if (password.length < PASSWORD_MIN) throw new AuthError(t('auth.err.weak', { n: PASSWORD_MIN }))
+  if (await isPwnedPassword(password)) throw new AuthError(t('auth.err.pwned'))
   const token = await getAccessToken()
   if (!token) throw new AuthError(t('auth.err.session'))
   await gotrue('/user', { method: 'PUT', body: { password }, token })

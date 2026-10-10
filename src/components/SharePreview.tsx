@@ -2,6 +2,7 @@ import { t } from '../i18n'
 import { Download, Share2, X } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { shareImage } from '../lib/shareCard'
+import { useBackToClose } from '../lib/backNav'
 import { useEscape } from '../lib/escape'
 
 interface Props {
@@ -30,6 +31,7 @@ export default function SharePreview({ blob, filename, title, onClose }: Props) 
     return () => URL.revokeObjectURL(u)
   }, [blob])
   useEscape(onClose)
+  useBackToClose(onClose)
 
   const go = async () => {
     setBusy(true)
@@ -52,7 +54,7 @@ export default function SharePreview({ blob, filename, title, onClose }: Props) 
       <div className="flex min-h-0 flex-1 items-center justify-center px-6">
         {url && <img src={url} alt={t('share.posterAlt', { title })} className="max-h-full max-w-full rounded-2xl border border-line object-contain" />}
       </div>
-      <div className="safe-bottom mx-auto grid w-full max-w-md grid-cols-1 gap-2 px-4 pb-4 pt-4">
+      <div className="mx-auto grid w-full max-w-md grid-cols-1 gap-2 px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-4">
         <button onClick={go} disabled={busy} className="btn btn-primary py-3">
           {canShare ? <Share2 size={18} /> : <Download size={18} />}
           {canShare ? t('share.share') : t('share.saveImage')}
