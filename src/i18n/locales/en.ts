@@ -1325,28 +1325,6 @@ const dict: Translations = {
   'stats.avgLength': "Average length",
   'stats.episodesSeen': "Episodes watched",
   'stats.decades': "Release decades",
-  // — Dates approximatives / ajouts en lot —
-  'dates.title': "Dates to fix",
-  'dates.open': "Fix dates",
-  'dates.openApprox': "See approximate dates",
-  'dates.chartNote': "Left out of the chart, no precise date: {count}",
-  'dates.tabFix': "To fix",
-  'dates.tabApprox': "Approximate",
-  'dates.bulk': "Added in bulk on {date}",
-  'dates.missing': "No end date",
-  'dates.unknown': "Unknown date",
-  'dates.year': "Around {year}",
-  'dates.approxLabel': "approximate",
-  'dates.dunno': "I don't remember",
-  'dates.selectAll': "Select all",
-  'dates.selectNone': "Deselect all",
-  'dates.selected': "Selected: {count}",
-  'dates.yearPh': "Year",
-  'dates.monthPh': "Month (optional)",
-  'dates.apply': "Apply",
-  'dates.empty': "All good: no dates to fix.",
-  'dates.emptyApprox': "No approximate dates.",
-  'dates.hint': "These titles were marked as watched on the same day during a bulk add: their end date is the day they were added, not when you watched them. Select them, then pick a year (and a month if you remember), or “I don't remember”.",
 }
 
 export default dict

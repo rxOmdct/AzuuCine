@@ -2,7 +2,6 @@ import { locale } from '../i18n'
 import type { MediaItem, MediaType, WatchStatus } from '../types'
 import { episodeCap } from './franchise'
 import { DEFAULT_FILM_MINUTES, MEDIA_TYPES, STATUSES, TYPE_BY_VALUE } from './constants'
-import { dateQuality, knowsMonth, knowsYear } from './dating'
 
 /** Temps estimé (minutes) passé sur une fiche. */
 export function watchMinutes(item: MediaItem): number {
@@ -111,15 +110,15 @@ export function watchDate(item: MediaItem): string | undefined {
   return item.startDate ?? item.updatedAt.slice(0, 10)
 }
 
-/** Années pour lesquelles j'ai des visionnages, de la plus récente à la plus ancienne (dates d'ajout en lot exclues). */
-export function availableYears(items: MediaItem[], bulk: Set<string> = new Set()): string[] {
-  return [...new Set(items.filter((i) => knowsYear(dateQuality(i, bulk))).map((i) => watchDate(i)?.slice(0, 4)).filter((y): y is string => !!y))].sort().reverse()
+/** Années pour lesquelles j'ai des visionnages, de la plus récente à la plus ancienne. */
+export function availableYears(items: MediaItem[]): string[] {
+  return [...new Set(items.map((i) => watchDate(i)?.slice(0, 4)).filter((y): y is string => !!y))].sort().reverse()
 }
 
-/** Garde les fiches rattachées à l'année (ou toutes si year = ''). Un titre sans année fiable n'entre dans aucune année. */
-export function itemsForPeriod(items: MediaItem[], year: string, bulk: Set<string> = new Set()): MediaItem[] {
+/** Garde les fiches rattachées à l'année (ou toutes si year = ''). « À voir » compte toujours. */
+export function itemsForPeriod(items: MediaItem[], year: string): MediaItem[] {
   if (!year) return items
-  return items.filter((i) => knowsYear(dateQuality(i, bulk)) && watchDate(i)?.startsWith(year))
+  return items.filter((i) => watchDate(i)?.startsWith(year))
 }
 
 export interface MonthBucket {
@@ -131,7 +130,7 @@ export interface MonthBucket {
 }
 
 /** Titres terminés et temps par mois : les 12 mois de l'année choisie, ou les 12 derniers mois. */
-export function monthly(items: MediaItem[], year: string, bulk: Set<string> = new Set()): MonthBucket[] {
+export function monthly(items: MediaItem[], year: string): MonthBucket[] {
   const months: string[] = []
   if (year) {
     for (let m = 1; m <= 12; m++) months.push(`${year}-${String(m).padStart(2, '0')}`)
@@ -145,7 +144,7 @@ export function monthly(items: MediaItem[], year: string, bulk: Set<string> = ne
   }
   return months.map((key) => {
     const date = new Date(`${key}-15T12:00:00`)
-    const inMonth = items.filter((i) => i.status === 'termine' && knowsMonth(dateQuality(i, bulk)) && watchDate(i)?.startsWith(key))
+    const inMonth = items.filter((i) => i.status === 'termine' && watchDate(i)?.startsWith(key))
     const label = date.toLocaleDateString(locale(), { month: 'short' })
     return {
       key,

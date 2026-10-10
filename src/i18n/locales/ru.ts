@@ -1465,28 +1465,6 @@ const dict: Translations = {
   'stats.avgLength': "Средняя длительность",
   'stats.episodesSeen': "Просмотрено серий",
   'stats.decades': "Десятилетия выхода",
-  // — Dates approximatives / ajouts en lot —
-  'dates.title': "Даты для исправления",
-  'dates.open': "Исправить даты",
-  'dates.openApprox': "Посмотреть приблизительные даты",
-  'dates.chartNote': "Вне графика, без точной даты: {count}",
-  'dates.tabFix': "Исправить",
-  'dates.tabApprox': "Приблизительные",
-  'dates.bulk': "Добавлено пакетом {date}",
-  'dates.missing': "Нет даты окончания",
-  'dates.unknown': "Дата неизвестна",
-  'dates.year': "Около {year}",
-  'dates.approxLabel': "приблизительно",
-  'dates.dunno': "Не помню",
-  'dates.selectAll': "Выбрать все",
-  'dates.selectNone': "Снять выбор",
-  'dates.selected': "Выбрано: {count}",
-  'dates.yearPh': "Год",
-  'dates.monthPh': "Месяц (необязательно)",
-  'dates.apply': "Применить",
-  'dates.empty': "Всё в порядке: исправлять нечего.",
-  'dates.emptyApprox': "Нет приблизительных дат.",
-  'dates.hint': "Эти тайтлы были отмечены просмотренными в один день при пакетном добавлении: их дата окончания — день добавления, а не просмотра. Выбери их и укажи год (и месяц, если помнишь) или «Не помню».",
 }
 
 export default dict

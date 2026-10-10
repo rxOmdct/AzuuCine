@@ -1325,28 +1325,6 @@ const dict: Translations = {
   'stats.avgLength': "Ortalama süre",
   'stats.episodesSeen': "İzlenen bölümler",
   'stats.decades': "Yayın on yılları",
-  // — Dates approximatives / ajouts en lot —
-  'dates.title': "Düzeltilecek tarihler",
-  'dates.open': "Tarihleri düzelt",
-  'dates.openApprox': "Yaklaşık tarihleri gör",
-  'dates.chartNote': "Kesin tarihi olmadığı için grafik dışı: {count}",
-  'dates.tabFix': "Düzeltilecek",
-  'dates.tabApprox': "Yaklaşık",
-  'dates.bulk': "Toplu eklendi: {date}",
-  'dates.missing': "Bitiş tarihi yok",
-  'dates.unknown': "Tarih bilinmiyor",
-  'dates.year': "{year} civarı",
-  'dates.approxLabel': "yaklaşık",
-  'dates.dunno': "Hatırlamıyorum",
-  'dates.selectAll': "Tümünü seç",
-  'dates.selectNone': "Seçimi kaldır",
-  'dates.selected': "Seçilen: {count}",
-  'dates.yearPh': "Yıl",
-  'dates.monthPh': "Ay (isteğe bağlı)",
-  'dates.apply': "Uygula",
-  'dates.empty': "Her şey yolunda: düzeltilecek tarih yok.",
-  'dates.emptyApprox': "Yaklaşık tarih yok.",
-  'dates.hint': "Bu yapımlar toplu eklemede aynı gün izlendi olarak işaretlendi: bitiş tarihleri izleme değil ekleme günü. Onları seç, sonra bir yıl (hatırlıyorsan ay da) seç ya da “Hatırlamıyorum”a dokun.",
 }
 
 export default dict

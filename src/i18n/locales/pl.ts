@@ -1465,28 +1465,6 @@ const dict: Translations = {
   'stats.avgLength': "Średnia długość",
   'stats.episodesSeen': "Obejrzane odcinki",
   'stats.decades': "Dekady premiery",
-  // — Dates approximatives / ajouts en lot —
-  'dates.title': "Daty do poprawienia",
-  'dates.open': "Popraw daty",
-  'dates.openApprox': "Zobacz przybliżone daty",
-  'dates.chartNote': "Poza wykresem, bez dokładnej daty: {count}",
-  'dates.tabFix': "Do poprawienia",
-  'dates.tabApprox': "Przybliżone",
-  'dates.bulk': "Dodane hurtowo {date}",
-  'dates.missing': "Brak daty zakończenia",
-  'dates.unknown': "Data nieznana",
-  'dates.year': "Około {year}",
-  'dates.approxLabel': "przybliżona",
-  'dates.dunno': "Nie pamiętam",
-  'dates.selectAll': "Zaznacz wszystko",
-  'dates.selectNone': "Odznacz wszystko",
-  'dates.selected': "Zaznaczone: {count}",
-  'dates.yearPh': "Rok",
-  'dates.monthPh': "Miesiąc (opcjonalnie)",
-  'dates.apply': "Zastosuj",
-  'dates.empty': "Wszystko w porządku: brak dat do poprawienia.",
-  'dates.emptyApprox': "Brak przybliżonych dat.",
-  'dates.hint': "Te tytuły oznaczono jako obejrzane tego samego dnia podczas hurtowego dodawania: ich data zakończenia to dzień dodania, a nie oglądania. Zaznacz je i wybierz rok (oraz miesiąc, jeśli pamiętasz) albo „Nie pamiętam”.",
 }
 
 export default dict

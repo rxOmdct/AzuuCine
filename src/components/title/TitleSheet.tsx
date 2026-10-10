@@ -1,4 +1,3 @@
-import { approxPatch, endLabel } from '../../lib/dating'
 import { locale, t } from '../../i18n'
 import { Bookmark, Check, ChevronDown, Eye, Heart, Loader2, MessagesSquare, Minus, MoreHorizontal, Pencil, Play, Plus, Share2, Trash2, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
@@ -184,13 +183,11 @@ export default function TitleSheet({ item: initial, seed, onClose, onGoToSetting
     if (s === status) return
     const patch: Partial<MediaInput> = { status: s }
     const today = todayISO()
-    if (s === 'a_voir') Object.assign(patch, { startDate: undefined, endDate: undefined, endApprox: undefined })
+    if (s === 'a_voir') Object.assign(patch, { startDate: undefined, endDate: undefined })
     // Série : la date de début est celle du premier épisode coché
-    if (s === 'en_cours') Object.assign(patch, { startDate: episodic && !item?.episodesWatched ? item?.startDate : (item?.startDate ?? today), endDate: undefined, endApprox: undefined })
+    if (s === 'en_cours') Object.assign(patch, { startDate: episodic && !item?.episodesWatched ? item?.startDate : (item?.startDate ?? today), endDate: undefined })
     if (s === 'termine') {
-      const keep = item?.status === 'termine' && item.endDate
-      patch.endDate = keep ? item.endDate : today
-      if (!keep) patch.endApprox = undefined
+      patch.endDate = item?.status === 'termine' && item.endDate ? item.endDate : today
       if (!item?.startDate) patch.startDate = episodic && item?.episodesWatched ? today : patch.endDate
       const cap = episodeCap(item ?? { episodesTotal: data.episodesTotal, seasons: data.seasons })
       if (episodic && cap) patch.episodesWatched = cap
@@ -217,8 +214,7 @@ export default function TitleSheet({ item: initial, seed, onClose, onGoToSetting
       }
       // Date de fin seulement pour un titre terminé (noter une série en cours ne la termine pas)
       const finished = (patch.status ?? item?.status) === 'termine'
-      // (« date inconnue » choisie exprès : on ne la remplace pas)
-      if (finished && !item?.endDate && !item?.endApprox) patch.endDate = today
+      if (finished && !item?.endDate) patch.endDate = today
       if (finished && !item?.startDate) patch.startDate = today
     }
     void save(patch)
@@ -773,7 +769,7 @@ function Tracking({ item, lists, tagSuggestions, onChange }: { item: MediaItem; 
   const rewatches = [...(item.rewatchDates ?? [])].sort().reverse()
   const summary = [
     item.startDate && `${t('form.startShort')} ${formatDate(item.startDate)}`,
-    endLabel(item) && `${t('form.endShort')} ${endLabel(item)}`,
+    item.endDate && `${t('form.endShort')} ${formatDate(item.endDate)}`,
     rewatches.length ? t('title.rewatchCount', { count: rewatches.length }) : undefined,
   ].filter(Boolean)
 
@@ -793,30 +789,10 @@ function Tracking({ item, lists, tagSuggestions, onChange }: { item: MediaItem; 
               <span className="label">{t('form.startShort')}</span>
               <input className="field" type="date" value={item.startDate ?? ''} max={todayISO()} onChange={(e) => onChange({ startDate: e.target.value || undefined })} />
             </label>
-            <div>
-              <label className="block">
-                <span className="label">
-                  {t('form.endShort')}
-                  {(item.endApprox === 'year' || item.endApprox === 'month') && <span className="ms-1.5 font-normal normal-case text-ink-3">· {t('dates.approxLabel')}</span>}
-                </span>
-                {item.endApprox === 'unknown' ? (
-                  <span className="field block text-ink-3">{t('dates.unknown')}</span>
-                ) : (
-                  <input className="field" type="date" value={item.endDate ?? ''} max={todayISO()} onChange={(e) => onChange({ endDate: e.target.value || undefined, endApprox: undefined })} />
-                )}
-              </label>
-              {item.status === 'termine' && (
-                <button
-                  type="button"
-                  onClick={() => onChange(item.endApprox === 'unknown' ? { endApprox: undefined } : approxPatch(item, 'unknown'))}
-                  aria-pressed={item.endApprox === 'unknown'}
-                  className={cx('chip mt-2 text-xs', item.endApprox === 'unknown' && 'chip-on')}
-                >
-                  {item.endApprox === 'unknown' && <Check size={13} />}
-                  {t('dates.dunno')}
-                </button>
-              )}
-            </div>
+            <label className="block">
+              <span className="label">{t('form.endShort')}</span>
+              <input className="field" type="date" value={item.endDate ?? ''} max={todayISO()} onChange={(e) => onChange({ endDate: e.target.value || undefined })} />
+            </label>
           </div>
           <div>
             <span className="label">{t('lists.myLists')}</span>

@@ -1325,28 +1325,6 @@ const dict: Translations = {
   'stats.avgLength': "औसत अवधि",
   'stats.episodesSeen': "देखे गए एपिसोड",
   'stats.decades': "रिलीज़ के दशक",
-  // — Dates approximatives / ajouts en lot —
-  'dates.title': "सुधारने वाली तारीखें",
-  'dates.open': "तारीखें सुधारें",
-  'dates.openApprox': "अनुमानित तारीखें देखें",
-  'dates.chartNote': "सटीक तारीख न होने से ग्राफ़ से बाहर: {count}",
-  'dates.tabFix': "सुधारना है",
-  'dates.tabApprox': "अनुमानित",
-  'dates.bulk': "{date} को एक साथ जोड़ा गया",
-  'dates.missing': "समाप्ति तारीख नहीं",
-  'dates.unknown': "तारीख अज्ञात",
-  'dates.year': "लगभग {year}",
-  'dates.approxLabel': "अनुमानित",
-  'dates.dunno': "याद नहीं",
-  'dates.selectAll': "सभी चुनें",
-  'dates.selectNone': "सभी हटाएँ",
-  'dates.selected': "चुने गए: {count}",
-  'dates.yearPh': "वर्ष",
-  'dates.monthPh': "महीना (वैकल्पिक)",
-  'dates.apply': "लागू करें",
-  'dates.empty': "सब ठीक है: कोई तारीख सुधारनी नहीं।",
-  'dates.emptyApprox': "कोई अनुमानित तारीख नहीं।",
-  'dates.hint': "इन टाइटल को एक साथ जोड़ते समय एक ही दिन देखा गया चिह्नित किया गया था: इनकी समाप्ति तारीख जोड़ने का दिन है, देखने का नहीं। इन्हें चुनें, फिर एक वर्ष (और याद हो तो महीना) चुनें, या “याद नहीं”।",
 }
 
 export default dict

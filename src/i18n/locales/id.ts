@@ -1325,28 +1325,6 @@ const dict: Translations = {
   'stats.avgLength': "Durasi rata-rata",
   'stats.episodesSeen': "Episode ditonton",
   'stats.decades': "Dekade rilis",
-  // — Dates approximatives / ajouts en lot —
-  'dates.title': "Tanggal yang perlu diperbaiki",
-  'dates.open': "Perbaiki tanggal",
-  'dates.openApprox': "Lihat tanggal perkiraan",
-  'dates.chartNote': "Di luar grafik, tanpa tanggal pasti: {count}",
-  'dates.tabFix': "Perlu diperbaiki",
-  'dates.tabApprox': "Perkiraan",
-  'dates.bulk': "Ditambahkan sekaligus pada {date}",
-  'dates.missing': "Tanpa tanggal selesai",
-  'dates.unknown': "Tanggal tidak diketahui",
-  'dates.year': "Sekitar {year}",
-  'dates.approxLabel': "perkiraan",
-  'dates.dunno': "Aku lupa",
-  'dates.selectAll': "Pilih semua",
-  'dates.selectNone': "Batalkan pilihan",
-  'dates.selected': "Dipilih: {count}",
-  'dates.yearPh': "Tahun",
-  'dates.monthPh': "Bulan (opsional)",
-  'dates.apply': "Terapkan",
-  'dates.empty': "Semua beres: tidak ada tanggal yang perlu diperbaiki.",
-  'dates.emptyApprox': "Tidak ada tanggal perkiraan.",
-  'dates.hint': "Judul-judul ini ditandai sudah ditonton pada hari yang sama saat ditambahkan sekaligus: tanggal selesainya adalah hari penambahan, bukan hari menonton. Pilih judulnya, lalu pilih tahun (dan bulan jika ingat), atau “Aku lupa”.",
 }
 
 export default dict

@@ -1548,28 +1548,6 @@ const dict: Translations = {
   'stats.avgLength': "متوسط المدة",
   'stats.episodesSeen': "الحلقات المشاهدة",
   'stats.decades': "عقود الإصدار",
-  // — Dates approximatives / ajouts en lot —
-  'dates.title': "تواريخ تحتاج إلى تصحيح",
-  'dates.open': "تصحيح التواريخ",
-  'dates.openApprox': "عرض التواريخ التقريبية",
-  'dates.chartNote': "خارج الرسم لعدم وجود تاريخ دقيق: {count}",
-  'dates.tabFix': "للتصحيح",
-  'dates.tabApprox': "تقريبية",
-  'dates.bulk': "أُضيف دفعة واحدة في {date}",
-  'dates.missing': "بلا تاريخ انتهاء",
-  'dates.unknown': "تاريخ غير معروف",
-  'dates.year': "حوالي {year}",
-  'dates.approxLabel': "تقريبي",
-  'dates.dunno': "لا أتذكر",
-  'dates.selectAll': "تحديد الكل",
-  'dates.selectNone': "إلغاء التحديد",
-  'dates.selected': "المحدد: {count}",
-  'dates.yearPh': "السنة",
-  'dates.monthPh': "الشهر (اختياري)",
-  'dates.apply': "تطبيق",
-  'dates.empty': "كل شيء على ما يرام: لا توجد تواريخ للتصحيح.",
-  'dates.emptyApprox': "لا توجد تواريخ تقريبية.",
-  'dates.hint': "تم تعليم هذه الأعمال كمشاهدة في اليوم نفسه أثناء إضافة دفعة واحدة: تاريخ انتهائها هو يوم الإضافة لا يوم المشاهدة. حدّدها ثم اختر سنة (وشهرًا إن تذكرت)، أو «لا أتذكر».",
 }
 
 export default dict

@@ -1325,28 +1325,6 @@ const dict: Translations = {
   'stats.avgLength': "Durchschnittliche Länge",
   'stats.episodesSeen': "Gesehene Folgen",
   'stats.decades': "Erscheinungsjahrzehnte",
-  // — Dates approximatives / ajouts en lot —
-  'dates.title': "Zu korrigierende Daten",
-  'dates.open': "Daten korrigieren",
-  'dates.openApprox': "Ungefähre Daten ansehen",
-  'dates.chartNote': "Ohne genaues Datum nicht im Diagramm: {count}",
-  'dates.tabFix': "Zu korrigieren",
-  'dates.tabApprox': "Ungefähr",
-  'dates.bulk': "Gesammelt hinzugefügt am {date}",
-  'dates.missing': "Kein Enddatum",
-  'dates.unknown': "Datum unbekannt",
-  'dates.year': "Um {year}",
-  'dates.approxLabel': "ungefähr",
-  'dates.dunno': "Weiß ich nicht mehr",
-  'dates.selectAll': "Alle auswählen",
-  'dates.selectNone': "Auswahl aufheben",
-  'dates.selected': "Ausgewählt: {count}",
-  'dates.yearPh': "Jahr",
-  'dates.monthPh': "Monat (optional)",
-  'dates.apply': "Übernehmen",
-  'dates.empty': "Alles in Ordnung: keine Daten zu korrigieren.",
-  'dates.emptyApprox': "Keine ungefähren Daten.",
-  'dates.hint': "Diese Titel wurden am selben Tag beim gesammelten Hinzufügen als gesehen markiert: Ihr Enddatum ist der Tag des Hinzufügens, nicht des Ansehens. Wähle sie aus und gib ein Jahr (und einen Monat, falls du dich erinnerst) an – oder „Weiß ich nicht mehr“.",
 }
 
 export default dict

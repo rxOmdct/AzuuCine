@@ -1325,28 +1325,6 @@ const dict: Translations = {
   'stats.avgLength': "Gemiddelde duur",
   'stats.episodesSeen': "Geziene afleveringen",
   'stats.decades': "Decennia van uitgave",
-  // — Dates approximatives / ajouts en lot —
-  'dates.title': "Te corrigeren datums",
-  'dates.open': "Datums corrigeren",
-  'dates.openApprox': "Geschatte datums bekijken",
-  'dates.chartNote': "Buiten de grafiek, geen precieze datum: {count}",
-  'dates.tabFix': "Te corrigeren",
-  'dates.tabApprox': "Geschat",
-  'dates.bulk': "In bulk toegevoegd op {date}",
-  'dates.missing': "Geen einddatum",
-  'dates.unknown': "Datum onbekend",
-  'dates.year': "Rond {year}",
-  'dates.approxLabel': "geschat",
-  'dates.dunno': "Weet ik niet meer",
-  'dates.selectAll': "Alles selecteren",
-  'dates.selectNone': "Alles deselecteren",
-  'dates.selected': "Geselecteerd: {count}",
-  'dates.yearPh': "Jaar",
-  'dates.monthPh': "Maand (optioneel)",
-  'dates.apply': "Toepassen",
-  'dates.empty': "Alles in orde: geen datums te corrigeren.",
-  'dates.emptyApprox': "Geen geschatte datums.",
-  'dates.hint': "Deze titels zijn op dezelfde dag als gezien gemarkeerd bij een bulktoevoeging: hun einddatum is de dag van toevoegen, niet van kijken. Selecteer ze en kies een jaar (en een maand als je die nog weet), of ‘Weet ik niet meer’.",
 }
 
 export default dict

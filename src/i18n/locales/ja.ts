@@ -1325,28 +1325,6 @@ const dict: Translations = {
   'stats.avgLength': "平均の長さ",
   'stats.episodesSeen': "観たエピソード",
   'stats.decades': "公開年代",
-  // — Dates approximatives / ajouts en lot —
-  'dates.title': "修正が必要な日付",
-  'dates.open': "日付を修正",
-  'dates.openApprox': "おおよその日付を見る",
-  'dates.chartNote': "正確な日付がないためグラフ外：{count}",
-  'dates.tabFix': "要修正",
-  'dates.tabApprox': "おおよそ",
-  'dates.bulk': "{date} にまとめて追加",
-  'dates.missing': "終了日なし",
-  'dates.unknown': "日付不明",
-  'dates.year': "{year}年ごろ",
-  'dates.approxLabel': "おおよそ",
-  'dates.dunno': "覚えていない",
-  'dates.selectAll': "すべて選択",
-  'dates.selectNone': "選択を解除",
-  'dates.selected': "選択中：{count}",
-  'dates.yearPh': "年",
-  'dates.monthPh': "月（任意）",
-  'dates.apply': "適用",
-  'dates.empty': "問題ありません：修正する日付はありません。",
-  'dates.emptyApprox': "おおよその日付はありません。",
-  'dates.hint': "これらの作品はまとめて追加したときに同じ日に「視聴済み」になりました。終了日は追加した日で、実際に観た日ではありません。作品を選び、年（覚えていれば月も）を選ぶか、「覚えていない」を選んでください。",
 }
 
 export default dict
