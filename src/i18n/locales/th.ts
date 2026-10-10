@@ -1325,6 +1325,28 @@ const dict: Translations = {
   'stats.avgLength': "ความยาวเฉลี่ย",
   'stats.episodesSeen': "ตอนที่ดู",
   'stats.decades': "ทศวรรษที่ออกฉาย",
+  // — Dates approximatives / ajouts en lot —
+  'dates.title': "วันที่ที่ต้องแก้",
+  'dates.open': "แก้วันที่",
+  'dates.openApprox': "ดูวันที่โดยประมาณ",
+  'dates.chartNote': "ไม่อยู่ในกราฟเพราะไม่มีวันที่แน่ชัด: {count}",
+  'dates.tabFix': "ต้องแก้",
+  'dates.tabApprox': "โดยประมาณ",
+  'dates.bulk': "เพิ่มพร้อมกันเมื่อ {date}",
+  'dates.missing': "ไม่มีวันที่ดูจบ",
+  'dates.unknown': "ไม่ทราบวันที่",
+  'dates.year': "ราว {year}",
+  'dates.approxLabel': "โดยประมาณ",
+  'dates.dunno': "จำไม่ได้",
+  'dates.selectAll': "เลือกทั้งหมด",
+  'dates.selectNone': "ยกเลิกการเลือก",
+  'dates.selected': "เลือกแล้ว: {count}",
+  'dates.yearPh': "ปี",
+  'dates.monthPh': "เดือน (ไม่บังคับ)",
+  'dates.apply': "ใช้",
+  'dates.empty': "เรียบร้อย: ไม่มีวันที่ที่ต้องแก้",
+  'dates.emptyApprox': "ไม่มีวันที่โดยประมาณ",
+  'dates.hint': "เรื่องเหล่านี้ถูกทำเครื่องหมายว่าดูแล้วในวันเดียวกันตอนเพิ่มพร้อมกัน วันที่ดูจบจึงเป็นวันที่เพิ่ม ไม่ใช่วันที่ดูจริง เลือกเรื่อง แล้วเลือกปี (และเดือนถ้าจำได้) หรือ “จำไม่ได้”",
 }
 
 export default dict

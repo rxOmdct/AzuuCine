@@ -1325,6 +1325,28 @@ const dict: Translations = {
   'stats.avgLength': "Duración media",
   'stats.episodesSeen': "Episodios vistos",
   'stats.decades': "Décadas de estreno",
+  // — Dates approximatives / ajouts en lot —
+  'dates.title': "Fechas por corregir",
+  'dates.open': "Corregir fechas",
+  'dates.openApprox': "Ver fechas aproximadas",
+  'dates.chartNote': "Fuera del gráfico, sin fecha precisa: {count}",
+  'dates.tabFix': "Por corregir",
+  'dates.tabApprox': "Aproximadas",
+  'dates.bulk': "Añadido en bloque el {date}",
+  'dates.missing': "Sin fecha de fin",
+  'dates.unknown': "Fecha desconocida",
+  'dates.year': "Hacia {year}",
+  'dates.approxLabel': "aproximada",
+  'dates.dunno': "No me acuerdo",
+  'dates.selectAll': "Seleccionar todo",
+  'dates.selectNone': "Deseleccionar todo",
+  'dates.selected': "Seleccionados: {count}",
+  'dates.yearPh': "Año",
+  'dates.monthPh': "Mes (opcional)",
+  'dates.apply': "Aplicar",
+  'dates.empty': "Todo en orden: no hay fechas por corregir.",
+  'dates.emptyApprox': "No hay fechas aproximadas.",
+  'dates.hint': "Estos títulos se marcaron como vistos el mismo día al añadirlos en bloque: su fecha de fin es la del añadido, no la del visionado. Selecciónalos y elige un año (y un mes si lo recuerdas), o «No me acuerdo».",
 }
 
 export default dict

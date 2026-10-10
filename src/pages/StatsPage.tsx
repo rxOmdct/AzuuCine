@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react'
 import { t } from '../i18n'
 import { BarList, Columns, Panel, StatTile } from '../components/stats/Charts'
 import Poster from '../components/Poster'
+import DatesSheet from '../components/stats/DatesSheet'
+import { bulkDays, dateQuality, knowsMonth, needsFix } from '../lib/dating'
 import { EmptyState, PageHeader } from '../components/ui'
 import { STATUSES, TYPE_BY_VALUE } from '../lib/constants'
 import { genreLabel } from '../lib/genres'
@@ -26,11 +28,14 @@ export default function StatsPage({ onOpen }: { onOpen: (item: MediaItem) => voi
   const { items, settings } = useMedia()
   const [scope, setScope] = useState<Scope>('all')
   const [year, setYear] = useState('')
+  const [fixing, setFixing] = useState(false)
+  // Jours d'ajout en lot, repérés sur toute la bibliothèque
+  const bulk = useMemo(() => bulkDays(items), [items])
 
   const scoped = useMemo(() => (scope === 'all' ? items : items.filter((i) => SCOPE_TYPES[scope].includes(i.type))), [items, scope])
-  const years = useMemo(() => availableYears(scoped), [scoped])
+  const years = useMemo(() => availableYears(scoped, bulk), [scoped, bulk])
   const period = year && years.includes(year) ? year : ''
-  const list = useMemo(() => itemsForPeriod(scoped, period), [scoped, period])
+  const list = useMemo(() => itemsForPeriod(scoped, period, bulk), [scoped, period, bulk])
 
   // Onglets : « Général », « Films », « Séries » toujours ; les autres seulement s'ils ont des titres
   const scopes: Scope[] = (['all', 'film', 'series', 'anime', 'other'] as Scope[]).filter(
@@ -66,15 +71,44 @@ export default function StatsPage({ onOpen }: { onOpen: (item: MediaItem) => voi
       {list.length === 0 ? (
         <EmptyState title={t('stats.emptyTitle')} text={t('stats.emptyText')} />
       ) : (
-        <StatsBody key={scope + period} scope={scope} items={list} year={period} scale={settings.ratingScale} onOpen={onOpen} />
+        <StatsBody key={scope + period} scope={scope} items={list} year={period} bulk={bulk} scale={settings.ratingScale} onOpen={onOpen} onFixDates={() => setFixing(true)} />
       )}
+      {fixing && <DatesSheet onClose={() => setFixing(false)} />}
     </>
   )
 }
 
-function StatsBody({ scope, items, year, scale, onOpen }: { scope: Scope; items: MediaItem[]; year: string; scale: '5' | '10'; onOpen: (item: MediaItem) => void }) {
+function StatsBody({
+  scope,
+  items,
+  year,
+  bulk,
+  scale,
+  onOpen,
+  onFixDates,
+}: {
+  scope: Scope
+  items: MediaItem[]
+  year: string
+  bulk: Set<string>
+  scale: '5' | '10'
+  onOpen: (item: MediaItem) => void
+  onFixDates: () => void
+}) {
   const s = useMemo(() => computeStats(items), [items])
-  const months = useMemo(() => monthly(items, year), [items, year])
+  const months = useMemo(() => monthly(items, year, bulk), [items, year, bulk])
+  // Titres terminés tenus à l'écart de la courbe (ajout en lot, sans date, ou date trop vague)
+  const offChart = useMemo(() => {
+    let n = 0
+    let fix = 0
+    for (const i of items) {
+      if (i.status !== 'termine') continue
+      const q = dateQuality(i, bulk)
+      if (!knowsMonth(q)) n++
+      if (needsFix(q)) fix++
+    }
+    return { n, fix }
+  }, [items, bulk])
   const rec = useMemo(() => records(items), [items])
   const geo = useMemo(() => countries(items), [items])
   const isFilm = scope === 'film'
@@ -141,6 +175,14 @@ function StatsBody({ scope, items, year, scale, onOpen }: { scope: Scope; items:
             <p className="mt-3 text-xs text-ink-2">
               {t('stats.busiest')} <span className="font-medium text-ink">{busiest.label}</span> · {t('stats.monthFinished', { count: busiest.count })}
             </p>
+          )}
+          {offChart.n > 0 && (
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-dashed border-line-strong px-3 py-2.5">
+              <p className="text-xs text-ink-2">{t('dates.chartNote', { count: offChart.n })}</p>
+              <button onClick={onFixDates} className="text-xs font-semibold text-ink">
+                {offChart.fix > 0 ? t('dates.open') : t('dates.openApprox')} <span className="text-accent rtl:-scale-x-100">→</span>
+              </button>
+            </div>
           )}
         </Panel>
 

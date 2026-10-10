@@ -1325,6 +1325,28 @@ const dict: Translations = {
   'stats.avgLength': "평균 길이",
   'stats.episodesSeen': "본 에피소드",
   'stats.decades': "개봉 연대",
+  // — Dates approximatives / ajouts en lot —
+  'dates.title': "수정할 날짜",
+  'dates.open': "날짜 수정",
+  'dates.openApprox': "대략적인 날짜 보기",
+  'dates.chartNote': "정확한 날짜가 없어 그래프에서 제외: {count}",
+  'dates.tabFix': "수정 필요",
+  'dates.tabApprox': "대략적",
+  'dates.bulk': "{date}에 한꺼번에 추가됨",
+  'dates.missing': "종료일 없음",
+  'dates.unknown': "날짜 모름",
+  'dates.year': "{year}년쯤",
+  'dates.approxLabel': "대략적",
+  'dates.dunno': "기억 안 나요",
+  'dates.selectAll': "모두 선택",
+  'dates.selectNone': "선택 해제",
+  'dates.selected': "선택됨: {count}",
+  'dates.yearPh': "연도",
+  'dates.monthPh': "월(선택)",
+  'dates.apply': "적용",
+  'dates.empty': "모두 정상이에요: 수정할 날짜가 없어요.",
+  'dates.emptyApprox': "대략적인 날짜가 없어요.",
+  'dates.hint': "이 작품들은 한꺼번에 추가할 때 같은 날 '봤음'으로 표시됐어요. 종료일은 실제로 본 날이 아니라 추가한 날이에요. 작품을 선택한 뒤 연도(기억나면 월도)를 고르거나 '기억 안 나요'를 누르세요.",
 }
 
 export default dict

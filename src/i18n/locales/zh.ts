@@ -1325,6 +1325,28 @@ const dict: Translations = {
   'stats.avgLength': "平均时长",
   'stats.episodesSeen': "看过的集数",
   'stats.decades': "上映年代",
+  // — Dates approximatives / ajouts en lot —
+  'dates.title': "需要修正的日期",
+  'dates.open': "修正日期",
+  'dates.openApprox': "查看大致日期",
+  'dates.chartNote': "没有准确日期，未计入图表：{count}",
+  'dates.tabFix': "待修正",
+  'dates.tabApprox': "大致",
+  'dates.bulk': "于 {date} 批量添加",
+  'dates.missing': "无看完日期",
+  'dates.unknown': "日期未知",
+  'dates.year': "约 {year} 年",
+  'dates.approxLabel': "大致",
+  'dates.dunno': "不记得了",
+  'dates.selectAll': "全选",
+  'dates.selectNone': "取消全选",
+  'dates.selected': "已选：{count}",
+  'dates.yearPh': "年份",
+  'dates.monthPh': "月份（可选）",
+  'dates.apply': "应用",
+  'dates.empty': "一切正常：没有需要修正的日期。",
+  'dates.emptyApprox': "没有大致日期。",
+  'dates.hint': "这些作品是在批量添加时于同一天被标记为看过的：它们的看完日期是添加的日子，而不是观看的日子。选中它们，然后选择年份（记得的话再选月份），或选择“不记得了”。",
 }
 
 export default dict

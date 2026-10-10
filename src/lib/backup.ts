@@ -119,6 +119,7 @@ export function normalizeItem(raw: unknown): MediaItem | null {
     duration: int(r.duration, 0, 6000) || undefined,
     startDate: safeDay(r.startDate),
     endDate: safeDay(r.endDate),
+    endApprox: r.endApprox === 'year' || r.endApprox === 'month' || r.endApprox === 'unknown' ? r.endApprox : undefined,
     genres: safeStringList(r.genres, LIMITS.genres),
     platform: cleanText(r.platform, LIMITS.shortText),
     notes: cleanText(r.notes, LIMITS.notes),

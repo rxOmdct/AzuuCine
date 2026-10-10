@@ -33,6 +33,8 @@ export interface MediaItem {
 
   startDate?: string // AAAA-MM-JJ
   endDate?: string // AAAA-MM-JJ
+  /** Date de fin approximative : année seule, mois, ou inconnue (titres ajoutés en lot, vus il y a longtemps). */
+  endApprox?: 'year' | 'month' | 'unknown'
   genres: string[]
   platform?: string
   /** Mon avis (visible sur mon profil, comme ma note) */

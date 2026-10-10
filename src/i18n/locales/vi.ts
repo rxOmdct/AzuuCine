@@ -1325,6 +1325,28 @@ const dict: Translations = {
   'stats.avgLength': "Thời lượng trung bình",
   'stats.episodesSeen': "Tập đã xem",
   'stats.decades': "Thập niên phát hành",
+  // — Dates approximatives / ajouts en lot —
+  'dates.title': "Ngày cần sửa",
+  'dates.open': "Sửa ngày",
+  'dates.openApprox': "Xem ngày ước lượng",
+  'dates.chartNote': "Không có trong biểu đồ vì thiếu ngày chính xác: {count}",
+  'dates.tabFix': "Cần sửa",
+  'dates.tabApprox': "Ước lượng",
+  'dates.bulk': "Thêm hàng loạt ngày {date}",
+  'dates.missing': "Không có ngày xem xong",
+  'dates.unknown': "Không rõ ngày",
+  'dates.year': "Khoảng {year}",
+  'dates.approxLabel': "ước lượng",
+  'dates.dunno': "Không nhớ",
+  'dates.selectAll': "Chọn tất cả",
+  'dates.selectNone': "Bỏ chọn tất cả",
+  'dates.selected': "Đã chọn: {count}",
+  'dates.yearPh': "Năm",
+  'dates.monthPh': "Tháng (không bắt buộc)",
+  'dates.apply': "Áp dụng",
+  'dates.empty': "Mọi thứ ổn: không có ngày nào cần sửa.",
+  'dates.emptyApprox': "Không có ngày ước lượng.",
+  'dates.hint': "Các phim này được đánh dấu đã xem cùng một ngày khi thêm hàng loạt: ngày xem xong là ngày thêm vào, không phải ngày xem. Hãy chọn chúng rồi chọn năm (và tháng nếu còn nhớ), hoặc “Không nhớ”.",
 }
 
 export default dict

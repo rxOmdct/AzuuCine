@@ -1327,6 +1327,28 @@ const dict = {
   'stats.avgLength': "Durée moyenne",
   'stats.episodesSeen': "Épisodes vus",
   'stats.decades': "Décennies de sortie",
+  // — Dates approximatives / ajouts en lot —
+  'dates.title': "Dates à corriger",
+  'dates.open': "Corriger les dates",
+  'dates.openApprox': "Voir les dates approximatives",
+  'dates.chartNote': "Hors courbe, faute de date précise : {count}",
+  'dates.tabFix': "À corriger",
+  'dates.tabApprox': "Approximatives",
+  'dates.bulk': "Ajouté en lot le {date}",
+  'dates.missing': "Sans date de fin",
+  'dates.unknown': "Date inconnue",
+  'dates.year': "Vers {year}",
+  'dates.approxLabel': "approximative",
+  'dates.dunno': "Je ne sais plus",
+  'dates.selectAll': "Tout sélectionner",
+  'dates.selectNone': "Tout désélectionner",
+  'dates.selected': "Sélectionnés : {count}",
+  'dates.yearPh': "Année",
+  'dates.monthPh': "Mois (facultatif)",
+  'dates.apply': "Appliquer",
+  'dates.empty': "Tout est en ordre : aucune date à corriger.",
+  'dates.emptyApprox': "Aucune date approximative.",
+  'dates.hint': "Ces titres ont été marqués « vus » le même jour, lors d'un ajout en lot : leur date de fin est celle de l'ajout, pas du visionnage. Sélectionne-les, puis choisis une année (et un mois si tu t'en souviens), ou « Je ne sais plus ».",
 }
 
 export default dict
