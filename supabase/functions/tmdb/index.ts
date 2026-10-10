@@ -7,7 +7,7 @@ import { corsHeaders, getUserId, json, rateLimited } from '../_shared/auth.ts'
 const TMDB_KEY = Deno.env.get('TMDB_API_KEY') ?? ''
 
 // Mêmes adresses que dans l'app — tout le reste est refusé
-const PATHS = /^\/(search\/multi|configuration|discover\/(movie|tv)|(movie|tv)\/\d{1,10}(\/recommendations|\/season\/\d{1,3})?|find\/(tt)?\d{1,10})$/
+const PATHS = /^\/(search\/(multi|person)|configuration|discover\/(movie|tv)|(movie|tv)\/\d{1,10}(\/recommendations|\/season\/\d{1,3})?|find\/(tt)?\d{1,10}|person\/\d{1,10})$/
 
 // Paramètres autorisés et forme de leur valeur
 const PARAMS: Record<string, RegExp> = {
@@ -16,7 +16,7 @@ const PARAMS: Record<string, RegExp> = {
   include_adult: /^false$/,
   page: /^[1-9]\d?$/,
   // Une ou plusieurs sous-réponses connues, séparées par des virgules (ex. « credits,watch/providers » pour la fiche)
-  append_to_response: /^(watch\/providers|credits|release_dates)(,(watch\/providers|credits|release_dates)){0,2}$/,
+  append_to_response: /^(watch\/providers|credits|release_dates|combined_credits)(,(watch\/providers|credits|release_dates|combined_credits)){0,2}$/,
   region: /^[A-Z]{2}$/,
   'release_date.gte': /^\d{4}-\d{2}-\d{2}$/,
   'release_date.lte': /^\d{4}-\d{2}-\d{2}$/,
@@ -26,7 +26,7 @@ const PARAMS: Record<string, RegExp> = {
   sort_by: /^popularity\.desc$/,
   with_origin_country: /^[A-Z]{2}(\|[A-Z]{2}){0,20}$/,
   without_genres: /^\d{1,6}(\|\d{1,6}){0,10}$/,
-  // Import TV Time / IMDb : /find/{id}
+  // Import TV Time / IMDb : /find/{id} — et pages des personnes : /search/person, /person/{id}
   external_source: /^(tvdb_id|imdb_id)$/,
 }
 

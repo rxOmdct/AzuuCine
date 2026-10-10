@@ -42,13 +42,15 @@ interface Props {
   seed?: SearchResult
   onClose: () => void
   onGoToSettings?: () => void
+  /** Ouvre la page d'un acteur / réalisateur (sa filmographie) */
+  onOpenPerson?: (p: { id: string; name?: string; photo?: string }) => void
 }
 
 /**
  * Fiche d'un titre, façon Letterboxd : tout se fait ici, et chaque geste est enregistré tout de suite.
  * Vu / En cours / À voir, note, coup de cœur, avis, épisodes, casting et note moyenne du public.
  */
-export default function TitleSheet({ item: initial, seed, onClose, onGoToSettings }: Props) {
+export default function TitleSheet({ item: initial, seed, onClose, onGoToSettings, onOpenPerson }: Props) {
   const { items, settings, add, update, lists, patchMany } = useMedia()
   const actions = useLibraryActions()
   const social = useSocial()
@@ -339,7 +341,22 @@ export default function TitleSheet({ item: initial, seed, onClose, onGoToSetting
               {metaLine.length > 0 && <p className="mt-2 text-xs uppercase tracking-wide text-ink-2 lg:text-sm">{metaLine.join(' · ')}</p>}
               {extras && extras.directors.length > 0 && (
                 <p className="mt-2 text-sm text-ink-2 lg:text-base">
-                  {extras.directorKind === 'director' ? t('title.directedBy') : t('title.createdBy')} <span className="font-medium text-ink">{extras.directors.join(', ')}</span>
+                  {extras.directorKind === 'director' ? t('title.directedBy') : t('title.createdBy')}{' '}
+                  {(extras.directorPeople ?? extras.directors.map((name) => ({ name, personId: undefined }))).map((d, k) => (
+                    <span key={d.name}>
+                      {k > 0 && ', '}
+                      {d.personId && onOpenPerson ? (
+                        <button
+                          onClick={() => onOpenPerson({ id: d.personId!, name: d.name })}
+                          className="font-medium text-ink underline decoration-line-strong underline-offset-4 hover:decoration-accent"
+                        >
+                          {d.name}
+                        </button>
+                      ) : (
+                        <span className="font-medium text-ink">{d.name}</span>
+                      )}
+                    </span>
+                  ))}
                 </p>
               )}
               {status && (
@@ -523,17 +540,25 @@ export default function TitleSheet({ item: initial, seed, onClose, onGoToSetting
             <section className="mt-8">
               <h3 className="eyebrow mx-4 mb-3 text-ink-2">{t('title.cast')}</h3>
               <div className="no-scrollbar flex gap-3 overflow-x-auto px-4 pb-1">
-                {extras.cast.map((c, k) => (
-                  <div key={c.name + k} className="w-[5.5rem] shrink-0 text-center">
+                {extras.cast.map((c, k) => {
+                  const open = c.personId && onOpenPerson ? () => onOpenPerson({ id: c.personId!, name: c.voice ?? c.name, photo: c.voice ? undefined : c.photo }) : undefined
+                  const Tag = open ? 'button' : 'div'
+                  return (
+                  <Tag
+                    key={c.name + k}
+                    {...(open ? { onClick: open, type: 'button' as const } : {})}
+                    className="group w-[5.5rem] shrink-0 text-center"
+                  >
                     {c.photo ? (
-                      <img src={c.photo} alt="" loading="lazy" className="mx-auto size-20 rounded-full border border-line bg-surface-2 object-cover" />
+                      <img src={c.photo} alt="" loading="lazy" className="mx-auto size-20 rounded-full border border-line bg-surface-2 object-cover transition-colors group-hover:border-accent" />
                     ) : (
-                      <span className="mx-auto grid size-20 place-items-center rounded-full border border-line bg-surface-2 text-lg font-semibold text-ink-3">{c.name.charAt(0)}</span>
+                      <span className="mx-auto grid size-20 place-items-center rounded-full border border-line bg-surface-2 text-lg font-semibold text-ink-3 transition-colors group-hover:border-accent">{c.name.charAt(0)}</span>
                     )}
                     <p className="mt-2 line-clamp-2 text-xs font-medium leading-snug">{c.name}</p>
                     {(c.role || c.voice) && <p className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-ink-3">{c.role ?? t('title.voice', { name: c.voice! })}</p>}
-                  </div>
-                ))}
+                  </Tag>
+                  )
+                })}
               </div>
             </section>
           )}

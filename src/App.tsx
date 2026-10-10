@@ -6,6 +6,7 @@ import SideNav from './components/SideNav'
 import AddTitle from './components/title/AddTitle'
 import EditDetails from './components/title/EditDetails'
 import TitleSheet from './components/title/TitleSheet'
+import PersonSheet from './components/person/PersonSheet'
 import Roulette from './components/Roulette'
 import CalendarView from './components/CalendarView'
 import HomePage from './pages/HomePage'
@@ -34,13 +35,22 @@ function routeFromHash(): Route {
   return (TABS as string[]).includes(h) ? (h as Tab) : 'notfound'
 }
 
-/** Fiche ouverte : un titre de ma bibliothèque, ou un résultat de recherche pas encore ajouté. */
-type Opened = { item: MediaItem; seed?: undefined } | { seed: SearchResult; item?: undefined }
+/**
+ * Fenêtres ouvertes les unes sur les autres : fiche d'un titre (de ma bibliothèque, ou résultat pas encore ajouté)
+ * ou page d'une personne. Titre → acteur → autre titre → … : « retour » remonte d'un cran.
+ */
+type Layer =
+  | { kind: 'title'; item: MediaItem; seed?: undefined }
+  | { kind: 'title'; seed: SearchResult; item?: undefined }
+  | { kind: 'person'; personId: string; name?: string; photo?: string }
+let layerUid = 0
 
 export default function App() {
   const { error } = useMedia()
   const [route, setRoute] = useState<Route>(routeFromHash)
-  const [opened, setOpened] = useState<Opened | null>(null)
+  const [layers, setLayers] = useState<(Layer & { uid: number })[]>([])
+  const pushLayer = (l: Layer) => setLayers((ls) => [...ls.slice(-11), { ...l, uid: ++layerUid }])
+  const closeLayer = (uid: number) => setLayers((ls) => ls.filter((x) => x.uid !== uid))
   const [adding, setAdding] = useState(false)
   const [manual, setManual] = useState<string | null>(null)
   const [roulette, setRoulette] = useState(false)
@@ -59,10 +69,12 @@ export default function App() {
   // Dans la barre de navigation, l'administration reste rattachée à « Réglages »
   const navTab: Tab = route === 'admin' ? 'settings' : route === 'notfound' ? 'home' : route
 
-  const openItem = (item: MediaItem) => setOpened({ item })
+  const openItem = (item: MediaItem) => pushLayer({ kind: 'title', item })
+  const openSeed = (seed: SearchResult) => pushLayer({ kind: 'title', seed })
+  const openPerson = (p: { id: string; name?: string; photo?: string }) => pushLayer({ kind: 'person', personId: p.id, name: p.name, photo: p.photo })
   const openNew = () => setAdding(true)
   const toSettings = () => {
-    setOpened(null)
+    setLayers([])
     setAdding(false)
     setManual(null)
     // Laisse les fenêtres retirer leur entrée d'historique avant de changer d'onglet
@@ -71,7 +83,7 @@ export default function App() {
 
   return (
     <ToastProvider>
-    <SocialProvider onOpenOwnItem={openItem} onOpenSeed={(seed) => setOpened({ seed })}>
+    <SocialProvider onOpenOwnItem={openItem} onOpenSeed={openSeed}>
     <SideNav current={navTab} onChange={go} onAdd={openNew} />
     <div className="mx-auto min-h-dvh max-w-2xl lg:max-w-none lg:ps-60">
       <main className="safe-top px-4 pb-32 lg:px-10 lg:pb-10 2xl:px-14">
@@ -94,20 +106,34 @@ export default function App() {
       {adding && (
         <AddTitle
           onClose={() => setAdding(false)}
-          onPick={(seed) => setOpened({ seed })}
+          onPick={openSeed}
           onOpenItem={openItem}
+          onOpenPerson={openPerson}
           onManual={(title) => setManual(title)}
           onGoToSettings={toSettings}
         />
       )}
-      {opened && (
-        <TitleSheet
-          key={opened.item ? opened.item.id : opened.seed.externalId}
-          item={opened.item}
-          seed={opened.seed}
-          onClose={() => setOpened(null)}
-          onGoToSettings={toSettings}
-        />
+      {layers.map((l) =>
+        l.kind === 'title' ? (
+          <TitleSheet
+            key={l.uid}
+            item={l.item}
+            seed={l.seed}
+            onClose={() => closeLayer(l.uid)}
+            onGoToSettings={toSettings}
+            onOpenPerson={openPerson}
+          />
+        ) : (
+          <PersonSheet
+            key={l.uid}
+            personId={l.personId}
+            name={l.name}
+            photo={l.photo}
+            onClose={() => closeLayer(l.uid)}
+            onOpenItem={openItem}
+            onOpenSeed={openSeed}
+          />
+        ),
       )}
       {manual !== null && (
         <EditDetails
@@ -116,7 +142,7 @@ export default function App() {
           onCreated={(item) => {
             setManual(null)
             setAdding(false)
-            setOpened({ item })
+            openItem(item)
           }}
         />
       )}

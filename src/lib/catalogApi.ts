@@ -118,7 +118,7 @@ export function isPlausibleTmdbKey(key: string): boolean {
 }
 
 /** Seules ces adresses de l'API TMDB peuvent être appelées. */
-const TMDB_PATHS = /^\/(search\/multi|configuration|discover\/(movie|tv)|(movie|tv)\/\d{1,10}(\/recommendations|\/season\/\d{1,3})?|find\/(tt)?\d{1,10})$/
+const TMDB_PATHS = /^\/(search\/(multi|person)|configuration|discover\/(movie|tv)|(movie|tv)\/\d{1,10}(\/recommendations|\/season\/\d{1,3})?|find\/(tt)?\d{1,10}|person\/\d{1,10})$/
 
 /** « Clé » spéciale : avec un compte, les requêtes passent par le serveur qui détient la vraie clé TMDB. */
 export const CLOUD_TMDB = 'cloud-proxy'
@@ -582,6 +582,21 @@ interface TmdbCredits {
 const names = (list: (string | undefined)[], max: number) =>
   [...new Set(list.map((n) => cleanText(n, 60)).filter((n): n is string => !!n))].slice(0, max)
 
+const tmdbPersonId = (id: unknown) => (typeof id === 'number' && Number.isInteger(id) && id > 0 && id < 1e10 ? `tmdbp:${id}` : undefined)
+const aniPersonId = (id: unknown) => (typeof id === 'number' && Number.isInteger(id) && id > 0 && id < 1e10 ? `anilistp:${id}` : undefined)
+
+/** Noms + pages des personnes (sans doublon, 3 au plus). */
+function crewRefs(list: { id?: number; name?: string }[], toId: (id: unknown) => string | undefined): CrewRef[] {
+  const out: CrewRef[] = []
+  for (const c of list) {
+    const name = cleanText(c.name, 60)
+    if (!name || out.some((o) => o.name === name)) continue
+    out.push({ name, personId: toId(c.id) })
+    if (out.length >= 3) break
+  }
+  return out
+}
+
 /** Réalisation, production et casting principal depuis TMDB. */
 export async function getTmdbCredits(externalId: string, key: string): Promise<Credits | undefined> {
   if (!isSafeExternalId(externalId) || !externalId.startsWith('tmdb:')) return undefined
@@ -1026,6 +1041,14 @@ export interface CastMember {
   photo?: string
   /** Doubleur·se (animes) */
   voice?: string
+  /** Page de la personne (acteur·rice, ou doubleur·se pour les animes) : « tmdbp:123 » / « anilistp:123 » */
+  personId?: string
+}
+
+/** Personne de l'équipe (réalisation, création) avec sa page. */
+export interface CrewRef {
+  name: string
+  personId?: string
 }
 
 export interface TitleExtras {
@@ -1039,6 +1062,8 @@ export interface TitleExtras {
   cast: CastMember[]
   /** Réalisation (films) ou création (séries) */
   directors: string[]
+  /** Les mêmes, avec de quoi ouvrir leur page */
+  directorPeople?: CrewRef[]
   directorKind: 'director' | 'creator'
   tagline?: string
   runtime?: number
@@ -1057,10 +1082,10 @@ interface TmdbExtras {
   runtime?: number
   episode_run_time?: number[]
   number_of_seasons?: number
-  created_by?: { name?: string }[]
+  created_by?: { id?: number; name?: string }[]
   credits?: {
-    cast?: { name?: string; character?: string; profile_path?: string | null; order?: number }[]
-    crew?: { name?: string; job?: string }[]
+    cast?: { id?: number; name?: string; character?: string; profile_path?: string | null; order?: number }[]
+    crew?: { id?: number; name?: string; job?: string }[]
   }
   'watch/providers'?: unknown
 }
@@ -1083,6 +1108,7 @@ async function tmdbExtras(externalId: string, key: string): Promise<TitleExtras>
       name: cleanText(c.name, 60),
       role: cleanText(c.character, 80),
       photo: isSafeTmdbPath(c.profile_path) ? `${TMDB_IMG}/w185${c.profile_path}` : undefined,
+      personId: tmdbPersonId(c.id),
     }))
     .filter((c): c is CastMember => !!c.name)
   const crew = Array.isArray(d.credits?.crew) ? d.credits!.crew! : []
@@ -1096,6 +1122,10 @@ async function tmdbExtras(externalId: string, key: string): Promise<TitleExtras>
       kind === 'movie'
         ? names(crew.filter((c) => c.job === 'Director').map((c) => c.name), 3)
         : names((Array.isArray(d.created_by) ? d.created_by : []).map((c) => c.name), 3),
+    directorPeople: crewRefs(
+      kind === 'movie' ? crew.filter((c) => c.job === 'Director') : Array.isArray(d.created_by) ? d.created_by : [],
+      tmdbPersonId,
+    ),
     directorKind: kind === 'movie' ? 'director' : 'creator',
     tagline: cleanText(d.tagline, 200),
     runtime: count(kind === 'movie' ? d.runtime : d.episode_run_time?.[0], 6000),
@@ -1114,10 +1144,10 @@ query ($id: Int) {
     characters(sort: [ROLE, RELEVANCE], perPage: 16) {
       edges {
         node { name { full } image { medium } }
-        voiceActors(language: JAPANESE, sort: [RELEVANCE]) { name { full } }
+        voiceActors(language: JAPANESE, sort: [RELEVANCE]) { id name { full } }
       }
     }
-    staff(sort: [RELEVANCE], perPage: 12) { edges { role node { name { full } } } }
+    staff(sort: [RELEVANCE], perPage: 12) { edges { role node { id name { full } } } }
     externalLinks { site url type language color icon }
   }
 }`
@@ -1127,8 +1157,8 @@ interface AniExtras {
   bannerImage?: string | null
   duration?: number | null
   stats?: { scoreDistribution?: { score?: number; amount?: number }[] | null } | null
-  characters?: { edges?: { node?: { name?: { full?: string }; image?: { medium?: string } }; voiceActors?: { name?: { full?: string } }[] }[] } | null
-  staff?: { edges?: { role?: string; node?: { name?: { full?: string } } }[] } | null
+  characters?: { edges?: { node?: { name?: { full?: string }; image?: { medium?: string } }; voiceActors?: { id?: number; name?: { full?: string } }[] }[] } | null
+  staff?: { edges?: { role?: string; node?: { id?: number; name?: { full?: string } } }[] } | null
   externalLinks?: unknown
 }
 
@@ -1156,6 +1186,7 @@ async function aniListExtras(externalId: string): Promise<TitleExtras> {
       name: cleanText(e.node?.name?.full, 60),
       photo: safePosterUrl(e.node?.image?.medium),
       voice: cleanText(e.voiceActors?.[0]?.name?.full, 60),
+      personId: aniPersonId(e.voiceActors?.[0]?.id),
     }))
     .filter((c): c is CastMember => !!c.name)
   const staff = Array.isArray(m.staff?.edges) ? m.staff!.edges! : []
@@ -1166,6 +1197,10 @@ async function aniListExtras(externalId: string): Promise<TitleExtras> {
     distribution: votes ? distribution : undefined,
     cast,
     directors: names(staff.filter((s) => /^Director$/i.test(s.role ?? '')).map((s) => s.node?.name?.full), 3),
+    directorPeople: crewRefs(
+      staff.filter((s) => /^Director$/i.test(s.role ?? '')).map((s) => ({ id: s.node?.id, name: s.node?.name?.full })),
+      aniPersonId,
+    ),
     directorKind: 'director',
     runtime: count(m.duration, 6000),
     streaming: parseAniListLinks(m.externalLinks),
@@ -1229,7 +1264,7 @@ export async function tmdbFindExternal(id: string, source: 'tvdb_id' | 'imdb_id'
   return (tv && tmdbWithPrefill(tv, 'tv')) || (movie && tmdbWithPrefill(movie, 'movie')) || undefined
 }
 
-export { ANILIST, ANILIST_FIELDS, aniToResult, type AniMedia }
+export { ANILIST, ANILIST_FIELDS, aniToResult, tmdbFetch, tmdbToResult, TMDB_IMG, type AniMedia, type TmdbItem }
 /** Adresse de l'affiche TMDB d'un titre (listes partagées : la copie locale de l'affiche ne se partage pas). */
 export async function getTmdbPosterUrl(externalId: string, key: string): Promise<string | undefined> {
   if (!isSafeExternalId(externalId) || !externalId.startsWith('tmdb:')) return undefined
